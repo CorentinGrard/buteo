@@ -96,8 +96,9 @@ class NativeXcsoarCore(
 
     private val lock = Mutex()
     /**
-     * Held by network calls instead of [lock], so commands do not wait
-     * for a download; [stop] takes both (always [lock] first).
+     * Held by network calls and flight file analyses instead of [lock],
+     * so commands do not wait for them; [stop] takes both (always [lock]
+     * first).
      */
     private val networkLock = Mutex()
     @Volatile
@@ -512,6 +513,10 @@ class NativeXcsoarCore(
 
     override suspend fun weGlideAircraft(id: Int) =
         network({ NativeCore.nativeWeGlideAircraftGet(it, id) }, WeGlideAircraft::parse)
+
+    /* off the core's main thread, as a network call: it takes seconds */
+    override suspend fun analyseFlightFile(igcPath: String) =
+        networkCall { NativeCore.nativeAnalyseFlightFile(it, igcPath) }?.let(Analysis::parse)
 
     override suspend fun uploadToWeGlide(igcPath: String) =
         network({ NativeCore.nativeWeGlideUpload(it, igcPath) }, WeGlideFlight::parse)

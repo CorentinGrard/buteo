@@ -48,7 +48,7 @@ class MacCreadyTest {
                 fake.setMacCready(macCready)
             }
         }
-        val viewModel = FlightViewModel(core) { "" }
+        val viewModel = FlightViewModel(core)
         advanceTimeBy(2_000)
         val before = fake.flightState.value?.macCready
 
@@ -67,7 +67,7 @@ class MacCreadyTest {
     @Test
     fun outOfRangeIsClamped() = runTest {
         val fake = FakeXcsoarCore(backgroundScope)
-        val viewModel = FlightViewModel(fake) { "" }
+        val viewModel = FlightViewModel(fake)
         advanceTimeBy(2_000)
 
         viewModel.setMacCready(7.0)

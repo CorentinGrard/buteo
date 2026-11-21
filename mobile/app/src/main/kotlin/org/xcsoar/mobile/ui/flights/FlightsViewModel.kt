@@ -5,13 +5,20 @@ package org.xcsoar.mobile.ui.flights
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.xcsoar.mobile.core.Analysis
 import org.xcsoar.mobile.core.WeGlideFlight
 import org.xcsoar.mobile.core.XcsoarCore
+import org.xcsoar.mobile.ui.summary.FlightSummary
+import java.io.File
 
 /** One IGC file XCSoar's logger wrote. */
 data class FlightLog(
@@ -35,7 +42,22 @@ sealed interface Upload {
 interface UploadStore {
     suspend fun load(): Map<String, WeGlideFlight>
     suspend fun save(name: String, flight: WeGlideFlight)
+    /** The file is gone: a new one may get its name. */
+    suspend fun remove(name: String)
 }
+
+/** A recorded flight opened from the list ([FlightsViewModel.open]). */
+data class FlightDetail(
+    val log: FlightLog,
+    /** While the core reads the file. */
+    val reading: Boolean = true,
+    /** Null while reading, and when the file has no take-off. */
+    val summary: FlightSummary? = null,
+    /** The take-off's day, "YYYY-MM-DD" (UTC). */
+    val date: String? = null,
+    /** Why the file could not be deleted. */
+    val error: String? = null,
+)
 
 /**
  * The recorded flights, newest first, and their WeGlide uploads: those
@@ -45,6 +67,8 @@ class FlightsViewModel(
     private val list: suspend () -> List<FlightLog>,
     private val core: XcsoarCore? = null,
     private val uploadStore: UploadStore? = null,
+    /** Where files are deleted (tests run it at once). */
+    private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val flightsFlow = MutableStateFlow<List<FlightLog>?>(null)
     /** `null` while loading. */
@@ -57,6 +81,54 @@ class FlightsViewModel(
     private val uploadsFlow = MutableStateFlow<Map<String, Upload>>(emptyMap())
     /** Uploads, by IGC path: done ones remembered, others of this session. */
     val uploads: StateFlow<Map<String, Upload>> = uploadsFlow.asStateFlow()
+
+    private val detailFlow = MutableStateFlow<FlightDetail?>(null)
+    /** The flight opened last; null before. */
+    val detail: StateFlow<FlightDetail?> = detailFlow.asStateFlow()
+
+    /* the analyses read this session, by path and time written */
+    private val analyses = mutableMapOf<Pair<String, Long>, Analysis>()
+    private var openJob: Job? = null
+
+    /** Show [flight]: its analysis from the core, seconds the first time. */
+    fun open(flight: FlightLog) {
+        openJob?.cancel()
+        detailFlow.value = FlightDetail(flight)
+        openJob = viewModelScope.launch {
+            val key = flight.path to flight.modified
+            val analysis = analyses[key] ?: try {
+                core?.analyseFlightFile(flight.path)?.also { analyses[key] = it }
+            } catch (_: Exception) {
+                null
+            }
+            detailFlow.value = FlightDetail(
+                flight, reading = false, date = analysis?.date,
+                summary = analysis?.takeIf { it.flight != null }
+                    ?.let { FlightSummary.of(it, replay = false) })
+        }
+    }
+
+    /**
+     * Delete [flight]'s IGC file, and the WeGlide upload remembered for
+     * it; [onDeleted] once it is gone.
+     */
+    fun delete(flight: FlightLog, onDeleted: () -> Unit) {
+        viewModelScope.launch {
+            if (!withContext(io) { File(flight.path).delete() }) {
+                detailFlow.update { it?.copy(error = "Could not delete ${flight.name}") }
+                return@launch
+            }
+            try {
+                uploadStore?.remove(flight.name)
+            } catch (_: Exception) {
+                // a stale upload only shows on a later file of that name
+            }
+            uploadsFlow.update { it - flight.path }
+            analyses.keys.removeAll { it.first == flight.path }
+            refresh()
+            onDeleted()
+        }
+    }
 
     fun refresh() {
         viewModelScope.launch {

@@ -173,5 +173,5 @@ Play counts that. A draft to check:
   Website: the GitHub page.
 - Graphics: icon `mobile/app/src/main/ic_launcher-playstore.png`
   (512 px); a feature graphic (1024 × 500) and two phone screenshots or
-  more (the demo replay shows the app without your area) are still to
-  make.
+  more are still to make (a replay of `test/data/01lz1hq1.igc`, copied
+  into `XCSoarData/logs`, shows the app away from your area).

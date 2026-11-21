@@ -52,7 +52,9 @@ import org.xcsoar.mobile.ui.flight.ReplayControls
 import org.xcsoar.mobile.ui.flight.ReplaySpeed
 import org.xcsoar.mobile.ui.flight.flightMenu
 import org.xcsoar.mobile.ui.flights.FlightsContent
-import org.xcsoar.mobile.ui.flights.ReplayContent
+import org.xcsoar.mobile.ui.flights.FlightDetail
+import org.xcsoar.mobile.ui.flights.FlightLog
+import org.xcsoar.mobile.ui.flights.FlightLogContent
 import org.xcsoar.mobile.ui.map.MapSettingsContent
 import org.xcsoar.mobile.ui.settings.SoundContent
 import org.xcsoar.mobile.ui.settings.WindContent
@@ -174,7 +176,13 @@ class TouchTargetsTest {
 
     @Test
     fun flights() = check {
-        FlightsContent(emptyList(), {}, {}, canReplay = true, onReplay = {})
+        FlightsContent(listOf(FlightLog("/x/a.igc", "a.igc", 1, 1)), {}, {})
+    }
+
+    @Test
+    fun flightLog() = check {
+        FlightLogContent(FlightDetail(FlightLog("/x/a.igc", "a.igc", 1, 1), reading = false),
+                         weGlideReady = true, upload = null, onGround = true)
     }
 
     @Test
@@ -242,9 +250,6 @@ class TouchTargetsTest {
 
     @Test
     fun analysis() = check { AnalysisContent(null, AnalysisPage.BAROGRAPH, {}, {}) }
-
-    @Test
-    fun replay() = check { ReplayContent(emptyList(), ReplaySpeed(), {}, {}, {}, {}, {}) }
 
     private val planes = listOf(
         PlaneInfo("/d/planes/D-1234.xcp", "D-1234", "XY", "LS 4", "LS-4", 160, false),

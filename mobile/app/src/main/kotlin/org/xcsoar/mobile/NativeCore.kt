@@ -138,6 +138,7 @@ internal object NativeCore {
     @JvmStatic external fun nativeWeGlideAircraftUpdate(core: Long): String?
     @JvmStatic external fun nativeWeGlideAircraftGet(core: Long, id: Int): String?
     @JvmStatic external fun nativeWeGlideUpload(core: Long, igcPath: String): String?
+    @JvmStatic external fun nativeAnalyseFlightFile(core: Long, igcPath: String): String?
     @JvmStatic external fun nativeTaskEdit(core: Long, op: Int, index: Int, value: Double): Int
     @JvmStatic external fun nativeTaskListFiles(core: Long): String?
     @JvmStatic external fun nativeTaskLoad(core: Long, path: String, index: Int): Int

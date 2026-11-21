@@ -10,7 +10,6 @@ import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -45,7 +44,6 @@ import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -83,7 +81,7 @@ import org.xcsoar.mobile.ui.map.MapSettingsViewModel
 import org.xcsoar.mobile.ui.flights.FlightLog
 import org.xcsoar.mobile.ui.flights.FlightsScreen
 import org.xcsoar.mobile.ui.flights.FlightsViewModel
-import org.xcsoar.mobile.ui.flights.ReplayScreen
+import org.xcsoar.mobile.ui.flights.FlightLogScreen
 import org.xcsoar.mobile.ui.profiles.ProfilesScreen
 import org.xcsoar.mobile.ui.profiles.ProfilesViewModel
 import org.xcsoar.mobile.ui.settings.AirspaceAlertsScreen
@@ -120,7 +118,6 @@ import org.xcsoar.mobile.ui.flight.FlightViewModel
 import org.xcsoar.mobile.ui.theme.ThemeChoice
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -128,7 +125,7 @@ private enum class Screen { FLIGHT, DATA_FILES, DOWNLOAD, MAP_SETTINGS, WAYPOINT
                             TASK, TASK_FILES, TASK_ADD_POINT, UNITS, ANALYSIS,
                             CREW, PLANE_EDIT, PILOT, TILE_PICKER,
                             AIRSPACE_ALERTS, SAFETY, WIND, STATUS, SOUND, TRACKING, WEATHER,
-                            NOTAMS, REPLAY, PROFILES, TEAM_CODE, TEAM_REFERENCE, RADIO,
+                            NOTAMS, FLIGHT_LOG, PROFILES, TEAM_CODE, TEAM_REFERENCE, RADIO,
                             ATC, ATC_REFERENCE, AIRSPACE_DETAILS, WELCOME, SUMMARY }
 
 /** How deep a page is: pages further in slide in from the right. */
@@ -138,13 +135,11 @@ private val Screen.depth: Int
         Screen.DOWNLOAD, Screen.PLANE_EDIT, Screen.TASK_FILES, Screen.TASK_ADD_POINT,
         Screen.TEAM_REFERENCE, Screen.ATC_REFERENCE,
         // open from the page that holds them (D25)
-        Screen.PILOT, Screen.REPLAY, Screen.NOTAMS, Screen.UNITS, Screen.WIND -> 2
+        Screen.PILOT, Screen.FLIGHT_LOG, Screen.NOTAMS, Screen.UNITS, Screen.WIND -> 2
         else -> 1
     }
 
 private const val PAGE_MILLIS = 250
-
-private const val TAG = "MainActivity"
 
 /**
  * Deeper pages slide in from the right over the one they leave; going
@@ -209,12 +204,6 @@ class MainActivity : ComponentActivity() {
             if (uri != null) onProfilePicked?.invoke(uri)
         }
 
-    private var onReplayPicked: ((Uri) -> Unit)? = null
-    private val replayPicker =
-        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            if (uri != null) onReplayPicked?.invoke(uri)
-        }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -251,7 +240,6 @@ class MainActivity : ComponentActivity() {
                     initializer {
                         FlightViewModel(
                             core = app.anyCore,
-                            demoFlight = { app.demoFlight().path },
                             calloutSettings = { app.calloutSettings },
                         )
                     }
@@ -711,38 +699,25 @@ class MainActivity : ComponentActivity() {
                                 summaryViewModel, flightsViewModel, onShare = ::share,
                                 onOpenUrl = ::openUrl, onDone = { screen = Screen.FLIGHT })
                             Screen.FLIGHTS -> FlightsScreen(
-                                flightsViewModel, onShare = ::share, onOpenUrl = ::openUrl,
-                                // on the ground only: not something to press in flight
-                                canReplay = flightViewModel.flightState
-                                    .collectAsState().value?.flying == false,
-                                onReplay = { screen = Screen.REPLAY },
+                                flightsViewModel,
+                                onOpen = {
+                                    flightsViewModel.open(it)
+                                    screen = Screen.FLIGHT_LOG
+                                },
                                 onBack = { screen = Screen.FLIGHT })
-                            Screen.REPLAY -> {
-                                val speed by flightViewModel.replaySpeed.collectAsState()
+                            Screen.FLIGHT_LOG -> FlightLogScreen(
+                                flightsViewModel,
+                                // replays and deletions are not for the air
+                                onGround = flightViewModel.flightState
+                                    .collectAsState().value?.flying == false,
                                 // replaying: back to the map itself
-                                val replay = { path: String ->
-                                    flightViewModel.startReplay(path)
+                                onReplay = {
+                                    flightViewModel.startReplay(it.path)
                                     menuOpen = false
                                     screen = Screen.FLIGHT
-                                }
-                                onReplayPicked = { uri ->
-                                    lifecycleScope.launch {
-                                        try {
-                                            replay(app.importReplayFile(uri))
-                                        } catch (e: Exception) {
-                                            Log.w(TAG, "replay file not copied", e)
-                                        }
-                                    }
-                                }
-                                ReplayScreen(
-                                    flightsViewModel, speed,
-                                    onSpeed = flightViewModel::setReplaySpeed,
-                                    onDemo = { replay(app.demoFlight().path) },
-                                    onReplay = { replay(it.path) },
-                                    // IGC and NMEA files have no reliable type
-                                    onOpenFile = { replayPicker.launch(arrayOf("*/*")) },
-                                    onBack = { screen = Screen.FLIGHTS })
-                            }
+                                },
+                                onShare = ::share, onOpenUrl = ::openUrl,
+                                onBack = { screen = Screen.FLIGHTS })
                             Screen.PROFILES -> ProfilesScreen(
                                 profilesViewModel,
                                 flying = flightViewModel.flightState

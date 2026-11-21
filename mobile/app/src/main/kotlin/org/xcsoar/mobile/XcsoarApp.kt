@@ -137,6 +137,10 @@ class XcsoarApp : Application() {
                 preferences.edit().putString(name, flight.encode()).commit()
             }
         }
+
+        override suspend fun remove(name: String) {
+            withContext(Dispatchers.IO) { preferences.edit().remove(name).commit() }
+        }
     }
 
     /** The pilot chose the plane and crew since the app started. */
@@ -229,22 +233,6 @@ class XcsoarApp : Application() {
         target.path
     }
 
-    /**
-     * Copy a flight the user picked for a replay into the cache,
-     * keeping its name (its extension tells IGC from NMEA); the
-     * previous one goes.
-     *
-     * @return the path of the copy
-     */
-    suspend fun importReplayFile(uri: Uri): String = withContext(Dispatchers.IO) {
-        val folder = File(cacheDir, "replay")
-        folder.deleteRecursively()
-        val target = File(folder.apply { mkdirs() }, displayName(uri))
-        val input = checkNotNull(contentResolver.openInputStream(uri)) { "cannot open $uri" }
-        input.use { source -> target.outputStream().use { source.copyTo(it) } }
-        target.path
-    }
-
     val downloader by lazy { Downloader(cacheDir) }
 
     /**
@@ -282,27 +270,18 @@ class XcsoarApp : Application() {
         return if (base.isBlank() || base == "." || base == "..") "imported" else base
     }
 
-    /** The IGC files XCSoar's logger wrote (not the demo flight). */
+    /** The IGC files XCSoar's logger wrote. */
     suspend fun flightLogs(): List<FlightLog> = withContext(Dispatchers.IO) {
-        File(xcsoarDataDir, "logs").listFiles { f ->
-            f.isFile && f.name.endsWith(".igc", ignoreCase = true) && f.name != DEMO_FLIGHT
+        val logs = File(xcsoarDataDir, "logs")
+        // the demo flight the app copied there until 2026-11-21
+        File(logs, OLD_DEMO_FLIGHT).delete()
+        logs.listFiles { f ->
+            f.isFile && f.name.endsWith(".igc", ignoreCase = true)
         }.orEmpty().map { FlightLog(it.path, it.name, it.lastModified(), it.length()) }
-    }
-
-    /** The bundled demo flight, copied to the data directory. */
-    fun demoFlight(): File {
-        val file = File(xcsoarDataDir, "logs/$DEMO_FLIGHT")
-        if (!file.exists()) {
-            file.parentFile?.mkdirs()
-            assets.open("01lz1hq1.igc").use { input ->
-                file.outputStream().use { input.copyTo(it) }
-            }
-        }
-        return file
     }
 
     private companion object {
         const val TAG = "XcsoarApp"
-        const val DEMO_FLIGHT = "demo.igc"
+        const val OLD_DEMO_FLIGHT = "demo.igc"
     }
 }

@@ -182,6 +182,13 @@ interface XcsoarCore {
     /** XCSoar's analysis pages; null if the core has not started. */
     suspend fun analysis(): Analysis? = null
 
+    /**
+     * A recorded flight from its IGC file, as XCSoar's AnalyseFlight
+     * finds it: what a flight's summary shows, and its [Analysis.date].
+     * Seconds for a long flight.  Null if the file cannot be read.
+     */
+    suspend fun analyseFlightFile(igcPath: String): Analysis? = null
+
     /** The InfoBox types a tile can show, by name. */
     suspend fun tileTypes(): List<TileType> = emptyList()
 

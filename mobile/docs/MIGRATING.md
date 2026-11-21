@@ -41,11 +41,11 @@ computer over USB. The folders inside are XCSoar's (`maps`, `airspace`,
 | Map item list | Hold the map and lift: a card with what is under your finger. |
 | Airspace warnings and filters | The banner over the cards (Ack, Day); Menu → Airspace, which also has the NOTAMs. |
 | Safety factors | Menu → Safety heights (Startup Task MC is "MacCready at start" there). |
-| Logger | Automatic: it starts at take-off and stops after landing. After the landing, a summary of the flight shares it and uploads it to WeGlide; Menu → Flights has all of them. |
+| Logger | Automatic: it starts at take-off and stops after landing. After the landing, a summary of the flight shares it and uploads it to WeGlide; Menu → Flights has all of them: tap one for its summary, Replay, Share, WeGlide or Delete. |
 | Thermal assistant | While circling, on the glider over the map (Menu → Map & units → Thermal assistant), and as a tile. |
 | Circling zoom | Menu → Map & units → Zoom of its own. |
 | Sounds of events | Menu → Sound → Voice callouts: airspace, final glide, task points and climbs, spoken. |
-| Replay | Menu → Flights → Replay (on the ground). |
+| Replay | Menu → Flights → a flight → Replay (on the ground). To replay another IGC file, copy it into `XCSoarData/logs`. |
 
 ## Not there yet
 

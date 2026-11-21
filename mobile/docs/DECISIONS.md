@@ -443,3 +443,31 @@ Amends D24's "Google Play: open".  The steps: `mobile/docs/PLAY.md`.
 - The privacy policy, required by Play for location, is
   `mobile/docs/PRIVACY.md`; it says what the optional features send
   where.
+
+## D27 — A flight's page, read from its IGC file
+**Status:** Accepted (2026-11-21)
+
+The pilot asked to tap a recorded flight for what it was, to replay it
+from there and to delete flights; Status, diagnostics, moves to the
+bottom of the menu.
+
+- A recorded flight's page is the summary after a landing (D25's
+  Flights): its times, contest result over its path, climbs and highest
+  point, from the IGC file (`xcs_analyse_flight_file()`,
+  `core/host/CoreFlightFile.cpp`).  The core runs XCSoar's AnalyseFlight
+  (the analysis SkyLines runs on uploaded flights): its replay and
+  flight phase detector from `test/src`, built into the core; the
+  contest and handicap of the settings.  It reads the file on the
+  caller's thread, not the core's (seconds for a long flight), with the
+  network calls' lock so the core cannot stop under it; the app keeps
+  each analysis for the session.
+- The page has Replay and Share at the bottom, then Upload to WeGlide
+  and Delete (confirmed; the remembered upload goes too, as the logger
+  may give a new file the name).  Replay and Delete only on the
+  ground: in flight the logger writes the newest file.  The Flights list
+  is rows that open it.
+- The Replay page goes: its speed is the replay bar's, its demo flight
+  went with it (`test/data/01lz1hq1.igc` stays in the l5 app, which
+  its end-to-end test replays from Flights), and its "Open a file…"
+  too: an IGC file copied into `XCSoarData/logs` is a flight like the
+  others.  The `demo.igc` older versions copied there is deleted.

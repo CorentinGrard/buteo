@@ -100,7 +100,7 @@ class CalloutsTest {
     @Test
     fun leavingAClimbSaysItsAverageOnce() = runTest {
         val core = Scripted(FakeXcsoarCore(backgroundScope))
-        val viewModel = FlightViewModel(core) { "" }
+        val viewModel = FlightViewModel(core)
         try {
             val said = mutableListOf<String>()
             backgroundScope.launch { viewModel.callouts.collect { said += it } }
@@ -124,7 +124,7 @@ class CalloutsTest {
     @Test
     fun turningInAndOutOfAClimbSaysItOnce() = runTest {
         val core = Scripted(FakeXcsoarCore(backgroundScope))
-        val viewModel = FlightViewModel(core) { "" }
+        val viewModel = FlightViewModel(core)
         try {
             val said = mutableListOf<String>()
             backgroundScope.launch { viewModel.callouts.collect { said += it } }
@@ -149,7 +149,7 @@ class CalloutsTest {
     fun turnPointSaysTheNextOne() = runTest {
         val core = Scripted(FakeXcsoarCore(backgroundScope))
         var settings = CalloutSettings(taskPoints = false)
-        val viewModel = FlightViewModel(core, { settings }) { "" }
+        val viewModel = FlightViewModel(core, { settings })
         try {
             val said = mutableListOf<String>()
             backgroundScope.launch { viewModel.callouts.collect { said += it } }

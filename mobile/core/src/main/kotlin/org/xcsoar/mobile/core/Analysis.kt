@@ -268,6 +268,8 @@ data class FlightTimes(
 /** XCSoar's analysis pages (`xcs_get_analysis`). */
 @Serializable
 data class Analysis(
+    /** A flight file's day ("YYYY-MM-DD", UTC: [XcsoarCore.analyseFlightFile]). */
+    val date: String? = null,
     /** Hours since take-off; null when not flying. */
     @SerialName("flight_time") val flightTime: Double? = null,
     /** The last flight (kept after its landing); null before a take-off. */

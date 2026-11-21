@@ -118,7 +118,7 @@ class SummaryTest {
     @Test
     fun aLandingOrAReplayEndsTheFlight() = runTest {
         val core = Scripted(FakeXcsoarCore(backgroundScope))
-        val viewModel = FlightViewModel(core) { "" }
+        val viewModel = FlightViewModel(core)
         try {
             val ended = mutableListOf<FlightEnd>()
             backgroundScope.launch { viewModel.flightEnded.collect { ended += it } }

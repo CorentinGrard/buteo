@@ -28,6 +28,7 @@ import org.xcsoar.mobile.core.PlaneDetails
 import org.xcsoar.mobile.core.PlaneEdit
 import org.xcsoar.mobile.core.TileLayout
 import org.xcsoar.mobile.ui.Format
+import java.io.File
 
 /**
  * L5 (mobile/docs/ARCHITECTURE.md §6): the real core, optimised as it
@@ -53,13 +54,19 @@ class ReplayEndToEndTest {
     val rules: RuleChain = RuleChain.outerRule(permissions).around(compose)
 
     @Test
-    fun demoFlightFliesOnTheFlightScreen() {
+    fun aRecordedFlightFliesOnTheFlightScreen() {
+        val flight = copyTestFlight()
         startFlightScreen()
 
+        // Flights, the flight's page with the core's analysis of the
+        // file, and its Replay
         compose.onNodeWithContentDescription("Menu").performClick()
         compose.onNodeWithText("Flights").performScrollTo().performClick()
+        compose.onNodeWithText(flight.name, substring = true).performClick()
+        waitFor("the flight's analysis", STARTUP_MS) {
+            descriptions("Time ").any { !it.contains(Format.INVALID) }
+        }
         compose.onNodeWithText("Replay").performClick()
-        compose.onNodeWithText("Demo flight").performClick()
         waitFor("the replay bar", STARTUP_MS) {
             exists(hasContentDescription("Skip 10 minutes"))
         }
@@ -141,6 +148,20 @@ class ReplayEndToEndTest {
         } finally {
             core.deletePlane(path)
         }
+    }
+
+    /**
+     * The test flight (the l5 app's asset, test/data/01lz1hq1.igc)
+     * among the recorded flights of the l5 app.
+     */
+    private fun copyTestFlight(): File {
+        val app = ApplicationProvider.getApplicationContext<XcsoarApp>()
+        val file = File(app.xcsoarDataDir, "logs/2010-01-21-TEST-01.igc")
+        file.parentFile?.mkdirs()
+        app.assets.open("01lz1hq1.igc").use { input ->
+            file.outputStream().use { input.copyTo(it) }
+        }
+        return file
     }
 
     /** Past the first start's setup or the plane picker, to the flight screen. */

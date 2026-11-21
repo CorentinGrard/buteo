@@ -33,7 +33,8 @@ under a new Kotlin interface.
   landing, upload to WeGlide
 - A first start that sets up units and the glider, and downloads the
   map, airspace and airfields for where you are
-- XCSoar's analysis pages, and replay of IGC files
+- XCSoar's analysis pages; each recorded flight's summary, replay and
+  deletion
 - Your XCSoar profiles, planes and data files work as they are
 
 Not there yet: external devices (Bluetooth, BLE and USB varios,

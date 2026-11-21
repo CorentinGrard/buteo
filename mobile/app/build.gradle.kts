@@ -176,7 +176,7 @@ val upstreamJava = tasks.register<CopyIntoGenerated>("upstreamJava") {
     subDirectory.set("org/xcsoar")
 }
 
-/** A recorded flight for the "Replay demo" action. */
+/** A recorded flight for the end-to-end tests to replay (the l5 app only). */
 val demoFlight = tasks.register<CopyIntoGenerated>("demoFlight") {
     sources.from(xcsoarRoot.file("test/data/01lz1hq1.igc"))
     subDirectory.set("")
@@ -281,7 +281,9 @@ val nativeCoreRelease = nativeCore(false)
 androidComponents {
     onVariants { variant ->
         variant.sources.java?.addGeneratedSourceDirectory(upstreamJava, CopyIntoGenerated::outputDir)
-        variant.sources.assets?.addGeneratedSourceDirectory(demoFlight, CopyIntoGenerated::outputDir)
+        if (variant.buildType == "l5")
+            variant.sources.assets?.addGeneratedSourceDirectory(demoFlight,
+                                                                CopyIntoGenerated::outputDir)
         val core = if (variant.buildType == "debug") nativeCoreDebug else nativeCoreRelease
         variant.sources.jniLibs?.addGeneratedSourceDirectory(core, NativeCoreLibrary::outputDir)
         variant.sources.res?.addGeneratedSourceDirectory(coreDrawables, CoreDrawables::outputDir)

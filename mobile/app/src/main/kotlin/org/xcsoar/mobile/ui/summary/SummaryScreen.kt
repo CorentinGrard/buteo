@@ -101,37 +101,7 @@ fun SummaryContent(
                  color = colors.textSecondary, fontSize = 16.sp)
         }
 
-        // the three numbers of the flight
-        val result = summary.result
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Stat("Time", Format.duration(summary.duration), Modifier.weight(1f))
-            Stat("Distance", Format.distance(result?.distance), Modifier.weight(1f))
-            Stat("Score", Format.Value(result?.let { String.format(Locale.ROOT, "%.0f", it.score) }
-                                           ?: Format.INVALID, "pts"),
-                 Modifier.weight(1f))
-        }
-
-        ContestMap(summary.contest)
-
-        val best = summary.bestClimb
-        val climb = Format.vario(best?.lift)
-        ValueList(listOfNotNull(
-            "Best climb" to (best?.let {
-                "${climb.text} ${climb.unit} · ${Format.altitude(it.gain).text} " +
-                    Format.altitude(it.gain).unit
-            } ?: ""),
-            "Average climb" to (summary.averageClimb?.let {
-                val v = Format.vario(it)
-                "${v.text} ${v.unit} · ${summary.climbs} climbs"
-            } ?: ""),
-            "Highest" to (summary.highest?.let {
-                Format.altitude(it).let { v -> "${v.text} ${v.unit}" }
-            } ?: ""),
-            result?.label?.ifEmpty { null }?.let { "Contest" to it },
-            result?.takeIf { it.speed > 0 }?.let {
-                "Speed" to Format.taskSpeed(it.speed).let { v -> "${v.text} ${v.unit}" }
-            },
-        ))
+        FlightFacts(summary)
 
         when {
             summary.replay ->
@@ -163,6 +133,45 @@ fun SummaryContent(
             else -> {}
         }
     }
+}
+
+/**
+ * The flight's three numbers, its contest result over its path and its
+ * climbs: after the landing, and on a recorded flight's page.
+ */
+@Composable
+fun FlightFacts(summary: FlightSummary) {
+    // the three numbers of the flight
+    val result = summary.result
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Stat("Time", Format.duration(summary.duration), Modifier.weight(1f))
+        Stat("Distance", Format.distance(result?.distance), Modifier.weight(1f))
+        Stat("Score", Format.Value(result?.let { String.format(Locale.ROOT, "%.0f", it.score) }
+                                       ?: Format.INVALID, "pts"),
+             Modifier.weight(1f))
+    }
+
+    ContestMap(summary.contest)
+
+    val best = summary.bestClimb
+    val climb = Format.vario(best?.lift)
+    ValueList(listOfNotNull(
+        "Best climb" to (best?.let {
+            "${climb.text} ${climb.unit} · ${Format.altitude(it.gain).text} " +
+                Format.altitude(it.gain).unit
+        } ?: ""),
+        "Average climb" to (summary.averageClimb?.let {
+            val v = Format.vario(it)
+            "${v.text} ${v.unit} · ${summary.climbs} climbs"
+        } ?: ""),
+        "Highest" to (summary.highest?.let {
+            Format.altitude(it).let { v -> "${v.text} ${v.unit}" }
+        } ?: ""),
+        result?.label?.ifEmpty { null }?.let { "Contest" to it },
+        result?.takeIf { it.speed > 0 }?.let {
+            "Speed" to Format.taskSpeed(it.speed).let { v -> "${v.text} ${v.unit}" }
+        },
+    ))
 }
 
 /** One of the flight's three numbers, large. */

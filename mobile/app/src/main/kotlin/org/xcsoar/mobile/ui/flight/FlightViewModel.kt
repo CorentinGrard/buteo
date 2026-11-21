@@ -53,12 +53,10 @@ import kotlin.math.abs
  *
  * @param core the process's core (shared with the other screens)
  * @param calloutSettings the callouts the pilot wants, read at each one
- * @param demoFlight path of a recorded flight for [replayDemo]
  */
 class FlightViewModel(
     private val core: XcsoarCore,
     private val calloutSettings: () -> CalloutSettings = { CalloutSettings() },
-    private val demoFlight: () -> String,
 ) : ViewModel() {
     /**
      * The latest state, at most [UI_INTERVAL_MS] apart: what the screen
@@ -416,9 +414,6 @@ class FlightViewModel(
     private val replaySpeedFlow = MutableStateFlow(ReplaySpeed())
     /** The speed the next or current replay runs at, and whether it is paused. */
     val replaySpeed: StateFlow<ReplaySpeed> = replaySpeedFlow.asStateFlow()
-
-    /** Replay the bundled demo flight. */
-    fun replayDemo() = startReplay(demoFlight())
 
     /** Replay an IGC or NMEA file at [replaySpeed]. */
     fun startReplay(path: String) {
