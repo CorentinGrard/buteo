@@ -741,7 +741,8 @@ the core already links but that has never run in this app:
 - [ ] Crash reporting (opt-in, privacy-friendly) + native crash symbolication
 - [~] Distribution: GitHub releases signed with Buteo's key (D24,
       `.github/workflows/mobile-release.yml`, v1.0.0 2026-11-20);
-      Google Play and F-Droid: open
+      Obtainium links in the README; Google Play: internal test, the
+      workflow uploads drafts (D26, `mobile/docs/PLAY.md`); F-Droid: open
 - [x] User docs: migration guide from XCSoar (`mobile/docs/MIGRATING.md`,
       2026-10-20): data, where things are, what is not there yet
 

@@ -417,3 +417,29 @@ the settings were too many.
   tiles still open it directly).  The vario sound and the voice
   callouts are one Sound page.  The Airspace row says whether warnings
   are on.
+
+## D26 — Google Play: drafts on the internal track, Buteo's own key
+**Status:** Accepted (2026-11-21); the key is chosen in the Play Console
+
+Amends D24's "Google Play: open".  The steps: `mobile/docs/PLAY.md`.
+
+- A tag's bundle also goes to Play's internal track as a **draft**
+  (`r0adkll/upload-google-play`, when the secret
+  `PLAY_SERVICE_ACCOUNT_JSON` is set; skipped without it).  Rolling out
+  and promoting stay in the Play Console: a person looks at each
+  release of a flight instrument before pilots get it, and the service
+  account may only release to testing tracks.  Play's "What's new":
+  `mobile/docs/releases/<tag>.play.txt`, else a link to the GitHub
+  release.
+- Recommended app signing key: Buteo's own (uploaded with PEPK, and
+  the upload key as well), so that Play, GitHub and Obtainium builds
+  update one another.  With a Google-made key they would be two apps
+  that only an uninstall, which deletes `XCSoarData`, can swap.  Play
+  allows the change until a release reaches open testing or
+  production.
+- Only the core's ABIs (arm64-v8a) in the APK and the bundle:
+  `androidx.graphics.path` made them claim 32-bit and x86 phones,
+  where the core is missing.
+- The privacy policy, required by Play for location, is
+  `mobile/docs/PRIVACY.md`; it says what the optional features send
+  where.

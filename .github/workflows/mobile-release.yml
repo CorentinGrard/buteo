@@ -2,10 +2,15 @@
 # Buteo's releases (mobile/docs/DECISIONS.md D24): a tag
 # v<major>.<minor>.<patch> builds the APK and the Play bundle, signed
 # with the release key, and publishes a GitHub release with the APK.
-# Its notes: mobile/docs/releases/<tag>.md.
+# Its notes: mobile/docs/releases/<tag>.md.  With a Play service
+# account, the bundle also goes to Google Play's internal track as a
+# draft, to roll out from the Play Console (mobile/docs/PLAY.md, D26);
+# Play's "What's new": mobile/docs/releases/<tag>.play.txt if there is
+# one.
 #
 # Secrets: BUTEO_KEYSTORE_BASE64 (the keystore, base64),
-# BUTEO_KEYSTORE_PASSWORD, BUTEO_KEY_ALIAS, BUTEO_KEY_PASSWORD.
+# BUTEO_KEYSTORE_PASSWORD, BUTEO_KEY_ALIAS, BUTEO_KEY_PASSWORD;
+# PLAY_SERVICE_ACCOUNT_JSON (optional: without it, no Play upload).
 
 name: mobile-release
 
@@ -21,6 +26,8 @@ jobs:
   release:
     runs-on: ubuntu-24.04
     container: debian:trixie-slim
+    env:
+      PLAY_UPLOAD: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
 
     steps:
       - name: Install checkout dependencies
@@ -163,3 +170,37 @@ jobs:
           name: buteo-${{ steps.version.outputs.name }}-play-bundle
           path: dist/buteo-${{ steps.version.outputs.name }}.aab
           retention-days: 90
+
+      # Play's "What's new" (500 characters at most), else a link to
+      # the GitHub release
+      - name: Play's release notes
+        if: env.PLAY_UPLOAD == 'true'
+        shell: bash
+        run: |
+          mkdir play-whatsnew
+          notes="mobile/docs/releases/$GITHUB_REF_NAME.play.txt"
+          if [ -f "$notes" ]; then
+            [ "$(LC_ALL=C.UTF-8 wc -m < "$notes")" -le 500 ] || {
+              echo "::error::$notes is over Play's 500 characters"
+              exit 1
+            }
+            cp "$notes" play-whatsnew/whatsnew-en-US
+          else
+            echo "Buteo ${{ steps.version.outputs.name }}: https://github.com/$GITHUB_REPOSITORY/releases/tag/$GITHUB_REF_NAME" \
+              > play-whatsnew/whatsnew-en-US
+          fi
+
+      # a draft on the internal track: rolled out (and promoted) by hand
+      # in the Play Console; the service account may only release to
+      # testing tracks (mobile/docs/PLAY.md)
+      - name: Upload to Google Play
+        if: env.PLAY_UPLOAD == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: app.corentin.buteo
+          releaseFiles: dist/buteo-${{ steps.version.outputs.name }}.aab
+          tracks: internal
+          status: draft
+          releaseName: ${{ steps.version.outputs.name }}
+          whatsNewDirectory: play-whatsnew
