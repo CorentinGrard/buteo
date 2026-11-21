@@ -918,6 +918,28 @@ TestTiles(xcs_core *core)
   xcs_tiles_set(core, XCS_TILES_CIRCLING, 5, e_WindSpeed_Est);
 }
 
+/* a recorded flight's analysis from its file, as AnalyseFlight finds it */
+static void
+TestFlightFile(xcs_core *core)
+{
+  const auto json = GetJson([core](char *b, size_t s, size_t *l){
+    return xcs_analyse_flight_file(core, FLIGHT, b, s, l);
+  });
+  /* the take-off at 00:40 UTC and 5:14 in the air (local times
+     follow the machine's time zone) */
+  ok1(Contains(json, "{\"date\":\"2010-01-21\","
+                     "\"flight\":{\"takeoff\":2.429E3,"));
+  ok1(Contains(json, "\"duration\":1.8844E4}"));
+  /* climbs, and the contest chosen in the settings (WeGlide Free): 518 km */
+  ok1(Contains(json, "\"climb\":{\"thermals\":[["));
+  ok1(Contains(json, "\"results\":[{\"label\":\"\",\"distance\":5.18"));
+
+  char buffer[64];
+  size_t length;
+  ok1(xcs_analyse_flight_file(core, "test/data/does-not-exist.igc", buffer,
+                              sizeof(buffer), &length) == XCS_ERROR_FAILED);
+}
+
 /* the pages of the team code, radio, ATC and nearest airspace tiles */
 static void
 TestTilePages(xcs_core *core)
@@ -1583,7 +1605,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5);
 
   Recorder recorder;
   TestCreateArguments(recorder);
@@ -1620,6 +1642,7 @@ main()
   TestRasp(core);
   TestNotam(core);
   TestTiles(core);
+  TestFlightFile(core);
   TestTilePages(core);
   TestStatusPages(core);
   TestReplayControls(core);

@@ -39,6 +39,8 @@
 #include "CoreReceive.hpp"
 #include "CoreTask.hpp"
 #include "CoreAnalysis.hpp"
+#include "CoreFlightFile.hpp"
+#include "Computer/Settings.hpp"
 #include "CoreStatus.hpp"
 #include "Engine/Task/TaskBehaviour.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
@@ -1255,6 +1257,40 @@ xcs_get_analysis(xcs_core *core, char *buffer, size_t size,
   return RunOnMain(*core, [buffer, size, length_r]{
     return CopyJson(CoreAnalysis::Describe(), buffer, size, length_r);
   });
+}
+
+xcs_status
+xcs_analyse_flight_file(xcs_core *core, const char *igc_path, char *buffer,
+                        size_t size, size_t *length_r)
+{
+  if (core == nullptr || igc_path == nullptr || buffer == nullptr ||
+      length_r == nullptr)
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+  if (!core->started || core->IsMainThread())
+    return XCS_ERROR_STATE;
+
+  /* the pilot's contest and time zone from the main thread; the
+     analysis on the caller's, as it touches nothing of the core */
+  ContestSettings contest;
+  RoughTimeDelta utc_offset;
+  const auto status = RunOnMain(*core, [&]{
+    const auto &settings = CommonInterface::GetComputerSettings();
+    contest = settings.contest;
+    utc_offset = settings.utc_offset;
+    return XCS_OK;
+  });
+  if (status != XCS_OK)
+    return status;
+
+  try {
+    return CopyJson(CoreFlightFile::Analyse(Path{igc_path}, contest,
+                                            utc_offset),
+                    buffer, size, length_r);
+  } catch (...) {
+    LogError(std::current_exception(), "Flight file");
+    return XCS_ERROR_FAILED;
+  }
 }
 
 xcs_status

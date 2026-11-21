@@ -876,6 +876,19 @@ xcs_get_analysis(xcs_core *core, char *buffer, size_t size,
                  size_t *length_r);
 
 /**
+ * A recorded flight's analysis, from its IGC file: the part of
+ * xcs_get_analysis()'s format a flight's summary uses, plus its date
+ * (core/host/CoreFlightFile.hpp), for the contest chosen in the
+ * settings.  Reads the file on the calling thread, not the core's main
+ * thread (seconds for a long flight), which it must not be.
+ * XCS_ERROR_FAILED if the file cannot be read.  Never retry it for a
+ * small buffer (the file would be read again): at most about 50 KiB.
+ */
+XCS_EXPORT xcs_status
+xcs_analyse_flight_file(xcs_core *core, const char *igc_path, char *buffer,
+                        size_t size, size_t *length_r);
+
+/**
  * XCSoar's status dialog (flight, system, task, rules and times
  * pages) as JSON: translated labels and values formatted in the
  * pilot's units, as core/host/CoreStatus.hpp describes.  Buffer rules

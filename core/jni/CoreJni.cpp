@@ -1272,6 +1272,23 @@ Java_org_xcsoar_mobile_NativeCore_nativeWeGlideUpload(JNIEnv *env, jclass,
   });
 }
 
+JNIEXPORT jstring JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeAnalyseFlightFile(JNIEnv *env, jclass,
+                                                          jlong core,
+                                                          jstring igc_path)
+{
+  const auto p = Java::String::GetUTFChars(env, igc_path);
+  /* once, in room for its 500 points of altitude and trace: a second
+     call would read the whole file again */
+  std::string buffer(128 * 1024, '\0');
+  size_t length = 0;
+  if (xcs_analyse_flight_file(ToCore(core), p.c_str(), buffer.data(),
+                              buffer.size(), &length) != XCS_OK ||
+      length >= buffer.size())
+    return nullptr;
+  return env->NewStringUTF(buffer.c_str());
+}
+
 JNIEXPORT jint JNICALL
 Java_org_xcsoar_mobile_NativeCore_nativeTaskEdit(JNIEnv *, jclass,
                                                  jlong core, jint op,

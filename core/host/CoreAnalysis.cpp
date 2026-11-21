@@ -206,9 +206,9 @@ ContestResultJson(const char *label, const ContestStatistics &stats,
   };
 }
 
-/** The results FlightStatisticsRenderer::CaptionContest() shows. */
-static boost::json::array
-ContestResults(Contest contest, const ContestStatistics &stats) noexcept
+boost::json::array
+CoreAnalysis::ContestResults(Contest contest,
+                             const ContestStatistics &stats) noexcept
 {
   boost::json::array a;
   switch (contest) {
@@ -781,8 +781,8 @@ CoreAnalysis::Describe() noexcept
     o["contest"] = boost::json::object{
       {"name", ContestToString(settings.contest.contest) != nullptr
                ? ContestToString(settings.contest.contest) : ""},
-      {"results", ContestResults(settings.contest.contest,
-                                 calculated.contest_stats)},
+      {"results", CoreAnalysis::ContestResults(settings.contest.contest,
+                                               calculated.contest_stats)},
       {"trace", Trace(glide_computer.GetTraceComputer())},
     };
   }

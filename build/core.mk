@@ -132,10 +132,23 @@ else
 core-link-group =
 endif
 
+# A past flight's analysis (CoreFlightFile): AnalyseFlight's replay
+# and flight phases, from test/src; the rest of AnalyseFlight's
+# sources are the main program's, which the core has already.
+CORE_FLIGHT_FILE_SOURCES = \
+	$(TEST_SRC_DIR)/DebugReplay.cpp \
+	$(TEST_SRC_DIR)/DebugReplayIGC.cpp \
+	$(TEST_SRC_DIR)/DebugReplayNMEA.cpp \
+	$(TEST_SRC_DIR)/FlightPhaseDetector.cpp
+$(call SRC_TO_OBJ,$(CORE_SRC_DIR)/host/CoreFlightFile.cpp): \
+	CPPFLAGS += -I$(TEST_SRC_DIR)
+
 CORE_HOST_SOURCES = \
 	$(CORE_SRC_DIR)/host/CoreStartup.cpp \
 	$(CORE_SRC_DIR)/host/CoreTask.cpp \
 	$(CORE_SRC_DIR)/host/CoreAnalysis.cpp \
+	$(CORE_SRC_DIR)/host/CoreFlightFile.cpp \
+	$(CORE_FLIGHT_FILE_SOURCES) \
 	$(CORE_SRC_DIR)/host/CoreStatus.cpp \
 	$(CORE_SRC_DIR)/host/CoreTilePages.cpp \
 	$(CORE_SRC_DIR)/host/CorePlanes.cpp \

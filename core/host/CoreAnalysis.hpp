@@ -3,12 +3,15 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 struct MoreData;
 struct DerivedInfo;
 struct ComputerSettings;
-namespace boost::json { class object; }
+struct ContestStatistics;
+enum class Contest : uint8_t;
+namespace boost::json { class object; class array; }
 
 /**
  * The data behind XCSoar's analysis dialog (src/Dialogs/dlgAnalysis.cpp)
@@ -67,5 +70,13 @@ Describe() noexcept;
 boost::json::object
 ThermalBandChart(const MoreData &basic, const DerivedInfo &calculated,
                  const ComputerSettings &settings) noexcept;
+
+/**
+ * The contest results upstream's caption shows for @p contest
+ * (FlightStatisticsRenderer::CaptionContest()): "contest"/"results"
+ * above.  Also for a flight file (CoreFlightFile).
+ */
+boost::json::array
+ContestResults(Contest contest, const ContestStatistics &stats) noexcept;
 
 } // namespace CoreAnalysis
