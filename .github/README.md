@@ -20,8 +20,8 @@ under a new Kotlin interface.
 
 - XCSoar's moving map: terrain, airspace, waypoints, the task, the
   trail and thermals
-- Six tiles, one set for cruise and one for circling, with any of
-  XCSoar's InfoBoxes (graphical ones too)
+- Two to four rows of three tiles, one set for cruise and one for
+  circling, with any of XCSoar's InfoBoxes (graphical ones too)
 - Vario and final glide bars on the map's edges; vario and speed to fly
   sound
 - Tasks: edit, load `.tsk` and SeeYou `.cup` files or WeGlide tasks;
@@ -42,9 +42,18 @@ features are in Buteo: [Moving from XCSoar](../mobile/docs/MIGRATING.md).
 
 ## Install
 
-On an Android 8 or newer phone (64-bit ARM), download the APK of the
-[latest release](https://github.com/CorentinGrard/buteo/releases/latest)
-and open it. Not on Google Play yet.
+On an Android 8 or newer phone (64-bit ARM):
+
+- **With [Obtainium](https://github.com/ImranR98/Obtainium)**, which
+  installs Buteo's releases from here and keeps it up to date:
+  [add Buteo to Obtainium](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22app.corentin.buteo%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FCorentinGrard%2Fbuteo%22%2C%22author%22%3A%22CorentinGrard%22%2C%22name%22%3A%22Buteo%22%7D)
+  (open the link on the phone), or in Obtainium tap Add App and enter
+  `https://github.com/CorentinGrard/buteo`.
+- **By hand**: download the APK of the
+  [latest release](https://github.com/CorentinGrard/buteo/releases/latest)
+  and open it.
+
+Not on Google Play yet.
 
 ## How it is made
 
