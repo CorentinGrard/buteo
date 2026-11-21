@@ -198,16 +198,6 @@ class FlightScreenScreenshotTest {
         }
     }
 
-    /** Airspace warnings turned off: a reminder on the map. */
-    @Test
-    @Config(qualifiers = "w390dp-h844dp-xxhdpi")
-    fun airspaceAlertsOff() = capture("airspace_alerts_off_chip") {
-        XcsTheme(dark = false) {
-            FlightContent(FakeXcsoarCore.syntheticState(120), null, circling = false, {},
-                          airspaceAlertsOff = true)
-        }
-    }
-
     /** No plane set up: no polar, so no final glide or speed to fly. */
     @Test
     @Config(qualifiers = "w390dp-h844dp-xxhdpi")

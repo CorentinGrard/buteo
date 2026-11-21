@@ -372,8 +372,9 @@ Run: `./output/MACOS_CORE/bin/CoreSmoke DATA_DIR [FLIGHT.igc]`
       second and on airspace events.  Tested live (inside CTR Montpellier).
       A tone (alarm stream) and vibration once per new warning and again
       when it gets worse (ahead → inside).  Menu → Airspace alerts (also in
-      Settings): warnings on/off (XCSoar's AirspaceWarn; "Airspace alerts
-      off" reminder on the map), sound, vibration, and a banner that hides
+      Settings): warnings on/off (XCSoar's AirspaceWarn; the "Airspace alerts
+      off" reminder on the map went on 2026-11-21: the pilot's own
+      choice, not news), sound, vibration, and a banner that hides
       after 10 s with a countdown bar and comes back when it gets worse
       (`xcs_airspace_set_option` / `_get_option`)
 - [x] Vario / speed-to-fly audio: XCSoar's synthesiser through its own

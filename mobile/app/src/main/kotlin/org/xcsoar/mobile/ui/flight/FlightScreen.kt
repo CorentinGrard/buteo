@@ -154,7 +154,6 @@ fun FlightScreen(
         onSetMacCready = viewModel::setMacCready,
         warnings = warnings,
         airspaceHideTimer = hideTimer,
-        airspaceAlertsOff = !airspaceAlerts.warnings,
         onAcknowledge = viewModel::acknowledgeAirspace,
         onNextWaypoint = onOpenWaypoints,
         onWind = onOpenWind,
@@ -277,8 +276,6 @@ fun FlightContent(
     warnings: List<AirspaceWarningInfo> = emptyList(),
     /** the first warning hides itself then; null: it stays */
     airspaceHideTimer: HideTimer? = null,
-    /** the pilot turned airspace warnings off: a reminder on the map */
-    airspaceAlertsOff: Boolean = false,
     onAcknowledge: (AirspaceWarningInfo, day: Boolean) -> Unit = { _, _ -> },
     onNextWaypoint: () -> Unit = {},
     onWind: () -> Unit = {},
@@ -319,7 +316,7 @@ fun FlightContent(
         val mapArea = @Composable { showNext: Boolean, modifier: Modifier,
                                     insets: WindowInsets ->
             MapArea(state, lastEvent, circling, map, warnings, airspaceHideTimer,
-                    airspaceAlertsOff, onAcknowledge, onNextWaypoint, onWind, onNoPolar,
+                    onAcknowledge, onNextWaypoint, onWind, onNoPolar,
                     onSetMacCready, showNext,
                     vario, replay, modifier, insets, onMenu = { onMenuOpen(true) },
                     stepper = macCreadyStepper)
@@ -393,7 +390,6 @@ private fun MapArea(
     map: MapSlot?,
     warnings: List<AirspaceWarningInfo>,
     hideTimer: HideTimer?,
-    alertsOff: Boolean,
     onAcknowledge: (AirspaceWarningInfo, day: Boolean) -> Unit,
     onNextWaypoint: () -> Unit,
     onWind: () -> Unit,
@@ -501,7 +497,6 @@ private fun MapArea(
                         if (state.noPolar)
                             StatusChip("NO POLAR", colors.caution, onClick = onNoPolar,
                                        onClickLabel = "Set up a plane")
-                        if (alertsOff) StatusChip("AIRSPACE ALERTS OFF", colors.caution)
                         if (state.replay && replay == null)
                             StatusChip("REPLAY", colors.neutralSafe)
                         if (!state.flying) StatusChip("On ground", colors.text)

@@ -175,7 +175,7 @@ fun AirspaceAlertsContent(
             }
         }
         if (alerts != null && !warnings)
-            Text("Without warnings, the map shows \"Airspace alerts off\" as a reminder.",
+            Text("Off: nothing warns of airspace ahead or inside in flight.",
                  color = colors.caution, fontSize = 15.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
 
