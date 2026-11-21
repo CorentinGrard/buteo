@@ -84,20 +84,17 @@ fun FlightScreen(
     onOpenCrew: () -> Unit = {},
     onOpenAirspaceAlerts: () -> Unit = {},
     onOpenWeather: () -> Unit = {},
-    onOpenNotams: () -> Unit = {},
-    onOpenPilot: () -> Unit = {},
+    /** units, when the core draws no map (else they are on the map's page) */
     onOpenUnits: () -> Unit = {},
     /** null when the core draws no map */
     onOpenMapSettings: (() -> Unit)? = null,
     onOpenSafety: () -> Unit = {},
+    /** the wind chip */
     onOpenWind: () -> Unit = {},
     onOpenStatus: () -> Unit = {},
-    onOpenVarioSound: () -> Unit = {},
+    onOpenSound: () -> Unit = {},
     onOpenTracking: () -> Unit = {},
-    onOpenReplay: () -> Unit = {},
     onOpenProfiles: () -> Unit = {},
-    onOpenVoice: () -> Unit = {},
-    callouts: CalloutSettings = CalloutSettings(),
     theme: ThemeChoice = ThemeChoice.SYSTEM,
     onTheme: (ThemeChoice) -> Unit = {},
     /** rows of three tiles ([TILE_ROWS]) */
@@ -168,24 +165,14 @@ fun FlightScreen(
             onOpenWaypoints, onOpenTask, onOpenFlightSetup, onOpenAnalysis, onOpenCrew,
             onOpenFlights, onOpenDataFiles, onOpenAirspaceAlerts,
             onOpenWeather = onOpenWeather,
-            onOpenNotams = onOpenNotams,
-            onOpenPilot = onOpenPilot,
             onOpenUnits = onOpenUnits,
             onOpenMapSettings = onOpenMapSettings,
             onOpenSafety = onOpenSafety,
-            onOpenWind = onOpenWind,
             onOpenStatus = onOpenStatus,
-            onOpenVarioSound = onOpenVarioSound,
+            onOpenSound = onOpenSound,
             onOpenTracking = onOpenTracking,
             onOpenProfiles = onOpenProfiles,
-            onOpenVoice = onOpenVoice,
-            callouts = callouts,
             airspaceAlerts = airspaceAlerts,
-            replay = state?.replay == true,
-            // on the ground only: not something to press in flight
-            canReplay = state?.flying == false,
-            onReplay = onOpenReplay,
-            onStopReplay = viewModel::stopReplay,
             tileLayout = tileLayout,
             onTileLayout = viewModel::selectFlightMode,
             tileRows = tileRows,
@@ -836,7 +823,10 @@ private fun MenuPreview() {
 /**
  * The flight menu: in-flight actions, the flight screen's quick
  * settings, then what is done before and after the flight and the
- * settings.  Each page is listed once.
+ * settings.  Each page is listed once; related pages open from one
+ * another (D25): the pilot from Aircraft & crew, the replay from
+ * Flights, NOTAMs from Airspace, units from the map, the wind from
+ * Flight setup.
  */
 fun flightMenu(
     onOpenWaypoints: () -> Unit = {},
@@ -848,24 +838,16 @@ fun flightMenu(
     onOpenDataFiles: () -> Unit = {},
     onOpenAirspaceAlerts: () -> Unit = {},
     onOpenWeather: () -> Unit = {},
-    onOpenNotams: () -> Unit = {},
-    onOpenPilot: () -> Unit = {},
+    /** without a map: the units have no map page to be on */
     onOpenUnits: () -> Unit = {},
     /** null when the core draws no map */
     onOpenMapSettings: (() -> Unit)? = {},
     onOpenSafety: () -> Unit = {},
-    onOpenWind: () -> Unit = {},
     onOpenStatus: () -> Unit = {},
-    onOpenVarioSound: () -> Unit = {},
+    onOpenSound: () -> Unit = {},
     onOpenTracking: () -> Unit = {},
     onOpenProfiles: () -> Unit = {},
-    onOpenVoice: () -> Unit = {},
-    callouts: CalloutSettings = CalloutSettings(),
     airspaceAlerts: AirspaceAlerts = AirspaceAlerts(),
-    replay: Boolean = false,
-    canReplay: Boolean = false,
-    onReplay: () -> Unit = {},
-    onStopReplay: () -> Unit = {},
     tileLayout: Boolean? = null,
     onTileLayout: (circling: Boolean?) -> Unit = {},
     tileRows: Int = TILE_ROWS.first,
@@ -880,36 +862,26 @@ fun flightMenu(
     inFlight = listOf(
         MenuAction("Go to waypoint", "Nearest landable first", onClick = onOpenWaypoints),
         MenuAction("Task", "Edit, next, previous", onClick = onOpenTask),
-        MenuAction("Flight setup", "MacCready, ballast, bugs, QNH", onClick = onOpenFlightSetup),
+        MenuAction("Flight setup", "MacCready, ballast, bugs, QNH, wind",
+                   onClick = onOpenFlightSetup),
         MenuAction("Analysis", "Barograph, thermals, polar, wind", onClick = onOpenAnalysis),
     ),
     sections = listOf(
         MenuSection("Before and after the flight", listOf(
-            MenuAction("Aircraft & crew", "Plane, polar, masses, co-pilot",
+            MenuAction("Aircraft & crew", "Plane, co-pilot, pilot, WeGlide",
                        onClick = onOpenCrew),
             MenuAction("Weather", "METAR, TAF, RASP", onClick = onOpenWeather),
-            MenuAction("NOTAMs", "Download, filters, list", onClick = onOpenNotams),
-            MenuAction("Flights", "Share, upload to WeGlide", onClick = onOpenFlights),
+            MenuAction("Flights", "Share, upload to WeGlide, replay", onClick = onOpenFlights),
             MenuAction("Status", "Flight times, GPS, task rules, share position",
                        onClick = onOpenStatus),
-            if (replay)
-                MenuAction("Stop replay", "Back to the GPS", closesMenu = true,
-                           onClick = onStopReplay)
-            else
-                MenuAction("Replay", "A recorded flight, on the ground only",
-                           enabled = canReplay, onClick = onReplay),
         )),
-        MenuSection("Settings", listOfNotNull(
+        MenuSection("Settings", listOf(
             MenuAction("Airspace", describe(airspaceAlerts), onClick = onOpenAirspaceAlerts),
             MenuAction("Safety heights", "Arrival, terrain, safety MC", onClick = onOpenSafety),
-            MenuAction("Wind", "Set by hand, estimates", onClick = onOpenWind),
-            MenuAction("Vario sound", "Volume, mode, dead band", onClick = onOpenVarioSound),
-            MenuAction("Voice callouts", describe(callouts), onClick = onOpenVoice),
+            MenuAction("Sound", "Vario tone, voice callouts", onClick = onOpenSound),
             onOpenMapSettings?.let {
-                MenuAction("Map", "Terrain, topography, trail", onClick = it)
-            },
-            MenuAction("Units", "Altitude, speed, lift…", onClick = onOpenUnits),
-            MenuAction("Pilot & WeGlide", "Name, WeGlide ID", onClick = onOpenPilot),
+                MenuAction("Map & units", "Terrain, topography, trail, units", onClick = it)
+            } ?: MenuAction("Units", "Altitude, speed, lift…", onClick = onOpenUnits),
             MenuAction("Live tracking", "Cloud, SkyLines, LiveTrack24",
                        onClick = onOpenTracking),
             MenuAction("Data files", "Map, airspace, waypoints", onClick = onOpenDataFiles),
@@ -928,22 +900,7 @@ fun flightMenu(
     onTheme = onTheme,
 )
 
-/** "Airspace, final glide, task, climbs", "Off": the callouts at a glance. */
-private fun describe(callouts: CalloutSettings): String =
-    listOfNotNull("Airspace".takeIf { callouts.airspace },
-                  "final glide".takeIf { callouts.finalGlide },
-                  "task".takeIf { callouts.taskPoints },
-                  "climbs".takeIf { callouts.climbs })
-        .joinToString(", ")
-        .replaceFirstChar { it.uppercase() }
-        .ifEmpty { "Off" }
-
-/** "On · sound · vibration", "Off": the airspace alerts at a glance. */
+/** "Warnings on, classes, NOTAMs": what the Airspace page holds, and
+    whether XCSoar warns (warnings off is shown nowhere else). */
 private fun describe(alerts: AirspaceAlerts): String =
-    if (!alerts.warnings) "Off"
-    else listOfNotNull("On",
-                       "sound".takeIf { alerts.sound },
-                       "vibration".takeIf { alerts.vibration },
-                       "hide after ${alerts.autoHideSeconds} s"
-                           .takeIf { alerts.autoHideSeconds > 0 })
-        .joinToString(" · ")
+    "Warnings ${if (alerts.warnings) "on" else "off"}, classes, NOTAMs"

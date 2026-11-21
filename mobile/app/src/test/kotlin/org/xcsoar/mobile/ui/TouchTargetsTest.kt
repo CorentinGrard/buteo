@@ -26,6 +26,7 @@ import org.xcsoar.mobile.core.PlaneDetails
 import org.xcsoar.mobile.core.PlaneInfo
 import org.xcsoar.mobile.core.RadioChannel
 import org.xcsoar.mobile.core.RadioInfo
+import org.xcsoar.mobile.core.SoundOption
 import org.xcsoar.mobile.core.StatusPage
 import org.xcsoar.mobile.core.StatusPages
 import org.xcsoar.mobile.core.StatusRow
@@ -45,6 +46,7 @@ import org.xcsoar.mobile.ui.crew.CrewState
 import org.xcsoar.mobile.ui.crew.PlaneEditContent
 import org.xcsoar.mobile.ui.crew.PlaneEditState
 import org.xcsoar.mobile.ui.analysis.AnalysisPage
+import org.xcsoar.mobile.ui.flight.CalloutSettings
 import org.xcsoar.mobile.ui.flight.FlightContent
 import org.xcsoar.mobile.ui.flight.ReplayControls
 import org.xcsoar.mobile.ui.flight.ReplaySpeed
@@ -52,6 +54,7 @@ import org.xcsoar.mobile.ui.flight.flightMenu
 import org.xcsoar.mobile.ui.flights.FlightsContent
 import org.xcsoar.mobile.ui.flights.ReplayContent
 import org.xcsoar.mobile.ui.map.MapSettingsContent
+import org.xcsoar.mobile.ui.settings.SoundContent
 import org.xcsoar.mobile.ui.settings.WindContent
 import org.xcsoar.mobile.ui.setup.FlightSetup
 import org.xcsoar.mobile.ui.setup.FlightSetupContent
@@ -124,7 +127,7 @@ class TouchTargetsTest {
     @Test
     fun flightMenu() = check {
         FlightContent(FakeXcsoarCore.syntheticState(120), null, circling = false, {},
-                      menu = flightMenu(canReplay = true, orientation = MapOrientation.TRACK_UP,
+                      menu = flightMenu(orientation = MapOrientation.TRACK_UP,
                                         varioSound = true),
                       menuOpen = true)
     }
@@ -149,7 +152,7 @@ class TouchTargetsTest {
     fun crew() = check {
         CrewContent(CrewState(planes, lastFlown = planes[0].path, selected = planes[1].path,
                               copilots = listOf("John Roe"), copilot = "John Roe"),
-                    {}, {}, {}, {}, {}, {}, {})
+                    {}, {}, {}, {}, {}, {}, {}, {})
     }
 
     @Test
@@ -166,11 +169,13 @@ class TouchTargetsTest {
     @Test
     fun mapSettings() = check {
         MapSettingsContent(mapOf(MapOption.TERRAIN to 1, MapOption.TOPOGRAPHY to 0),
-                           { _, _ -> }, {})
+                           { _, _ -> }, {}, onOpenUnits = {})
     }
 
     @Test
-    fun flights() = check { FlightsContent(emptyList(), {}, {}) }
+    fun flights() = check {
+        FlightsContent(emptyList(), {}, {}, canReplay = true, onReplay = {})
+    }
 
     @Test
     fun radio() = check {
@@ -198,7 +203,16 @@ class TouchTargetsTest {
     fun flightSetup() = check {
         FlightSetupContent(FlightSetup(ballast = 80.0, maxBallast = 150.0, bugs = 0.9,
                                        wingLoading = 38.2, crewMass = 90.0, qnh = 1021.0),
-                           {}, {}, {}, {}, {}, {})
+                           {}, {}, {}, {}, {}, {}, onOpenWind = {})
+    }
+
+    @Test
+    fun sound() = check {
+        SoundContent(mapOf(SoundOption.VARIO to 1, SoundOption.VARIO_VOLUME to 80,
+                           SoundOption.VARIO_SWITCHING to 0, SoundOption.VARIO_DEAD_BAND to 1,
+                           SoundOption.VARIO_DEAD_BAND_MIN to -50,
+                           SoundOption.VARIO_DEAD_BAND_MAX to 50),
+                     { _, _ -> }, CalloutSettings(), voiceAvailable = true, {}, {}, {})
     }
 
     @Test

@@ -41,6 +41,7 @@ import org.xcsoar.mobile.core.AutoMacCreadyMode
 import org.xcsoar.mobile.core.FlightState
 import org.xcsoar.mobile.core.UnitGroup
 import org.xcsoar.mobile.ui.Format
+import org.xcsoar.mobile.ui.LinkRow
 import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.SwitchRow
 import org.xcsoar.mobile.ui.flight.Caption
@@ -53,18 +54,19 @@ import org.xcsoar.mobile.ui.setup.FlightSetupViewModel.Companion.MAX_CREW_MASS
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
 @Composable
-fun FlightSetupScreen(viewModel: FlightSetupViewModel, onBack: () -> Unit) {
+fun FlightSetupScreen(viewModel: FlightSetupViewModel, onOpenWind: () -> Unit,
+                      onBack: () -> Unit) {
     val setup by viewModel.setup.collectAsStateWithLifecycle()
     BackHandler(onBack = onBack)
     FlightSetupContent(setup, viewModel::changeBallast, viewModel::setBallast,
                        viewModel::changeBugs, viewModel::changeCrewMass, viewModel::changeQnh,
                        onBack, viewModel::changeMacCready, viewModel::setAutoMacCready,
-                       viewModel::setAutoMode)
+                       viewModel::setAutoMode, onOpenWind)
 }
 
 /**
  * MacCready (by hand or XCSoar's automatic one), crew mass, water
- * ballast, bugs, the resulting wing loading, and QNH.
+ * ballast, bugs, the resulting wing loading, QNH, and the wind.
  */
 @Composable
 fun FlightSetupContent(
@@ -78,6 +80,8 @@ fun FlightSetupContent(
     onChangeMacCready: (Int) -> Unit = {},
     onAutoMacCready: (Boolean) -> Unit = {},
     onAutoMode: (AutoMacCreadyMode) -> Unit = {},
+    /** null hides the Wind row */
+    onOpenWind: (() -> Unit)? = null,
 ) {
     val colors = XcsTheme.colors
     Column(
@@ -186,6 +190,11 @@ fun FlightSetupContent(
             }
             setup.baroAltitude?.let { ValueRow("Barometric altitude", Format.altitude(it)) }
         }
+
+        if (onOpenWind != null)
+            SettingsGroup(Modifier.padding(top = 8.dp)) {
+                LinkRow("Wind", "Set by hand, estimates", onClick = onOpenWind)
+            }
     }
 }
 

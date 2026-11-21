@@ -408,3 +408,12 @@ the settings were too many.
   final arrival when circling, then flight time, local time and
   battery in both, which the full-screen flight screen no longer shows
   in the status bar.
+- A shorter menu: 11 rows instead of 17 under the in-flight buttons.
+  Pages that belong together open from one another, as the plane
+  editor from Aircraft & crew: the pilot and WeGlide from Aircraft &
+  crew, the replay from Flights (its "Stop replay" row goes: the
+  replay bar has Stop), NOTAMs from Airspace, units from the map's page
+  ("Map & units"), the wind from Flight setup (the wind chip and wind
+  tiles still open it directly).  The vario sound and the voice
+  callouts are one Sound page.  The Airspace row says whether warnings
+  are on.

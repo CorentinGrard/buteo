@@ -29,7 +29,7 @@ class FlightsScreenshotTest {
                           1790959200000L, 412_300),
                 FlightLog("/x/2026-09-27-XCS-AAA-01.igc", "2026-09-27-XCS-AAA-01.igc",
                           1790521500000L, 98_000),
-            ), {}, {}, utc)
+            ), {}, {}, utc, canReplay = true, onReplay = {})
         }
     }
 

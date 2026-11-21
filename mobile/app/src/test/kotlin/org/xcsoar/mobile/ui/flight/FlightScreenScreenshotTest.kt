@@ -243,8 +243,7 @@ class FlightScreenScreenshotTest {
     fun menu() = capture("flight_menu") {
         XcsTheme(dark = false) {
             FlightContent(FakeXcsoarCore.syntheticState(120), null, circling = false, {},
-                          menu = flightMenu(canReplay = true,
-                                            orientation = MapOrientation.TRACK_UP,
+                          menu = flightMenu(orientation = MapOrientation.TRACK_UP,
                                             varioSound = true),
                           menuOpen = true)
         }

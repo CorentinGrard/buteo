@@ -164,7 +164,7 @@ private fun UnitsStep(state: WelcomeState, onPreset: (Int) -> Unit) {
             Choice(preset.name, presetSample(units, i), state.preset == i) { onPreset(i) }
         }
     }
-    Hint("Each unit can be changed later: Menu → Units.")
+    Hint("Each unit can be changed later: Menu → Map & units → Units.")
 }
 
 /** "km · m · km/h · m/s": distance, altitude, speed and lift of a preset. */

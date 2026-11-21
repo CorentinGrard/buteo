@@ -94,13 +94,12 @@ import org.xcsoar.mobile.ui.settings.WindScreen
 import org.xcsoar.mobile.ui.status.StatusScreen
 import org.xcsoar.mobile.ui.status.StatusViewModel
 import org.xcsoar.mobile.ui.settings.WindViewModel
-import org.xcsoar.mobile.ui.settings.VarioSoundScreen
+import org.xcsoar.mobile.ui.settings.SoundScreen
 import org.xcsoar.mobile.ui.settings.NotamScreen
 import org.xcsoar.mobile.ui.settings.NotamViewModel
 import org.xcsoar.mobile.ui.settings.TrackingScreen
 import org.xcsoar.mobile.ui.settings.TrackingViewModel
 import org.xcsoar.mobile.ui.settings.VarioSoundViewModel
-import org.xcsoar.mobile.ui.settings.VoiceScreen
 import org.xcsoar.mobile.ui.flight.Callouts
 import org.xcsoar.mobile.core.Thermal
 import org.xcsoar.mobile.ui.weather.WeatherScreen
@@ -128,16 +127,18 @@ import java.io.File
 private enum class Screen { FLIGHT, DATA_FILES, DOWNLOAD, MAP_SETTINGS, WAYPOINTS, FLIGHT_SETUP, FLIGHTS,
                             TASK, TASK_FILES, TASK_ADD_POINT, UNITS, ANALYSIS,
                             CREW, PLANE_EDIT, PILOT, TILE_PICKER,
-                            AIRSPACE_ALERTS, SAFETY, WIND, STATUS, VARIO_SOUND, TRACKING, WEATHER,
+                            AIRSPACE_ALERTS, SAFETY, WIND, STATUS, SOUND, TRACKING, WEATHER,
                             NOTAMS, REPLAY, PROFILES, TEAM_CODE, TEAM_REFERENCE, RADIO,
-                            ATC, ATC_REFERENCE, AIRSPACE_DETAILS, WELCOME, VOICE, SUMMARY }
+                            ATC, ATC_REFERENCE, AIRSPACE_DETAILS, WELCOME, SUMMARY }
 
 /** How deep a page is: pages further in slide in from the right. */
 private val Screen.depth: Int
     get() = when (this) {
         Screen.FLIGHT -> 0
         Screen.DOWNLOAD, Screen.PLANE_EDIT, Screen.TASK_FILES, Screen.TASK_ADD_POINT,
-        Screen.TEAM_REFERENCE, Screen.ATC_REFERENCE -> 2
+        Screen.TEAM_REFERENCE, Screen.ATC_REFERENCE,
+        // open from the page that holds them (D25)
+        Screen.PILOT, Screen.REPLAY, Screen.NOTAMS, Screen.UNITS, Screen.WIND -> 2
         else -> 1
     }
 
@@ -420,6 +421,10 @@ class MainActivity : ComponentActivity() {
                 var crewFromMenu by rememberSaveable { mutableStateOf(false) }
                 /* downloads open from data files and from the weather */
                 var downloadBack by rememberSaveable { mutableStateOf(Screen.DATA_FILES) }
+                /* the wind opens from flight setup, the wind chip and its tiles */
+                var windBack by rememberSaveable { mutableStateOf(Screen.FLIGHT) }
+                /* the units open from the map's page, or the menu without a map */
+                var unitsBack by rememberSaveable { mutableStateOf(Screen.MAP_SETTINGS) }
                 /* the flight menu; it stays open under the pages it opens,
                    so their Back comes back to it */
                 var menuOpen by rememberSaveable { mutableStateOf(false) }
@@ -467,21 +472,22 @@ class MainActivity : ComponentActivity() {
                         },
                         onOpenWeather = { screen = Screen.WEATHER },
                         onOpenAirspaceAlerts = { screen = Screen.AIRSPACE_ALERTS },
-                        onOpenNotams = { screen = Screen.NOTAMS },
-                        onOpenPilot = { screen = Screen.PILOT },
-                        onOpenUnits = { screen = Screen.UNITS },
+                        onOpenUnits = {
+                            unitsBack = Screen.FLIGHT
+                            screen = Screen.UNITS
+                        },
                         onOpenMapSettings = if (flightViewModel.hasMap)
                                                 ({ screen = Screen.MAP_SETTINGS })
                                             else null,
                         onOpenSafety = { screen = Screen.SAFETY },
-                        onOpenWind = { screen = Screen.WIND },
+                        onOpenWind = {
+                            windBack = Screen.FLIGHT
+                            screen = Screen.WIND
+                        },
                         onOpenStatus = { screen = Screen.STATUS },
-                        onOpenVarioSound = { screen = Screen.VARIO_SOUND },
+                        onOpenSound = { screen = Screen.SOUND },
                         onOpenTracking = { screen = Screen.TRACKING },
-                        onOpenReplay = { screen = Screen.REPLAY },
                         onOpenProfiles = { screen = Screen.PROFILES },
-                        onOpenVoice = { screen = Screen.VOICE },
-                        callouts = callouts,
                         onTileAction = { action ->
                             when (action.action) {
                                 "analysis" -> {
@@ -497,7 +503,10 @@ class MainActivity : ComponentActivity() {
                                 // upstream's basic settings: ballast, bugs, QNH
                                 "flight_setup" -> screen = Screen.FLIGHT_SETUP
                                 // upstream's wind settings dialog
-                                "wind" -> screen = Screen.WIND
+                                "wind" -> {
+                                    windBack = Screen.FLIGHT
+                                    screen = Screen.WIND
+                                }
                                 // upstream's status dialog, on the page it asks for
                                 "status" -> {
                                     statusViewModel.show(action.page.ifEmpty { null })
@@ -569,6 +578,7 @@ class MainActivity : ComponentActivity() {
                                     planeEditBack = Screen.CREW
                                     screen = Screen.PLANE_EDIT
                                 },
+                                onEditPilot = { screen = Screen.PILOT },
                                 onDone = crewDone,
                                 onBack = if (crewFromMenu) crewDone else null,
                             )
@@ -599,19 +609,17 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onBack = { screen = Screen.FLIGHT })
                             Screen.NOTAMS -> NotamScreen(
-                                notamViewModel, onBack = { screen = Screen.FLIGHT })
+                                notamViewModel, onBack = { screen = Screen.AIRSPACE_ALERTS })
                             Screen.TRACKING -> TrackingScreen(
                                 trackingViewModel, onBack = { screen = Screen.FLIGHT })
-                            Screen.VARIO_SOUND -> VarioSoundScreen(
-                                varioSoundViewModel, onBack = { screen = Screen.FLIGHT })
-                            Screen.VOICE -> VoiceScreen(
-                                callouts,
-                                available = app.voice.available.collectAsState().value,
-                                onChange = {
+                            Screen.SOUND -> SoundScreen(
+                                varioSoundViewModel, callouts,
+                                voiceAvailable = app.voice.available.collectAsState().value,
+                                onCallouts = {
                                     callouts = it
                                     app.calloutSettings = it
                                 },
-                                onSample = {
+                                onSampleCallout = {
                                     Callouts.climb(Thermal(2.1, 450.0, 300.0))
                                         ?.let(app.voice::speak)
                                 },
@@ -640,11 +648,13 @@ class MainActivity : ComponentActivity() {
                             Screen.AIRSPACE_DETAILS -> AirspaceDetailsScreen(
                                 airspaceDetailsViewModel, onBack = { screen = Screen.FLIGHT })
                             Screen.WIND -> WindScreen(
-                                windViewModel, onBack = { screen = Screen.FLIGHT })
+                                windViewModel, onBack = { screen = windBack })
                             Screen.AIRSPACE_ALERTS -> AirspaceAlertsScreen(
-                                airspaceAlertsViewModel, onBack = { screen = Screen.FLIGHT })
+                                airspaceAlertsViewModel,
+                                onOpenNotams = { screen = Screen.NOTAMS },
+                                onBack = { screen = Screen.FLIGHT })
                             Screen.PILOT -> PilotScreen(
-                                pilotViewModel, onBack = { screen = Screen.FLIGHT })
+                                pilotViewModel, onBack = { screen = Screen.CREW })
                             Screen.DATA_FILES -> DataFilesScreen(
                                 dataViewModel,
                                 onChoose = { kind ->
@@ -670,11 +680,21 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onBack = { screen = Screen.FLIGHT })
                             Screen.MAP_SETTINGS -> MapSettingsScreen(
-                                mapViewModel, onBack = { screen = Screen.FLIGHT })
+                                mapViewModel,
+                                onOpenUnits = {
+                                    unitsBack = Screen.MAP_SETTINGS
+                                    screen = Screen.UNITS
+                                },
+                                onBack = { screen = Screen.FLIGHT })
                             Screen.FLIGHT_SETUP -> FlightSetupScreen(
-                                setupViewModel, onBack = { screen = Screen.FLIGHT })
+                                setupViewModel,
+                                onOpenWind = {
+                                    windBack = Screen.FLIGHT_SETUP
+                                    screen = Screen.WIND
+                                },
+                                onBack = { screen = Screen.FLIGHT })
                             Screen.UNITS -> UnitsScreen(
-                                unitsViewModel, onBack = { screen = Screen.FLIGHT })
+                                unitsViewModel, onBack = { screen = unitsBack })
                             Screen.ANALYSIS -> AnalysisScreen(
                                 analysisViewModel, onBack = { screen = Screen.FLIGHT })
                             Screen.TASK -> TaskScreen(
@@ -692,6 +712,10 @@ class MainActivity : ComponentActivity() {
                                 onOpenUrl = ::openUrl, onDone = { screen = Screen.FLIGHT })
                             Screen.FLIGHTS -> FlightsScreen(
                                 flightsViewModel, onShare = ::share, onOpenUrl = ::openUrl,
+                                // on the ground only: not something to press in flight
+                                canReplay = flightViewModel.flightState
+                                    .collectAsState().value?.flying == false,
+                                onReplay = { screen = Screen.REPLAY },
                                 onBack = { screen = Screen.FLIGHT })
                             Screen.REPLAY -> {
                                 val speed by flightViewModel.replaySpeed.collectAsState()
@@ -717,7 +741,7 @@ class MainActivity : ComponentActivity() {
                                     onReplay = { replay(it.path) },
                                     // IGC and NMEA files have no reliable type
                                     onOpenFile = { replayPicker.launch(arrayOf("*/*")) },
-                                    onBack = { screen = Screen.FLIGHT })
+                                    onBack = { screen = Screen.FLIGHTS })
                             }
                             Screen.PROFILES -> ProfilesScreen(
                                 profilesViewModel,

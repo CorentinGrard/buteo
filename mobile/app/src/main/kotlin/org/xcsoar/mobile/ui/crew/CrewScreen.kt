@@ -36,6 +36,8 @@ import org.xcsoar.mobile.core.PlaneInfo
 import org.xcsoar.mobile.ui.ActionButton
 import org.xcsoar.mobile.ui.PageLayout
 import org.xcsoar.mobile.ui.InputField
+import org.xcsoar.mobile.ui.LinkRow
+import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.ScreenHeader
 import org.xcsoar.mobile.ui.flight.Caption
 import org.xcsoar.mobile.ui.theme.XcsTheme
@@ -49,6 +51,7 @@ import org.xcsoar.mobile.ui.theme.XcsTheme
 fun CrewScreen(
     viewModel: CrewViewModel,
     onEditPlane: (PlaneInfo?) -> Unit,
+    onEditPilot: () -> Unit,
     onDone: () -> Unit,
     onBack: (() -> Unit)?,
 ) {
@@ -57,7 +60,7 @@ fun CrewScreen(
     if (onBack != null)
         BackHandler(onBack = onBack)
     CrewContent(state, viewModel::select, viewModel::selectCopilot, viewModel::addCopilot,
-                onEditPlane, onConfirm = { viewModel.confirm(onDone) },
+                onEditPlane, onEditPilot, onConfirm = { viewModel.confirm(onDone) },
                 onSkip = onDone, onBack = onBack)
 }
 
@@ -68,6 +71,7 @@ fun CrewContent(
     onSelectCopilot: (String) -> Unit,
     onAddCopilot: (String) -> Unit,
     onEditPlane: (PlaneInfo?) -> Unit,
+    onEditPilot: () -> Unit,
     onConfirm: () -> Unit,
     onSkip: () -> Unit,
     onBack: (() -> Unit)?,
@@ -108,6 +112,12 @@ fun CrewContent(
 
         if (plane != null && plane.doubleSeater)
             CopilotChoice(state, onSelectCopilot, onAddCopilot)
+
+        Caption("Pilot", Modifier.padding(start = 4.dp, top = 8.dp))
+        SettingsGroup {
+            LinkRow(state.pilot.ifEmpty { "Set your name" },
+                    "Name in the IGC file, WeGlide account", onClick = onEditPilot)
+        }
 
         state.error?.let { Text(it, color = colors.warning, fontSize = 16.sp) }
     }

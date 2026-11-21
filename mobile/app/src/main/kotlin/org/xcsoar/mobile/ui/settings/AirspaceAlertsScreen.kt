@@ -46,6 +46,7 @@ import org.xcsoar.mobile.core.AirspaceClassInfo
 import org.xcsoar.mobile.core.AirspaceOption
 import org.xcsoar.mobile.core.XcsoarCore
 import org.xcsoar.mobile.core.airspaceAlerts
+import org.xcsoar.mobile.ui.LinkRow
 import org.xcsoar.mobile.ui.PageLayout
 import org.xcsoar.mobile.ui.ScreenHeader
 import org.xcsoar.mobile.ui.SettingsGroup
@@ -115,12 +116,14 @@ class AirspaceAlertsViewModel(private val core: XcsoarCore) : ViewModel() {
 }
 
 @Composable
-fun AirspaceAlertsScreen(viewModel: AirspaceAlertsViewModel, onBack: () -> Unit) {
+fun AirspaceAlertsScreen(viewModel: AirspaceAlertsViewModel, onOpenNotams: () -> Unit,
+                         onBack: () -> Unit) {
     val alerts by viewModel.alerts.collectAsStateWithLifecycle()
     val classes by viewModel.classes.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.refresh() }
     BackHandler(onBack = onBack)
-    AirspaceAlertsContent(alerts, viewModel::set, onBack, classes, viewModel::setClass)
+    AirspaceAlertsContent(alerts, viewModel::set, onBack, classes, viewModel::setClass,
+                          onOpenNotams)
 }
 
 /** XCSoar's range for the warning and acknowledgement times, s. */
@@ -153,7 +156,8 @@ private fun formatSeconds(seconds: Int): String =
 
 /**
  * Whether XCSoar warns of airspace and how early; how the warning
- * reaches the pilot; and which airspace classes it draws and warns of.
+ * reaches the pilot; the NOTAMs; and which airspace classes it draws
+ * and warns of.
  */
 @Composable
 fun AirspaceAlertsContent(
@@ -162,6 +166,8 @@ fun AirspaceAlertsContent(
     onBack: () -> Unit,
     classes: List<AirspaceClassInfo> = emptyList(),
     onSetClass: (code: Int, display: Boolean, warning: Boolean) -> Unit = { _, _, _ -> },
+    /** null hides the NOTAMs row */
+    onOpenNotams: (() -> Unit)? = null,
 ) {
     val colors = XcsTheme.colors
     val warnings = alerts?.warnings == true
@@ -206,6 +212,11 @@ fun AirspaceAlertsContent(
                       if (it) AirspaceAlerts.AUTO_HIDE_SECONDS else 0)
             }
         }
+
+        if (onOpenNotams != null)
+            SettingsGroup(Modifier.padding(top = 8.dp)) {
+                LinkRow("NOTAMs", "Download, filters, list", onClick = onOpenNotams)
+            }
 
         if (classes.isNotEmpty())
             ClassList(classes, warnings, onSetClass)

@@ -38,7 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.xcsoar.mobile.ui.ActionButton
+import org.xcsoar.mobile.ui.LinkRow
 import org.xcsoar.mobile.ui.ScreenHeader
+import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import java.text.DateFormat
 import java.util.Date
@@ -46,19 +48,22 @@ import java.util.TimeZone
 
 @Composable
 fun FlightsScreen(viewModel: FlightsViewModel, onShare: (FlightLog) -> Unit,
-                  onOpenUrl: (String) -> Unit, onBack: () -> Unit) {
+                  onOpenUrl: (String) -> Unit, canReplay: Boolean, onReplay: () -> Unit,
+                  onBack: () -> Unit) {
     val flights by viewModel.flights.collectAsStateWithLifecycle()
     val weGlideReady by viewModel.weGlideReady.collectAsStateWithLifecycle()
     val uploads by viewModel.uploads.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.refresh() }
     BackHandler(onBack = onBack)
     FlightsContent(flights, onShare, onBack, weGlideReady = weGlideReady, uploads = uploads,
-                   onUpload = viewModel::upload, onOpenUrl = onOpenUrl)
+                   onUpload = viewModel::upload, onOpenUrl = onOpenUrl,
+                   canReplay = canReplay, onReplay = onReplay)
 }
 
 /**
  * The IGC files of past flights, newest first, each with Share and,
- * once WeGlide is set up, Upload.
+ * once WeGlide is set up, Upload; and the replay of a flight, on the
+ * ground ([canReplay]).
  */
 @Composable
 fun FlightsContent(
@@ -70,6 +75,9 @@ fun FlightsContent(
     uploads: Map<String, Upload> = emptyMap(),
     onUpload: (FlightLog) -> Unit = {},
     onOpenUrl: (String) -> Unit = {},
+    canReplay: Boolean = false,
+    /** null hides the Replay row */
+    onReplay: (() -> Unit)? = null,
 ) {
     val colors = XcsTheme.colors
     Column(
@@ -83,9 +91,15 @@ fun FlightsContent(
     ) {
         ScreenHeader("Flights", onBack)
 
+        if (onReplay != null)
+            SettingsGroup {
+                LinkRow("Replay", "A flight, the demo or a file, on the ground only",
+                        enabled = canReplay, onClick = onReplay)
+            }
+
         if (!weGlideReady && !flights.isNullOrEmpty())
             Text("To upload flights to WeGlide, set your pilot ID in " +
-                     "Menu → Settings → Pilot & WeGlide.",
+                     "Menu → Aircraft & crew → Pilot.",
                  color = colors.textSecondary, fontSize = 15.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
 

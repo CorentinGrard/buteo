@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.xcsoar.mobile.core.MapOrientation
+import org.xcsoar.mobile.ui.Chevron
 import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.SwitchRow
 import org.xcsoar.mobile.ui.theme.ThemeChoice
@@ -304,12 +305,6 @@ private fun GroundAction(action: MenuAction, onClose: () -> Unit) {
             Text(action.detail, color = colors.textSecondary, fontSize = 13.sp, maxLines = 1,
                  overflow = TextOverflow.Ellipsis)
         }
-        Canvas(Modifier.size(width = 8.dp, height = 14.dp)) {
-            val stroke = 2.25.dp.toPx()
-            drawLine(colors.textSecondary, Offset(0f, 0f), Offset(size.width, size.height / 2),
-                     stroke, StrokeCap.Round)
-            drawLine(colors.textSecondary, Offset(size.width, size.height / 2),
-                     Offset(0f, size.height), stroke, StrokeCap.Round)
-        }
+        Chevron()
     }
 }

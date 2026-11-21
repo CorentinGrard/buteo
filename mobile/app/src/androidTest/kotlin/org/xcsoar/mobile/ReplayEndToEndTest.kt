@@ -57,7 +57,8 @@ class ReplayEndToEndTest {
         startFlightScreen()
 
         compose.onNodeWithContentDescription("Menu").performClick()
-        compose.onNodeWithText("Replay").performScrollTo().performClick()
+        compose.onNodeWithText("Flights").performScrollTo().performClick()
+        compose.onNodeWithText("Replay").performClick()
         compose.onNodeWithText("Demo flight").performClick()
         waitFor("the replay bar", STARTUP_MS) {
             exists(hasContentDescription("Skip 10 minutes"))

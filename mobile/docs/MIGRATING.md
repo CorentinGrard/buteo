@@ -37,15 +37,15 @@ computer over USB. The folders inside are XCSoar's (`maps`, `airspace`,
 | Go to (nearest landables) | Menu → Go to waypoint. |
 | Analysis | Menu → Analysis, all of XCSoar's pages. |
 | Status | Menu → Status. |
-| Wind settings | Menu → Wind, or tap the wind over the map. |
+| Wind settings | Menu → Flight setup → Wind, or tap the wind over the map. |
 | Map item list | Hold the map and lift: a card with what is under your finger. |
-| Airspace warnings and filters | The banner over the cards (Ack, Day); Menu → Airspace. |
+| Airspace warnings and filters | The banner over the cards (Ack, Day); Menu → Airspace, which also has the NOTAMs. |
 | Safety factors | Menu → Safety heights (Startup Task MC is "MacCready at start" there). |
 | Logger | Automatic: it starts at take-off and stops after landing. After the landing, a summary of the flight shares it and uploads it to WeGlide; Menu → Flights has all of them. |
-| Thermal assistant | While circling, on the glider over the map (Menu → Map → Thermal assistant), and as a tile. |
-| Circling zoom | Menu → Map → Zoom of its own. |
-| Sounds of events | Menu → Voice callouts: airspace, final glide, task points and climbs, spoken. |
-| Replay | Menu → Replay (on the ground). |
+| Thermal assistant | While circling, on the glider over the map (Menu → Map & units → Thermal assistant), and as a tile. |
+| Circling zoom | Menu → Map & units → Zoom of its own. |
+| Sounds of events | Menu → Sound → Voice callouts: airspace, final glide, task points and climbs, spoken. |
+| Replay | Menu → Flights → Replay (on the ground). |
 
 ## Not there yet
 

@@ -3,6 +3,7 @@
 
 package org.xcsoar.mobile.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.foundation.verticalScroll
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,7 +38,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -200,6 +204,42 @@ fun SwitchRow(title: String, detail: String, checked: Boolean?, enabled: Boolean
                    checkedTrackColor = colors.selected, checkedThumbColor = colors.onSelected,
                    uncheckedTrackColor = colors.control, uncheckedThumbColor = colors.textSecondary,
                    uncheckedBorderColor = colors.textSecondary))
+    }
+}
+
+/**
+ * A row that opens another page (in a [SettingsGroup]): its name, what
+ * it holds, and a chevron.  Disabled rows stay visible, dimmed.
+ */
+@Composable
+fun LinkRow(title: String, detail: String, enabled: Boolean = true, onClick: () -> Unit) {
+    val colors = XcsTheme.colors
+    Row(Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .alpha(if (enabled) 1f else 0.4f)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(title, color = colors.text, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            Text(detail, color = colors.textSecondary, fontSize = 14.sp)
+        }
+        Chevron()
+    }
+}
+
+/** "›": the row opens a page. */
+@Composable
+fun Chevron() {
+    val color = XcsTheme.colors.textSecondary
+    Canvas(Modifier.size(width = 8.dp, height = 14.dp)) {
+        val stroke = 2.25.dp.toPx()
+        drawLine(color, Offset(0f, 0f), Offset(size.width, size.height / 2), stroke,
+                 StrokeCap.Round)
+        drawLine(color, Offset(size.width, size.height / 2), Offset(0f, size.height), stroke,
+                 StrokeCap.Round)
     }
 }
 

@@ -12,7 +12,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * Which callouts the pilot hears (Menu → Voice callouts); the app's
+ * Which callouts the pilot hears (Menu → Sound); the app's
  * own choice, kept in its preferences.
  */
 data class CalloutSettings(

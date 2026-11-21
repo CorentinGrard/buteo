@@ -25,6 +25,8 @@ data class CrewState(
     val copilots: List<String> = emptyList(),
     /** The chosen co-pilot; empty: solo. */
     val copilot: String = "",
+    /** The pilot's name in the IGC file; empty if not set. */
+    val pilot: String = "",
     val error: String? = null,
 ) {
     val selectedPlane get() = planes?.firstOrNull { it.path == selected }
@@ -57,7 +59,8 @@ class CrewViewModel(private val core: XcsoarCore) : ViewModel() {
                        selected = keep ?: list?.suggested?.path,
                        copilots = if (s.planes == null) crew?.copilots.orEmpty()
                                   else (s.copilots + crew?.copilots.orEmpty()).distinct(),
-                       copilot = if (s.planes == null) crew?.copilot.orEmpty() else s.copilot)
+                       copilot = if (s.planes == null) crew?.copilot.orEmpty() else s.copilot,
+                       pilot = crew?.pilot ?: s.pilot)
             }
         }
     }

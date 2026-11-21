@@ -146,7 +146,8 @@ fun SummaryContent(
                      maxLines = 1, overflow = TextOverflow.Ellipsis,
                      modifier = Modifier.padding(horizontal = 4.dp))
                 if (!weGlideReady)
-                    Hint("To upload to WeGlide, set your pilot ID: Menu → Pilot & WeGlide.")
+                    Hint("To upload to WeGlide, set your pilot ID: Menu → Aircraft & crew → " +
+                         "Pilot.")
             }
         }
         when (upload) {

@@ -27,14 +27,15 @@ class CrewScreenshotTest {
     private fun crew(name: String, state: CrewState, onBack: (() -> Unit)?) =
         captureRoboImage("src/test/screenshots/crew_$name.png") {
             XcsTheme(dark = false) {
-                CrewContent(state, {}, {}, {}, {}, {}, {}, onBack)
+                CrewContent(state, {}, {}, {}, {}, {}, {}, {}, onBack)
             }
         }
 
     /* at app start: the last plane flown is chosen, no Back */
     @Test
     fun singleSeater() = crew("single", CrewState(
-        planes, lastFlown = planes[0].path, selected = planes[0].path), onBack = null)
+        planes, lastFlown = planes[0].path, selected = planes[0].path, pilot = "Jane Doe"),
+        onBack = null)
 
     @Test
     fun twoSeaterWithCopilot() = crew("two_seats", CrewState(

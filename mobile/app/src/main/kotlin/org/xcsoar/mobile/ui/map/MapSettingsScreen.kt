@@ -48,24 +48,31 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.xcsoar.mobile.core.MapOption
 import org.xcsoar.mobile.core.TerrainRamp
 import org.xcsoar.mobile.ui.flight.Caption
+import org.xcsoar.mobile.ui.LinkRow
 import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.SwitchRow
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
 @Composable
-fun MapSettingsScreen(viewModel: MapSettingsViewModel, onBack: () -> Unit) {
+fun MapSettingsScreen(viewModel: MapSettingsViewModel, onOpenUnits: () -> Unit,
+                      onBack: () -> Unit) {
     val options by viewModel.options.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.refresh() }
     BackHandler(onBack = onBack)
-    MapSettingsContent(options, viewModel::set, onBack)
+    MapSettingsContent(options, viewModel::set, onBack, onOpenUnits)
 }
 
-/** Terrain, its colours, topography and the trail; saved in the profile. */
+/**
+ * Terrain, its colours, topography and the trail, saved in the profile;
+ * and the units the map and the tiles show.
+ */
 @Composable
 fun MapSettingsContent(
     options: Map<MapOption, Int>,
     onSet: (MapOption, Int) -> Unit,
     onBack: () -> Unit,
+    /** null hides the Units row */
+    onOpenUnits: (() -> Unit)? = null,
 ) {
     val colors = XcsTheme.colors
     Column(
@@ -89,7 +96,8 @@ fun MapSettingsContent(
                 Text("Back", color = colors.text, fontSize = 16.sp,
                      fontWeight = FontWeight.SemiBold)
             }
-            Text("Map", color = colors.text, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text("Map & units", color = colors.text, fontSize = 24.sp,
+                 fontWeight = FontWeight.Bold)
         }
 
         SettingsGroup {
@@ -146,6 +154,11 @@ fun MapSettingsContent(
                 }
             }
         }
+
+        if (onOpenUnits != null)
+            SettingsGroup(Modifier.padding(top = 8.dp)) {
+                LinkRow("Units", "Altitude, speed, lift…", onClick = onOpenUnits)
+            }
     }
 }
 

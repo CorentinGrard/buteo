@@ -182,7 +182,7 @@ class FlightViewModel(
     val airspaceHideTimer: StateFlow<HideTimer?> = hideTimerFlow.asStateFlow()
 
     private val airspaceAlertsFlow = MutableStateFlow(AirspaceAlerts())
-    /** How warnings reach the pilot (Settings → Airspace alerts). */
+    /** How warnings reach the pilot (Menu → Airspace). */
     val airspaceAlerts: StateFlow<AirspaceAlerts> = airspaceAlertsFlow.asStateFlow()
 
     /** Read the airspace alert options again (after the pilot changed them). */
