@@ -872,8 +872,6 @@ fun flightMenu(
                        onClick = onOpenCrew),
             MenuAction("Weather", "METAR, TAF, RASP", onClick = onOpenWeather),
             MenuAction("Flights", "Share, upload to WeGlide, replay", onClick = onOpenFlights),
-            MenuAction("Status", "Flight times, GPS, task rules, share position",
-                       onClick = onOpenStatus),
         )),
         MenuSection("Settings", listOf(
             MenuAction("Airspace", describe(airspaceAlerts), onClick = onOpenAirspaceAlerts),
@@ -886,6 +884,9 @@ fun flightMenu(
                        onClick = onOpenTracking),
             MenuAction("Data files", "Map, airspace, waypoints", onClick = onOpenDataFiles),
             MenuAction("Profiles", "Switch, new, import", onClick = onOpenProfiles),
+            // what XCSoar sees, for when something looks wrong
+            MenuAction("Status", "Flight times, GPS, task rules, share position",
+                       onClick = onOpenStatus),
         )),
     ),
     tileLayout = tileLayout,
