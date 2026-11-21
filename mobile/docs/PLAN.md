@@ -820,6 +820,15 @@ caution).  From a fresh install tested on a Redmi 5 and the Pixel 7.
 
 - A full-screen flight mode: the status bar hides after a few seconds
   (a swipe shows it), 24 dp more for the map on short phones.
+  **Done** (2026-11-21, the pilot after a flight: "you can see the
+  header bar of the phone"): the flight screen hides both bars, as
+  XCSoar does; a swipe from an edge shows them for a few seconds, and
+  pages keep them.  The app gets that swipe too: the status bar's band
+  takes it, so it no longer pans the map away from the glider.  On the
+  Pixel 7 the cards stay under the camera (its cutout is as high as
+  the status bar), and the sheet gains the 24 dp of the gesture bar.
+  The phone's clock and battery go with the bar: Time local and
+  Battery percent are tiles.
 - Theme from the light: the light sensor (or the sun's elevation at the
   position, which XCSoar computes) chooses White or Dark, with the
   manual choice still there.

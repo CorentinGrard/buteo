@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -382,6 +384,7 @@ fun FlightContent(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class) // statusBarsIgnoringVisibility
 @Composable
 private fun MapArea(
     state: FlightState?,
@@ -457,6 +460,15 @@ private fun MapArea(
                 .fillMaxWidth()
                 .windowInsetsTopHeight(WindowInsets.statusBars)
                 .background(colors.sheet))
+        // hidden in flight (MainActivity), the bars come back with a swipe
+        // from the top: the app gets that swipe too, and it must not pan
+        // the map away from the glider
+        Box(Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBarsIgnoringVisibility)
+                .pointerInput(Unit) {
+                    awaitPointerEventScope { while (true) awaitPointerEvent() }
+                })
 
         Column(
             Modifier

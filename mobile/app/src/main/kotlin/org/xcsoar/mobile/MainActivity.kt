@@ -42,6 +42,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.core.content.FileProvider
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -397,6 +400,18 @@ class MainActivity : ComponentActivity() {
                         app.crewChosen || !app.hasPlanes -> Screen.FLIGHT
                         else -> Screen.CREW
                     })
+                }
+                // the flight screen takes the whole screen, as XCSoar's: a
+                // swipe from the edge shows the phone's bars for a few
+                // seconds (Battery percent and Time local are tiles); pages
+                // keep them
+                val fullScreen = screen == Screen.FLIGHT
+                LaunchedEffect(fullScreen) {
+                    val bars = WindowCompat.getInsetsController(window, window.decorView)
+                    bars.systemBarsBehavior =
+                        WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    if (fullScreen) bars.hide(WindowInsetsCompat.Type.systemBars())
+                    else bars.show(WindowInsetsCompat.Type.systemBars())
                 }
                 /* the plane editor opens from the crew page and the first start */
                 var planeEditBack by rememberSaveable { mutableStateOf(Screen.CREW) }
