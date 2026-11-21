@@ -231,6 +231,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             var theme by remember { mutableStateOf(app.theme) }
+            var tileRows by remember { mutableStateOf(app.tileRows) }
             val dark = when (theme) {
                 ThemeChoice.WHITE -> false
                 ThemeChoice.DARK -> true
@@ -519,6 +520,11 @@ class MainActivity : ComponentActivity() {
                         onEditTile = { layout, tile ->
                             tilePickerViewModel.open(layout, tile)
                             screen = Screen.TILE_PICKER
+                        },
+                        tileRows = tileRows,
+                        onTileRows = {
+                            tileRows = it
+                            app.tileRows = it
                         },
                         theme = theme,
                         onTheme = {

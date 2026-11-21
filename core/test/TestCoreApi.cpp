@@ -843,7 +843,9 @@ TestTiles(xcs_core *core)
                           std::to_string(e_HeightAGL) + ","));
 
   ok1(xcs_tiles_set(core, 2, 0, e_Speed_GPS) == XCS_ERROR_INVALID_ARGUMENT);
-  ok1(xcs_tiles_set(core, XCS_TILES_CRUISE, 6, e_Speed_GPS) == XCS_ERROR_INVALID_ARGUMENT);
+  ok1(xcs_tiles_set(core, XCS_TILES_CRUISE, 12, e_Speed_GPS) == XCS_ERROR_INVALID_ARGUMENT);
+  /* four rows of three */
+  ok1(xcs_tiles_set(core, XCS_TILES_CRUISE, 11, e_Battery) == XCS_OK);
   ok1(xcs_tiles_set(core, XCS_TILES_CRUISE, 0, e_Horizon) == XCS_ERROR_INVALID_ARGUMENT);
   ok1(xcs_tiles_set(core, XCS_TILES_CRUISE, 0, e_Speed_GPS) == XCS_OK);
   ok1(Contains(layouts(), "{\"layouts\":[[" + std::to_string(e_Speed_GPS) + "," +
@@ -901,7 +903,7 @@ TestTiles(xcs_core *core)
       return xcs_tiles_click(core, XCS_TILES_CIRCLING, 5, b, s, l);
     });
   };
-  ok1(xcs_tiles_click(core, XCS_TILES_CRUISE, 6, buffer, sizeof(buffer),
+  ok1(xcs_tiles_click(core, XCS_TILES_CRUISE, 12, buffer, sizeof(buffer),
                       &length) == XCS_ERROR_INVALID_ARGUMENT);
   ok1(click(e_OC_Distance) == "{\"action\":\"analysis\",\"page\":\"contest\"}");
   ok1(click(e_Temperature) == "{\"action\":\"analysis\",\"page\":\"temptrace\"}");
@@ -1581,7 +1583,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1);
 
   Recorder recorder;
   TestCreateArguments(recorder);
@@ -1626,7 +1628,8 @@ main()
   ok1(xcs_stop(core) == XCS_OK);
 
   /* the same core can be started again; a profile saved before
-     MacCready was a tile gets it, in its third tile, once */
+     MacCready was a tile gets it, in its third tile, once; saved with
+     two rows, rows 3 and 4 are the design's */
   {
     const auto prf = std::filesystem::path{DATA_PATH} / "profiles" / "default.prf";
     std::ifstream in{prf};
@@ -1639,9 +1642,16 @@ main()
                        << "MobileTilesCircling=\"21,10,117,94,1,25\"\n";
   }
   ok1(xcs_start(core) == XCS_OK);
-  ok1(Contains(GetJson([core](char *b, size_t s, size_t *l){
-                 return xcs_tiles_layouts(core, b, s, l);
-               }), "{\"layouts\":[[94,1,10,38,6,7],[21,10,117,94,1,25]]}"));
+  {
+    using namespace InfoBoxFactory;
+    const auto layouts = GetJson([core](char *b, size_t s, size_t *l){
+      return xcs_tiles_layouts(core, b, s, l);
+    });
+    ok1(Contains(layouts, "{\"layouts\":[[94,1,10,38,6,7," +
+                          std::to_string(e_Fin_Distance) + ",") &&
+        Contains(layouts, "],[21,10,117,94,1,25," +
+                          std::to_string(e_Thermal_30s) + ","));
+  }
   ok1(xcs_stop(core) == XCS_OK);
   xcs_destroy(core);
 

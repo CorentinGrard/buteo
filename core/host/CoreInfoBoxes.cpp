@@ -43,12 +43,19 @@ static constexpr std::array<std::string_view, CoreInfoBoxes::LAYOUT_COUNT>
   LAYOUT_KEYS{"MobileTilesCruise"sv, "MobileTilesCircling"sv};
 
 /** The design's tiles, as upstream InfoBoxes; MacCready is the third
-    (the app steps it from there; its comment is the speed to fly). */
+    (the app steps it from there; its comment is the speed to fly).
+    The app shows two rows of three by default, up to four: the last
+    row has the time and the battery, which the full-screen flight
+    screen hides with the status bar. */
 static constexpr Type DEFAULT_LAYOUTS[CoreInfoBoxes::LAYOUT_COUNT]
                                      [CoreInfoBoxes::TILE_COUNT] = {
-  {NavAltitude, e_HeightAGL, e_MacCready, e_WP_GR, e_Speed_GPS, e_TL_Avg},
+  {NavAltitude, e_HeightAGL, e_MacCready, e_WP_GR, e_Speed_GPS, e_TL_Avg,
+   e_Fin_Distance, e_Fin_AltDiff, e_CC_Speed,
+   e_TimeSinceTakeoff, e_TimeLocal, e_Battery},
   {e_Thermal_Avg, e_Thermal_Gain, e_MacCready, NavAltitude, e_HeightAGL,
-   e_WindSpeed_Est},
+   e_WindSpeed_Est,
+   e_Thermal_30s, e_Thermal_Time, e_Fin_AltDiff,
+   e_TimeSinceTakeoff, e_TimeLocal, e_Battery},
 };
 
 /** Set once a profile's saved layouts got their MacCready tile. */

@@ -100,6 +100,9 @@ fun FlightScreen(
     callouts: CalloutSettings = CalloutSettings(),
     theme: ThemeChoice = ThemeChoice.SYSTEM,
     onTheme: (ThemeChoice) -> Unit = {},
+    /** rows of three tiles ([TILE_ROWS]) */
+    tileRows: Int = TILE_ROWS.first,
+    onTileRows: (Int) -> Unit = {},
     onEditTile: (TileLayout, Int) -> Unit = { _, _ -> },
     /** A tile was tapped: the page its InfoBox opens. */
     onTileAction: (TileAction) -> Unit = {},
@@ -139,7 +142,7 @@ fun FlightScreen(
         state = state,
         lastEvent = lastEvent,
         circling = circling,
-        tiles = tiles,
+        tiles = tiles?.take(tileRows * TILE_COLUMNS),
         vario = { vario.value },
         macCready = macCready,
         onEditTile = { tile ->
@@ -185,6 +188,8 @@ fun FlightScreen(
             onStopReplay = viewModel::stopReplay,
             tileLayout = tileLayout,
             onTileLayout = viewModel::selectFlightMode,
+            tileRows = tileRows,
+            onTileRows = onTileRows,
             orientation = mapOrientation.takeIf { viewModel.hasMap },
             onOrientation = viewModel::setMapOrientation,
             varioSound = varioSound,
@@ -612,6 +617,10 @@ private fun mapAngle(orientation: MapOrientation, s: FlightState?): Double? = wh
 /** The tiles' columns. */
 private const val TILE_COLUMNS = 3
 
+/** The rows of tiles the pilot can choose: XCSoar's core keeps four
+    (core/host/CoreInfoBoxes.hpp TILE_COUNT). */
+val TILE_ROWS = 2..4
+
 /** Room "Set MC" needs beside the map buttons, else it goes above them. */
 private val SET_MC_ROOM = 96.dp
 
@@ -859,6 +868,8 @@ fun flightMenu(
     onStopReplay: () -> Unit = {},
     tileLayout: Boolean? = null,
     onTileLayout: (circling: Boolean?) -> Unit = {},
+    tileRows: Int = TILE_ROWS.first,
+    onTileRows: (Int) -> Unit = {},
     orientation: MapOrientation? = null,
     onOrientation: (MapOrientation) -> Unit = {},
     varioSound: Boolean? = null,
@@ -907,6 +918,8 @@ fun flightMenu(
     ),
     tileLayout = tileLayout,
     onTileLayout = onTileLayout,
+    tileRows = tileRows,
+    onTileRows = onTileRows,
     orientation = orientation,
     onOrientation = onOrientation,
     varioSound = varioSound,

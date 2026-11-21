@@ -400,3 +400,11 @@ the settings were too many.
   lift, above it when the row has no room.
 - The "Airspace alerts off" chip goes: warnings off is the pilot's own
   setting, not news; the menu's Airspace row says "Off".
+- Two to four rows of three tiles: Quick settings has Rows (2 / 3 / 4,
+  two by default), kept on the phone like the theme.  The core keeps
+  twelve tiles per layout (profile keys as before; a layout saved with
+  six gets the design's rows 3 and 4): final distance, final arrival
+  and task speed in cruise, 30 s average, time in the thermal and
+  final arrival when circling, then flight time, local time and
+  battery in both, which the full-screen flight screen no longer shows
+  in the status bar.

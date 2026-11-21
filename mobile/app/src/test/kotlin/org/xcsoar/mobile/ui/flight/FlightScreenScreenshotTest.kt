@@ -79,6 +79,35 @@ class FlightScreenScreenshotTest {
     }
 
     /**
+     * Four rows of tiles on a short phone (a Redmi 5: 360x720 dp), the
+     * most the menu offers: the time and the battery in the last row,
+     * which the full-screen flight screen hides with the status bar.
+     */
+    @Test
+    @Config(qualifiers = "w360dp-h720dp-xhdpi")
+    fun fourRowsShortPhone() = capture("tiles_four_rows") {
+        XcsTheme(dark = false) {
+            FlightContent(FakeXcsoarCore.syntheticState(120), null, circling = false, {},
+                          tiles = listOf(
+                              TileValue(1, "Alt GPS", "1646", "m"),
+                              TileValue(2, "H AGL", "1046", "m"),
+                              TileValue(3, "MC", "1.0", "m/s", comment = "126 km/h",
+                                        color = TileValue.COLOR_GREEN),
+                              TileValue(4, "WP GR", "27.0", ""),
+                              TileValue(5, "V GND", "130", "km/h"),
+                              TileValue(6, "TL Avg", "+2.1", "m/s",
+                                        color = TileValue.COLOR_GREEN),
+                              TileValue(7, "Fin Dis", "64.2", "km"),
+                              TileValue(8, "Fin AltD", "-420", "m",
+                                        color = TileValue.COLOR_RED),
+                              TileValue(9, "V Task Ach", "78", "km/h"),
+                              TileValue(10, "Time flt", "2:41", ""),
+                              TileValue(11, "Time loc", "15:32", ""),
+                              TileValue(12, "Battery", "64", "%")))
+        }
+    }
+
+    /**
      * Graphical InfoBoxes: the vario and thermal sparks, the barogram,
      * the wind and next waypoint arrows, drawn from the core's data.
      */

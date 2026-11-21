@@ -89,6 +89,7 @@ class MenuSection(val title: String, val actions: List<MenuAction>)
  * @param tileLayout the pilot's choice of tiles: null follows the
  * flight mode, else circling (true) or cruise (false) until the next
  * mode change
+ * @param tileRows how many rows of tiles the flight screen shows
  * @param orientation which way the map is up; null hides the choice
  * (no map, or the core has not answered yet)
  * @param varioSound the vario sound is on; null hides the switch (no
@@ -100,6 +101,8 @@ class FlightMenu(
     val sections: List<MenuSection> = emptyList(),
     val tileLayout: Boolean? = null,
     val onTileLayout: (circling: Boolean?) -> Unit = {},
+    val tileRows: Int = TILE_ROWS.first,
+    val onTileRows: (Int) -> Unit = {},
     val orientation: MapOrientation? = null,
     val onOrientation: (MapOrientation) -> Unit = {},
     val varioSound: Boolean? = null,
@@ -183,6 +186,9 @@ fun FlightMenuSheet(visible: Boolean, menu: FlightMenu, onClose: () -> Unit,
                                       onSelect = {
                                           menu.onTileLayout(if (it == 0) null else it == 2)
                                       })
+                    LabelledSegmented("Rows", TILE_ROWS.map { it.toString() },
+                                      selected = menu.tileRows - TILE_ROWS.first,
+                                      onSelect = { menu.onTileRows(TILE_ROWS.first + it) })
                     menu.orientation?.let { orientation ->
                         // heading and wind up (set elsewhere) select none
                         LabelledSegmented("Map up", ORIENTATIONS.map { it.second },

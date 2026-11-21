@@ -29,6 +29,7 @@ import org.xcsoar.mobile.core.WeGlideFlight
 import org.xcsoar.mobile.ui.flights.FlightLog
 import org.xcsoar.mobile.ui.flight.CalloutSettings
 import org.xcsoar.mobile.ui.flights.UploadStore
+import org.xcsoar.mobile.ui.flight.TILE_ROWS
 import org.xcsoar.mobile.ui.theme.ThemeChoice
 import java.io.File
 import java.util.Locale
@@ -84,6 +85,11 @@ class XcsoarApp : Application() {
             it.name == uiPreferences.getString("theme", null)
         } ?: ThemeChoice.SYSTEM
         set(value) = uiPreferences.edit().putString("theme", value.name).apply()
+
+    /** Rows of tiles on the flight screen ([TILE_ROWS]); on the phone, like the theme. */
+    var tileRows: Int
+        get() = uiPreferences.getInt("tileRows", TILE_ROWS.first).coerceIn(TILE_ROWS)
+        set(value) = uiPreferences.edit().putInt("tileRows", value).apply()
 
     /**
      * The profile file the core starts with; null for XCSoar's

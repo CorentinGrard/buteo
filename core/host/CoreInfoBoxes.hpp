@@ -14,7 +14,7 @@
 namespace CoreInfoBoxes {
 
 static constexpr unsigned LAYOUT_COUNT = 2;
-static constexpr unsigned TILE_COUNT = 6;
+static constexpr unsigned TILE_COUNT = 12;
 
 /**
  * The InfoBox types a tile can show (not the graphical ones), by name:
