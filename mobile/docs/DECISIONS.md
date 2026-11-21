@@ -383,3 +383,20 @@ computer, under the GPL.
 - Google Play: open.  Play App Signing either keeps this key (uploaded
   once: GitHub and Play builds then update each other) or makes its own
   (they then cannot replace each other).
+
+## D25 — The menu among the map buttons, a shorter menu
+**Status:** Accepted (2026-11-21)
+
+Amends D21 and D22 after the pilot flew the app on 2026-11-21: the
+Menu button beside the target card was "lost space" in flight, and
+the settings were too many.
+
+- The flight screen is full screen (the phone's bars come back with a
+  swipe from an edge; mobile/docs/PLAN.md, "In flight").
+- Menu is the first of the map buttons, at the bottom left, where the
+  map is free under the vario bar: the target card gets the whole
+  width (in landscape too), and the button is under the thumb, in the
+  same place on the ground and in flight.  "Set MC" sits beside it in
+  lift, above it when the row has no room.
+- The "Airspace alerts off" chip goes: warnings off is the pilot's own
+  setting, not news; the menu's Airspace row says "Off".

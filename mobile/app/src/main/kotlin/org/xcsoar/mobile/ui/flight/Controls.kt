@@ -209,8 +209,8 @@ fun Segmented(
 }
 
 /**
- * Opens the flight menu: a filled button beside the target card, at
- * least [TOUCH] each way ([modifier] may stretch it to the card).
+ * Opens the flight menu: a filled button at the left of the map
+ * buttons, at least [TOUCH] each way.
  */
 @Composable
 fun MenuButton(onClick: () -> Unit, modifier: Modifier = Modifier) {

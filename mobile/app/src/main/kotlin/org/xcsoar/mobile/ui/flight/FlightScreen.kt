@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -257,8 +256,9 @@ class MapSlot(
 
 /**
  * The flight screen, map first: the map with the vario and final glide
- * bars on its edges, and the tiles with MacCready and the menu below it
- * (portrait) or beside it (landscape, with the next waypoint).
+ * bars on its edges and the menu and zoom buttons along its bottom, and
+ * the tiles below it (portrait) or beside it (landscape, with the next
+ * waypoint).
  * Without [map] (no native core) the map area only shows the glider
  * symbol.
  */
@@ -344,10 +344,9 @@ fun FlightContent(
                             .padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        TargetRow(onMenu = { onMenuOpen(true) }) { modifier ->
-                            NextWaypointCard(state?.next, modifier, state?.nextTimeRemaining,
-                                             onClick = onNextWaypoint, elevated = false)
-                        }
+                        NextWaypointCard(state?.next, Modifier.fillMaxWidth(),
+                                         state?.nextTimeRemaining, onClick = onNextWaypoint,
+                                         elevated = false)
                         instruments()
                     }
                 }
@@ -481,10 +480,8 @@ private fun MapArea(
                 ReplayBar(state.timeUtc, replay.speed, replay.onPause, replay.onSpeed,
                           replay.onSkip, replay.onStop)
             if (showNext)
-                TargetRow(onMenu) { modifier ->
-                    NextWaypointCard(state?.next, modifier, state?.nextTimeRemaining,
-                                     onClick = onNextWaypoint)
-                }
+                NextWaypointCard(state?.next, Modifier.fillMaxWidth(), state?.nextTimeRemaining,
+                                 onClick = onNextWaypoint)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 when {
@@ -507,8 +504,8 @@ private fun MapArea(
         }
 
         // below the cards: the vario on the left edge, final glide on the
-        // right, the map buttons along the bottom, "Set MC" on the left
-        // in lift
+        // right, the map buttons along the bottom, the menu first, "Set
+        // MC" beside it in lift
         val cardsHeight = with(LocalDensity.current) { cardsBottom.toDp() }
         BoxWithConstraints(
             Modifier
@@ -544,17 +541,23 @@ private fun MapArea(
                 return@BoxWithConstraints
             }
 
+            // where the map is free under the vario, within reach of the
+            // thumb; the target card keeps the whole width (D25)
+            MenuButton(onMenu, Modifier.align(Alignment.BottomStart))
+
             // the buttons' width, to keep "Set MC" clear of them
             var buttonsWidth by remember { mutableIntStateOf(0) }
             val buttonsDp = with(LocalDensity.current) { buttonsWidth.toDp() }
             val thermal = state?.currentThermal
-            if (circling && thermal != null && thermal.lift > 0)
+            if (circling && thermal != null && thermal.lift > 0) {
+                val beside = maxWidth - buttonsDp - MENU_ROOM >= SET_MC_ROOM
                 SetMacCreadyButton(thermal.lift,
                                    { onSetMacCready(Format.stepVerticalSpeed(thermal.lift, 0)) },
                                    Modifier
                                        .align(Alignment.BottomStart)
-                                       .padding(bottom = if (maxWidth - buttonsDp < SET_MC_ROOM)
-                                                             64.dp else 0.dp))
+                                       .padding(start = if (beside) MENU_ROOM else 0.dp,
+                                                bottom = if (beside) 0.dp else 64.dp))
+            }
 
             Row(
                 Modifier.align(Alignment.BottomEnd).onSizeChanged { buttonsWidth = it.width },
@@ -606,25 +609,14 @@ private fun mapAngle(orientation: MapOrientation, s: FlightState?): Double? = wh
     MapOrientation.HEADING_UP -> null
 }
 
-/**
- * Menu, then the target card ([card] gets its modifier): the menu as
- * high as the card, on the left, where the hand that is not on the
- * stick reaches.
- */
-@Composable
-private fun TargetRow(onMenu: () -> Unit, card: @Composable (Modifier) -> Unit) {
-    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        MenuButton(onMenu, Modifier.fillMaxHeight())
-        card(Modifier.weight(1f))
-    }
-}
-
 /** The tiles' columns. */
 private const val TILE_COLUMNS = 3
 
 /** Room "Set MC" needs beside the map buttons, else it goes above them. */
 private val SET_MC_ROOM = 96.dp
+
+/** The menu button and the gap after it, on the left of the map buttons. */
+private val MENU_ROOM = 64.dp
 
 /** The MacCready stepper closes this long after its last use. */
 private const val STEPPER_MILLIS = 5000L
