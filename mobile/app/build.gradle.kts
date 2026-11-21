@@ -8,6 +8,10 @@ plugins {
     alias(libs.plugins.roborazzi)
 }
 
+/* The ABIs the core is built for: -Pxcsoar.abis=arm64-v8a,x86_64
+   (arm64 covers phones and Apple Silicon emulators) */
+val coreAbis = (findProperty("xcsoar.abis") as String? ?: "arm64-v8a").split(",")
+
 android {
     // the code's package, not the app's identity (D8, D23)
     namespace = "org.xcsoar.mobile"
@@ -29,6 +33,10 @@ android {
         versionCode = (findProperty("buteoVersionCode") as String?)?.toInt() ?: 1
         versionName = findProperty("buteoVersionName") as String? ?: "dev"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // only those: a library's own native code (androidx.graphics.path)
+        // made the APK and the Play bundle claim 32-bit and x86 phones,
+        // where the core is missing and the app cannot start
+        ndk { abiFilters += coreAbis }
     }
 
     buildFeatures {
@@ -261,9 +269,7 @@ val coreDrawables = tasks.register<CoreDrawables>("coreDrawables") {
 /** The core for a build type: debug builds keep XCSoar's assertions. */
 fun nativeCore(debugBuild: Boolean) =
     tasks.register<NativeCoreLibrary>(if (debugBuild) "nativeCoreDebug" else "nativeCoreRelease") {
-        // -Pxcsoar.abis=arm64-v8a,x86_64 (arm64 covers phones and Apple
-        // Silicon emulators)
-        abis.set((findProperty("xcsoar.abis") as String? ?: "arm64-v8a").split(","))
+        abis.set(coreAbis)
         debug.set(debugBuild)
         repoRoot.set(xcsoarRoot)
         outputs.upToDateWhen { false }
