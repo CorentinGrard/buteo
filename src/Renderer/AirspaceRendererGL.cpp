@@ -415,6 +415,21 @@ private:
                   CLEARED_RING_PADDING_MASK);
   }
 
+  /**
+   * The colour a warning gives this airspace (AirspaceLook::warning_colors),
+   * or nullptr for its class colours.
+   */
+  [[gnu::pure]]
+  const Color *GetWarningColor(const AbstractAirspace &airspace) const noexcept {
+    if (!look.warning_colors || warning_manager.IsAcked(airspace))
+      return nullptr;
+    if (warning_manager.IsInside(airspace))
+      return &look.inside_color;
+    if (warning_manager.HasWarning(airspace))
+      return &look.warning_color;
+    return nullptr;
+  }
+
   void VisitCircle(const AirspaceCircle &airspace) {
     const auto type_or_class = airspace.GetTypeOrClass();
     AirspaceClass as_type_or_class = settings.classes[type_or_class].display
@@ -444,14 +459,15 @@ private:
       } else {
         // draw a ring inside the circle
         Color color = class_look.fill_color;
-        Pen pen_donut(look.thick_pen.GetWidth() / 2, color.WithAlpha(90));
+        Pen pen_donut(look.thick_pen.GetWidth() / 2,
+                      color.WithAlpha(look.fill_alpha));
         canvas.SelectHollowBrush();
         canvas.Select(pen_donut);
         canvas.DrawCircle(screen_center,
                           screen_radius - look.thick_pen.GetWidth() / 4);
 
         if (WantsClearedBoundaryPadding(airspace, false)) {
-          canvas.Select(Brush(color.WithAlpha(90)));
+          canvas.Select(Brush(color.WithAlpha(look.fill_alpha)));
           canvas.SelectNullPen();
           SelectClearedRingPadding();
           canvas.DrawCircle(screen_center, screen_radius);
@@ -668,7 +684,10 @@ private:
     AirspaceClass as_type_or_class = settings.classes[type_or_class].display
       ? type_or_class : airspace.GetClass();
 
-    if (settings.black_outline)
+    if (const Color *warning = GetWarningColor(airspace))
+      canvas.Select(warning == &look.inside_color
+                    ? look.inside_pen : look.warning_pen);
+    else if (settings.black_outline)
       canvas.SelectBlackPen();
     else if (settings.classes[as_type_or_class].border_width == 0)
       // Don't draw outlines if border_width == 0
@@ -706,7 +725,9 @@ private:
       glStencilFunc(GL_EQUAL, 0, OUTLINE_STENCIL | CLEARANCE_STENCIL);
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
-    canvas.Select(Brush(class_look.fill_color.WithAlpha(90)));
+    const Color *warning = GetWarningColor(airspace);
+    canvas.Select(Brush((warning != nullptr ? *warning : class_look.fill_color)
+                        .WithAlpha(look.fill_alpha)));
     canvas.SelectNullPen();
   }
 

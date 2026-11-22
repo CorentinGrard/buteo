@@ -35,6 +35,22 @@ struct AirspaceLook {
 
   Pen thick_pen;
 
+  /**
+   * Alpha of the fills (OpenGL, the default fill mode).  A light one
+   * suits filling whole areas (#AirspaceClassRendererSettings::FillMode::ALL).
+   */
+  uint8_t fill_alpha = 90;
+
+  /**
+   * Draw an airspace with a warning in #warning_color and #warning_pen,
+   * and one the aircraft is inside of in #inside_color and #inside_pen,
+   * instead of its class colours, until acknowledged (OpenGL, the
+   * default fill mode).  Off: they keep their class colours.
+   */
+  bool warning_colors = false;
+  Color warning_color, inside_color;
+  Pen warning_pen, inside_pen;
+
   MaskedIcon intercept_icon;
 
   /**
