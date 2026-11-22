@@ -1,0 +1,5 @@
+- The flight screen is full screen
+- Two, three or four rows of tiles (Quick settings → Rows)
+- The Menu button sits with the map buttons; a shorter menu
+- Each recorded flight has its page: times, contest result, climbs,
+  with Replay, Share, Upload to WeGlide and Delete
