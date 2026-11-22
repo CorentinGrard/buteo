@@ -37,6 +37,7 @@ WaypointLook::Initialise(const WaypointRendererSettings &settings,
   light_gray_brush.Create(COLOR_LIGHT_GRAY);
   magenta_brush.Create(COLOR_MAGENTA);
   orange_brush.Create(COLOR_ORANGE);
+  landable_pen.Create(1, COLOR_BLACK);
 
   Reinitialise(settings);
 

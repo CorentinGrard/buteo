@@ -174,7 +174,7 @@ WaypointIconRenderer::DrawLandable(const Waypoint &waypoint,
 
   double radius = 10 * scale;
 
-  canvas.SelectBlackPen();
+  canvas.Select(look.landable_pen);
 
   const bool is_reachable = reachable != WaypointReachability::INVALID &&
     reachable != WaypointReachability::UNREACHABLE;

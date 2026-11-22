@@ -5,6 +5,7 @@
 
 #include "ui/canvas/Icon.hpp"
 #include "ui/canvas/Brush.hpp"
+#include "ui/canvas/Pen.hpp"
 
 class Font;
 struct WaypointRendererSettings;
@@ -25,6 +26,9 @@ struct WaypointLook {
   Brush reachable_brush, terrain_unreachable_brush, unreachable_brush;
 
   Brush white_brush, light_gray_brush, magenta_brush, orange_brush;
+
+  /** The outline of vector landables. */
+  Pen landable_pen;
 
   const Font *font, *bold_font;
 
