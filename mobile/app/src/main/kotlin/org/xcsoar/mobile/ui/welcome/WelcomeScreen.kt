@@ -33,6 +33,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.DataFile
 import org.xcsoar.mobile.core.RegionFiles
 import org.xcsoar.mobile.core.UnitGroup
@@ -99,26 +101,28 @@ fun WelcomeContent(
     val colors = XcsTheme.colors
     PageLayout(bottom = {
         if (state.step != WelcomeStep.UNITS)
-            ActionButton("Back", outlined = true, onClick = onBack)
+            ActionButton(stringResource(R.string.back), outlined = true, onClick = onBack)
         Spacer(Modifier.weight(1f))
         when {
             // Back closes the list
             state.choosingCountry -> {}
             state.step != WelcomeStep.DATA ->
-                ActionButton("Next", primary = true, onClick = onNext)
+                ActionButton(stringResource(R.string.next), primary = true, onClick = onNext)
             state.downloaded || state.files.none { it.chosen } ->
-                ActionButton("Done", primary = true, enabled = !state.downloading,
+                ActionButton(stringResource(R.string.done), primary = true, enabled = !state.downloading,
                              onClick = onDone)
             else ->
-                ActionButton(if (state.downloading) "Downloading…" else "Download",
+                ActionButton(stringResource(if (state.downloading) R.string.welcome_downloading
+                                         else R.string.download),
                              primary = true, enabled = !state.downloading,
                              onClick = onDownload)
         }
     }) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Caption("Step ${state.step.ordinal + 1} of ${WelcomeStep.entries.size}",
+            Caption(stringResource(R.string.welcome_step, state.step.ordinal + 1,
+                                   WelcomeStep.entries.size),
                     Modifier.padding(start = 4.dp).weight(1f))
-            ActionButton("Set up later", onClick = onDone)
+            ActionButton(stringResource(R.string.welcome_later), onClick = onDone)
         }
         when (state.step) {
             WelcomeStep.UNITS -> UnitsStep(state, onPreset)
@@ -150,13 +154,12 @@ private fun Hint(text: String) {
 /** XCSoar's presets, each with the units it gives. */
 @Composable
 private fun UnitsStep(state: WelcomeState, onPreset: (Int) -> Unit) {
-    Title("Welcome",
-          "Three things before the first flight: the units, you and your glider, " +
-              "and the maps for where you fly.")
-    Caption("Units", Modifier.padding(start = 4.dp))
+    Title(stringResource(R.string.welcome_title),
+          stringResource(R.string.welcome_intro))
+    Caption(stringResource(R.string.units), Modifier.padding(start = 4.dp))
     val units = state.units
     if (units == null) {
-        Loading("Starting…")
+        Loading(stringResource(R.string.flight_starting))
         return
     }
     Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -164,7 +167,8 @@ private fun UnitsStep(state: WelcomeState, onPreset: (Int) -> Unit) {
             Choice(preset.name, presetSample(units, i), state.preset == i) { onPreset(i) }
         }
     }
-    Hint("Each unit can be changed later: Menu → Map & units → Units.")
+    Hint(stringResource(R.string.welcome_units_later,
+                        menuPath(R.string.menu, R.string.menu_map_units, R.string.menu_units)))
 }
 
 /** "km · m · km/h · m/s": distance, altitude, speed and lift of a preset. */
@@ -198,16 +202,15 @@ private fun Choice(title: String, detail: String, selected: Boolean, onClick: ()
 @Composable
 private fun CrewStep(state: WelcomeState, onPilot: (String) -> Unit, onPlane: (String) -> Unit,
                      onAddPlane: () -> Unit) {
-    Title("You and your glider",
-          "Your name goes into the flight log.  The glider's polar gives final glide, " +
-              "speed to fly and the landables in reach.")
-    Caption("Pilot", Modifier.padding(start = 4.dp))
-    InputField(state.pilot, onPilot, "Your name", capitalization = KeyboardCapitalization.Words)
+    Title(stringResource(R.string.welcome_crew_title),
+          stringResource(R.string.welcome_crew_intro))
+    Caption(stringResource(R.string.pilot), Modifier.padding(start = 4.dp))
+    InputField(state.pilot, onPilot, stringResource(R.string.welcome_your_name), capitalization = KeyboardCapitalization.Words)
 
-    Caption("Glider", Modifier.padding(start = 4.dp))
+    Caption(stringResource(R.string.glider), Modifier.padding(start = 4.dp))
     val planes = state.planes
     if (planes == null) {
-        Loading("Starting…")
+        Loading(stringResource(R.string.flight_starting))
         return
     }
     if (planes.isNotEmpty())
@@ -216,11 +219,12 @@ private fun CrewStep(state: WelcomeState, onPilot: (String) -> Unit, onPlane: (S
                 PlaneRow(plane, selected = plane.path == state.plane, lastFlown = false,
                          onSelect = { onPlane(plane.path) }, onEdit = null)
         }
-    ActionButton(if (planes.isEmpty()) "Add your glider" else "Add another glider",
+    ActionButton(stringResource(if (planes.isEmpty()) R.string.welcome_add_glider
+                                 else R.string.welcome_add_another_glider),
                  outlined = true, modifier = Modifier.fillMaxWidth(), onClick = onAddPlane)
     if (planes.isEmpty())
-        Hint("Without one, Buteo shows \"NO POLAR\" and leaves final glide out; " +
-                 "Menu → Aircraft & crew adds one later.")
+        Hint(stringResource(R.string.welcome_no_glider,
+                            menuPath(R.string.menu, R.string.menu_crew)))
 }
 
 /** The map, airspace and waypoints for the region, to download. */
@@ -228,39 +232,40 @@ private fun CrewStep(state: WelcomeState, onPilot: (String) -> Unit, onPlane: (S
 private fun DataStep(state: WelcomeState, onCountries: (Boolean) -> Unit,
                      onToggleFile: (String) -> Unit, onRetry: () -> Unit) {
     val colors = XcsTheme.colors
-    Title("Maps for where you fly",
-          "Terrain, airspace and airfields from XCSoar's file repository.")
+    Title(stringResource(R.string.welcome_data_title),
+          stringResource(R.string.welcome_data_intro))
     val error = state.repositoryError
     if (state.repository == null) {
         if (error != null) {
-            Text("The repository could not be reached: $error", color = colors.warning,
+            Text(stringResource(R.string.welcome_repository_error, error), color = colors.warning,
                  fontSize = 16.sp, modifier = Modifier.padding(horizontal = 4.dp))
-            ActionButton("Try again", outlined = true, onClick = onRetry)
-            Hint("The files can also be downloaded later: Menu → Data files.")
+            ActionButton(stringResource(R.string.welcome_try_again), outlined = true, onClick = onRetry)
+            Hint(stringResource(R.string.welcome_files_later,
+                                menuPath(R.string.menu, R.string.menu_data_files)))
         } else
-            Loading("Looking for the files for where you are…")
+            Loading(stringResource(R.string.welcome_looking))
         return
     }
 
-    Caption("Region", Modifier.padding(start = 4.dp))
+    Caption(stringResource(R.string.welcome_region), Modifier.padding(start = 4.dp))
     Row(Modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .background(colors.panel, RoundedCornerShape(14.dp))
             .clickable(enabled = !state.downloading, role = Role.Button,
-                       onClickLabel = "Choose the region") { onCountries(true) }
+                       onClickLabel = stringResource(R.string.welcome_choose_region)) { onCountries(true) }
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically) {
-        Text(state.country?.let(::countryName) ?: "Choose", color = colors.text,
+        Text(state.country?.let(::countryName) ?: stringResource(R.string.welcome_choose), color = colors.text,
              fontSize = 19.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-        Text("Change", color = colors.text, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        Text(stringResource(R.string.change), color = colors.text, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
     }
 
     if (state.files.isEmpty()) {
-        Hint("XCSoar's repository has no files for this region.")
+        Hint(stringResource(R.string.welcome_no_files))
         return
     }
-    Caption("Files", Modifier.padding(start = 4.dp))
+    Caption(stringResource(R.string.files), Modifier.padding(start = 4.dp))
     Column(Modifier
                .fillMaxWidth()
                .background(colors.panel, RoundedCornerShape(14.dp))) {
@@ -271,7 +276,8 @@ private fun DataStep(state: WelcomeState, onCountries: (Boolean) -> Unit,
         }
     }
     if (state.files.any { it.file.dataFile == DataFile.MAP && it.chosen && !it.done })
-        Hint("Maps are large downloads: Wi-Fi is best.  Menu → Data files has the others.")
+        Hint(stringResource(R.string.welcome_maps_large,
+                            menuPath(R.string.menu, R.string.menu_data_files)))
 }
 
 @Composable
@@ -279,9 +285,9 @@ private fun FileChoice(entry: RegionFileState, enabled: Boolean, onToggle: () ->
     val colors = XcsTheme.colors
     val file = entry.file
     val kind = when (file.dataFile) {
-        DataFile.MAP -> "Map: terrain and topography"
-        DataFile.AIRSPACE -> "Airspace"
-        DataFile.WAYPOINTS -> "Waypoints: airfields and landables"
+        DataFile.MAP -> stringResource(R.string.welcome_file_map)
+        DataFile.AIRSPACE -> stringResource(R.string.airspace)
+        DataFile.WAYPOINTS -> stringResource(R.string.welcome_file_waypoints)
         else -> file.type
     }
     Column(Modifier
@@ -299,7 +305,7 @@ private fun FileChoice(entry: RegionFileState, enabled: Boolean, onToggle: () ->
                 Text(file.description.ifEmpty { file.name }, color = colors.textSecondary,
                      fontSize = 15.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 when {
-                    entry.done -> Text("Downloaded and loaded", color = colors.safe,
+                    entry.done -> Text(stringResource(R.string.welcome_downloaded), color = colors.safe,
                                        fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                     entry.error != null -> Text(entry.error, color = colors.warning,
                                                 fontSize = 15.sp, maxLines = 2,
@@ -324,8 +330,8 @@ private fun FileChoice(entry: RegionFileState, enabled: Boolean, onToggle: () ->
 private fun CountryList(state: WelcomeState, onCountry: (String) -> Unit) {
     val colors = XcsTheme.colors
     var query by rememberSaveable { mutableStateOf("") }
-    Title("Region", "Where do you fly?")
-    InputField(query, { query = it }, "Search", capitalization = KeyboardCapitalization.Words)
+    Title(stringResource(R.string.welcome_region), stringResource(R.string.welcome_where))
+    InputField(query, { query = it }, stringResource(R.string.search), capitalization = KeyboardCapitalization.Words)
     val countries = RegionFiles.countries(state.repository.orEmpty())
         .map { it to countryName(it) }
         .filter { (code, name) ->
@@ -352,6 +358,11 @@ private fun CountryList(state: WelcomeState, onCountry: (String) -> Unit) {
         }
     }
 }
+
+/** "Menu → Map & units → Units", in the phone's language. */
+@Composable
+private fun menuPath(vararg ids: Int): String =
+    ids.map { stringResource(it) }.joinToString(" → ")
 
 @Composable
 private fun Loading(text: String) {

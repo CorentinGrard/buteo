@@ -333,3 +333,115 @@ msgstr "Changer, nouveau, importer"
 #. menu_status_detail
 msgid "Flight times, GPS, task rules, share position"
 msgstr "Heures de vol, GPS, règles du circuit, partager la position"
+
+#. files
+msgid "Files"
+msgstr "Fichiers"
+
+#. change
+msgid "Change"
+msgstr "Changer"
+
+#. welcome_step
+msgid "Step %1$d of %2$d"
+msgstr "Étape %1$d sur %2$d"
+
+#. welcome_later
+msgid "Set up later"
+msgstr "Configurer plus tard"
+
+#. welcome_downloading
+msgid "Downloading…"
+msgstr "Téléchargement…"
+
+#. welcome_intro
+msgid "Three things before the first flight: the units, you and your glider, and the maps for where you fly."
+msgstr "Trois choses avant le premier vol : les unités, vous et votre planeur, et les cartes de votre région de vol."
+
+#. welcome_units_later
+msgid "Each unit can be changed later: %1$s."
+msgstr "Chaque unité pourra être changée plus tard : %1$s."
+
+#. welcome_crew_title
+msgid "You and your glider"
+msgstr "Vous et votre planeur"
+
+#. welcome_crew_intro
+msgid "Your name goes into the flight log. The glider's polar gives final glide, speed to fly and the landables in reach."
+msgstr "Votre nom figure dans le carnet de vol. La polaire du planeur donne la finale, la vitesse à voler et les terrains vachables à portée."
+
+#. welcome_your_name
+msgid "Your name"
+msgstr "Votre nom"
+
+#. welcome_add_glider
+msgid "Add your glider"
+msgstr "Ajouter votre planeur"
+
+#. welcome_add_another_glider
+msgid "Add another glider"
+msgstr "Ajouter un autre planeur"
+
+#. welcome_no_glider
+msgid "Without one, Buteo shows \"NO POLAR\" and leaves final glide out; %1$s adds one later."
+msgstr "Sans polaire, Buteo affiche \"PAS DE POLAIRE\" et n'indique pas la finale ; %1$s permet d'en ajouter une plus tard."
+
+#. welcome_data_title
+msgid "Maps for where you fly"
+msgstr "Les cartes de votre région de vol"
+
+#. welcome_data_intro
+msgid "Terrain, airspace and airfields from XCSoar's file repository."
+msgstr "Relief, espaces aériens et terrains du dépôt de fichiers de XCSoar."
+
+#. welcome_repository_error
+msgid "The repository could not be reached: %1$s"
+msgstr "Le dépôt est injoignable : %1$s"
+
+#. welcome_try_again
+msgid "Try again"
+msgstr "Réessayer"
+
+#. welcome_files_later
+msgid "The files can also be downloaded later: %1$s."
+msgstr "Les fichiers pourront aussi être téléchargés plus tard : %1$s."
+
+#. welcome_looking
+msgid "Looking for the files for where you are…"
+msgstr "Recherche des fichiers pour l'endroit où vous êtes…"
+
+#. welcome_region
+msgid "Region"
+msgstr "Région"
+
+#. welcome_choose_region
+msgid "Choose the region"
+msgstr "Choisir la région"
+
+#. welcome_choose
+msgid "Choose"
+msgstr "Choisir"
+
+#. welcome_no_files
+msgid "XCSoar's repository has no files for this region."
+msgstr "Le dépôt de XCSoar n'a aucun fichier pour cette région."
+
+#. welcome_maps_large
+msgid "Maps are large downloads: Wi-Fi is best. %1$s has the others."
+msgstr "Les cartes sont de gros téléchargements : mieux vaut le Wi-Fi. %1$s propose les autres."
+
+#. welcome_file_map
+msgid "Map: terrain and topography"
+msgstr "Carte : relief et topographie"
+
+#. welcome_file_waypoints
+msgid "Waypoints: airfields and landables"
+msgstr "Waypoints : terrains et vachables"
+
+#. welcome_downloaded
+msgid "Downloaded and loaded"
+msgstr "Téléchargé et chargé"
+
+#. welcome_where
+msgid "Where do you fly?"
+msgstr "Où volez-vous ?"

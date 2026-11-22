@@ -332,3 +332,115 @@ msgstr ""
 #. menu_status_detail
 msgid "Flight times, GPS, task rules, share position"
 msgstr ""
+
+#. files
+msgid "Files"
+msgstr ""
+
+#. change
+msgid "Change"
+msgstr ""
+
+#. welcome_step
+msgid "Step %1$d of %2$d"
+msgstr ""
+
+#. welcome_later
+msgid "Set up later"
+msgstr ""
+
+#. welcome_downloading
+msgid "Downloading…"
+msgstr ""
+
+#. welcome_intro
+msgid "Three things before the first flight: the units, you and your glider, and the maps for where you fly."
+msgstr ""
+
+#. welcome_units_later
+msgid "Each unit can be changed later: %1$s."
+msgstr ""
+
+#. welcome_crew_title
+msgid "You and your glider"
+msgstr ""
+
+#. welcome_crew_intro
+msgid "Your name goes into the flight log. The glider's polar gives final glide, speed to fly and the landables in reach."
+msgstr ""
+
+#. welcome_your_name
+msgid "Your name"
+msgstr ""
+
+#. welcome_add_glider
+msgid "Add your glider"
+msgstr ""
+
+#. welcome_add_another_glider
+msgid "Add another glider"
+msgstr ""
+
+#. welcome_no_glider
+msgid "Without one, Buteo shows \"NO POLAR\" and leaves final glide out; %1$s adds one later."
+msgstr ""
+
+#. welcome_data_title
+msgid "Maps for where you fly"
+msgstr ""
+
+#. welcome_data_intro
+msgid "Terrain, airspace and airfields from XCSoar's file repository."
+msgstr ""
+
+#. welcome_repository_error
+msgid "The repository could not be reached: %1$s"
+msgstr ""
+
+#. welcome_try_again
+msgid "Try again"
+msgstr ""
+
+#. welcome_files_later
+msgid "The files can also be downloaded later: %1$s."
+msgstr ""
+
+#. welcome_looking
+msgid "Looking for the files for where you are…"
+msgstr ""
+
+#. welcome_region
+msgid "Region"
+msgstr ""
+
+#. welcome_choose_region
+msgid "Choose the region"
+msgstr ""
+
+#. welcome_choose
+msgid "Choose"
+msgstr ""
+
+#. welcome_no_files
+msgid "XCSoar's repository has no files for this region."
+msgstr ""
+
+#. welcome_maps_large
+msgid "Maps are large downloads: Wi-Fi is best. %1$s has the others."
+msgstr ""
+
+#. welcome_file_map
+msgid "Map: terrain and topography"
+msgstr ""
+
+#. welcome_file_waypoints
+msgid "Waypoints: airfields and landables"
+msgstr ""
+
+#. welcome_downloaded
+msgid "Downloaded and loaded"
+msgstr ""
+
+#. welcome_where
+msgid "Where do you fly?"
+msgstr ""

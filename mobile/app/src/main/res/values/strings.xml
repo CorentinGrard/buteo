@@ -134,4 +134,42 @@
     <string name="menu_profiles_detail">Switch, new, import</string>
     <string name="menu_status">Status</string>
     <string name="menu_status_detail">Flight times, GPS, task rules, share position</string>
+
+    <!-- the welcome page -->
+    <string name="back">Back</string>
+    <string name="done">Done</string>
+    <string name="download">Download</string>
+    <string name="search">Search</string>
+    <string name="units">Units</string>
+    <string name="pilot">Pilot</string>
+    <string name="glider">Glider</string>
+    <string name="files">Files</string>
+    <string name="change">Change</string>
+    <string name="welcome_step">Step %1$d of %2$d</string>
+    <string name="welcome_later">Set up later</string>
+    <string name="welcome_downloading">Downloading…</string>
+    <string name="welcome_title">Welcome</string>
+    <string name="welcome_intro">Three things before the first flight: the units, you and your glider, and the maps for where you fly.</string>
+    <string name="welcome_units_later">Each unit can be changed later: %1$s.</string>
+    <string name="welcome_crew_title">You and your glider</string>
+    <string name="welcome_crew_intro">Your name goes into the flight log.  The glider\'s polar gives final glide, speed to fly and the landables in reach.</string>
+    <string name="welcome_your_name">Your name</string>
+    <string name="welcome_add_glider">Add your glider</string>
+    <string name="welcome_add_another_glider">Add another glider</string>
+    <string name="welcome_no_glider">Without one, Buteo shows \"NO POLAR\" and leaves final glide out; %1$s adds one later.</string>
+    <string name="welcome_data_title">Maps for where you fly</string>
+    <string name="welcome_data_intro">Terrain, airspace and airfields from XCSoar\'s file repository.</string>
+    <string name="welcome_repository_error">The repository could not be reached: %1$s</string>
+    <string name="welcome_try_again">Try again</string>
+    <string name="welcome_files_later">The files can also be downloaded later: %1$s.</string>
+    <string name="welcome_looking">Looking for the files for where you are…</string>
+    <string name="welcome_region">Region</string>
+    <string name="welcome_choose_region">Choose the region</string>
+    <string name="welcome_choose">Choose</string>
+    <string name="welcome_no_files">XCSoar\'s repository has no files for this region.</string>
+    <string name="welcome_maps_large">Maps are large downloads: Wi-Fi is best.  %1$s has the others.</string>
+    <string name="welcome_file_map">Map: terrain and topography</string>
+    <string name="welcome_file_waypoints">Waypoints: airfields and landables</string>
+    <string name="welcome_downloaded">Downloaded and loaded</string>
+    <string name="welcome_where">Where do you fly?</string>
 </resources>

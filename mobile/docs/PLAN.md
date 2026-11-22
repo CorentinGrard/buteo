@@ -642,8 +642,11 @@ the core already links but that has never run in this app:
       its cards, chips and edge bars, the menu, the replay bar, the map's
       hold card, the airspace banner (116 texts; German gets 35 from
       XCSoar).  Checked on the Pixel 7 in French; L5 finds its buttons
-      by the app's texts, in the phone's language.  Next: the first
-      start (Welcome), then each page; ViewModel messages (task, replay
+      by the app's texts, in the phone's language.  The first start
+      (Welcome, its three steps) done too, French screenshots included
+      (Android collapses a double space after a full stop in
+      strings.xml: the English screenshots moved by that).  Next: each
+      page from the menu; ViewModel messages (task, replay
       errors); spoken callouts in the language; Android's per-app
       language list (`localeConfig`) once more pages are done
 
@@ -909,6 +912,9 @@ caution).  From a fresh install tested on a Redmi 5 and the Pixel 7.
 ---
 
 ## Log
+
+- 2026-11-22 (evening) — Translations (D28): the Welcome pages in the
+  phone's language, French complete.
 
 - 2026-11-22 — Translations (D28): the flight screen and the menu in
   the phone's language, French complete, others from XCSoar's

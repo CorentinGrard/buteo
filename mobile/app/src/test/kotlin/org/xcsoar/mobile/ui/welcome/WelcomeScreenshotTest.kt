@@ -122,4 +122,39 @@ class WelcomeScreenshotTest {
                 }))
         }
     }
+
+    /** The phone in French (mobile/docs/DECISIONS.md D28). */
+    @Test
+    @Config(qualifiers = "fr-w390dp-h844dp-xxhdpi")
+    fun frenchUnits() = captureRoboImage("src/test/screenshots/fr_welcome_units.png") {
+        XcsTheme(dark = false) { WelcomeContent(WelcomeState(units = units, preset = 0)) }
+    }
+
+    @Test
+    @Config(qualifiers = "fr-w390dp-h844dp-xxhdpi")
+    fun frenchCrewWithoutPlane() = captureRoboImage("src/test/screenshots/fr_welcome_no_plane.png") {
+        XcsTheme(dark = false) {
+            WelcomeContent(WelcomeState(step = WelcomeStep.CREW, units = units,
+                                        planes = emptyList()))
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "fr-w390dp-h844dp-xxhdpi")
+    fun frenchData() = captureRoboImage("src/test/screenshots/fr_welcome_data.png") {
+        XcsTheme(dark = false) {
+            WelcomeContent(WelcomeState(step = WelcomeStep.DATA, units = units,
+                                        repository = files.map { it.file }, country = "fr",
+                                        files = files))
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "fr-w360dp-h720dp-xhdpi")
+    fun frenchOffline() = captureRoboImage("src/test/screenshots/fr_welcome_offline.png") {
+        XcsTheme(dark = false) {
+            WelcomeContent(WelcomeState(step = WelcomeStep.DATA, units = units,
+                                        repositoryError = "Unable to resolve host"))
+        }
+    }
 }
