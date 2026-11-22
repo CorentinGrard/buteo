@@ -125,7 +125,7 @@ with a staged rollout.
 | App access | All functionality is available without special access |
 | Ads | No ads |
 | Advertising ID | Not used (no `AD_ID` permission) |
-| Content rating | Category utility/other; every answer no → Everyone / PEGI 3 |
+| Content rating | Category utility/other; every answer no except "shares the user's location with other users": yes (live tracking) → Everyone / PEGI 3 |
 | Target audience | 18 and over (not designed for children) |
 | News app, Health, Financial features, Government app | No / none |
 | Foreground service | Type **Location**, see below |
@@ -153,7 +153,9 @@ Play counts that. A draft to check:
 - Users can request deletion: **No** (the developer holds no data;
   uninstalling deletes what is on the phone).
 - Data types, each **optional**, purpose **App functionality**,
-  collected and shared (live tracking, NOTAMs, WeGlide):
+  collected (live tracking, NOTAMs, WeGlide), not shared: Play does
+  not count a transfer the pilot starts and expects (turning tracking
+  on, tapping Upload) as sharing:
   - Location: **Precise location** (and approximate).
   - Personal info: **Name** (in the flight log, LiveTrack24 user name),
     **User IDs** (WeGlide ID, SkyLines key), **Other info** (date of
