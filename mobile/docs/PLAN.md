@@ -430,8 +430,11 @@ Run: `./output/MACOS_CORE/bin/CoreSmoke DATA_DIR [FLIGHT.igc]`
       50 km along the track, the airspaces in their map colours, terrain
       and the glide line, from CrossSectionRenderer's data in the core;
       screenshot and parser tests, not yet seen in flight.  The task
-      page's observation zones (2026-11-19).  Not yet: the maps on
-      terrain (plain background)
+      page's observation zones (2026-11-19).  The task and contest
+      maps (also the flight summary's and a flight's page) on the map's
+      terrain, faded, as upstream's (2026-11-23,
+      `xcs_map_terrain_image`: the core draws it offscreen for the
+      chart's box)
 - [x] **L5** instrumented tests (`app/src/androidTest`, 2026-10-20): the
       demo flight replays through the app and the flight screen shows it
       flying, with a vario and a wind estimate; each panel tile asks for

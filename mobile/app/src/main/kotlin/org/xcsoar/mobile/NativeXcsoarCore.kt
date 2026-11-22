@@ -222,6 +222,14 @@ class NativeXcsoarCore(
     override suspend fun setMapMode(mode: MapMode, index: Int) =
         command { NativeCore.nativeMapSetMode(it, mode.code, index) }
 
+    override suspend fun terrainImage(north: Double, west: Double, south: Double, east: Double,
+                                      width: Int, height: Int): ByteArray? = lock.withLock {
+        if (handle == 0L) return@withLock null
+        withContext(Dispatchers.IO) {
+            NativeCore.nativeMapTerrainImage(handle, north, west, south, east, width, height)
+        }
+    }
+
     override suspend fun mapLocationAt(x: Int, y: Int): GeoPosition? = lock.withLock {
         if (handle == 0L) return@withLock null
         withContext(Dispatchers.IO) { NativeCore.nativeMapLocationAt(handle, x, y) }

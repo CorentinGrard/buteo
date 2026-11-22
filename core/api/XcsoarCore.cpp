@@ -2173,6 +2173,30 @@ xcs_map_set_mode(xcs_core *core, uint32_t mode, uint32_t index)
 }
 
 xcs_status
+xcs_map_terrain_image(xcs_core *core, double north, double west,
+                      double south, double east, uint32_t width,
+                      uint32_t height, uint8_t *rgba, size_t size)
+{
+  if (core == nullptr || rgba == nullptr ||
+      !(north <= 90 && south >= -90 && north > south) ||
+      !(west >= -180 && east <= 180 && east > west) ||
+      width == 0 || height == 0 || width > 2048 || height > 2048 ||
+      size < std::size_t(width) * height * 4)
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+#ifdef ANDROID
+  return RunOnMain(*core, [=]{
+    const GeoPoint north_west{Angle::Degrees(west), Angle::Degrees(north)};
+    const GeoPoint south_east{Angle::Degrees(east), Angle::Degrees(south)};
+    return CoreMap::TerrainImage(north_west, south_east, width, height, rgba)
+      ? XCS_OK : XCS_ERROR_FAILED;
+  });
+#else
+  return XCS_ERROR_FAILED;
+#endif
+}
+
+xcs_status
 xcs_map_location_at(xcs_core *core, int32_t x, int32_t y,
                     double *latitude_r, double *longitude_r)
 {

@@ -1548,6 +1548,20 @@ typedef enum xcs_map_mode {
 XCS_EXPORT xcs_status
 xcs_map_set_mode(xcs_core *core, uint32_t mode, uint32_t index);
 
+/**
+ * The map's terrain (its colours and shading, as the map draws it) for
+ * the box from north-west to south-east, north up, on a flat projection
+ * around its middle (longitudes shrunk by the cosine of its latitude):
+ * RGBA, 4 bytes a pixel, row by row from the top.  For maps drawn by
+ * the app, e.g. the analysis pages'.  `size` at least width * height * 4;
+ * width and height 1..2048.  XCS_ERROR_FAILED without a map, terrain,
+ * or with the terrain off.
+ */
+XCS_EXPORT xcs_status
+xcs_map_terrain_image(xcs_core *core, double north, double west,
+                      double south, double east, uint32_t width,
+                      uint32_t height, uint8_t *rgba, size_t size);
+
 /** The place under pixel (x, y) of the map; XCS_ERROR_FAILED without
     a map. */
 XCS_EXPORT xcs_status

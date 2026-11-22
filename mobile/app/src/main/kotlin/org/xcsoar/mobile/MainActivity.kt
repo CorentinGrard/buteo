@@ -7,6 +7,7 @@ import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ComponentName
 import android.content.Intent
+import android.graphics.Bitmap
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
@@ -27,6 +28,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -37,6 +39,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -48,10 +51,14 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import java.nio.ByteBuffer
+import kotlinx.coroutines.CancellationException
 import org.xcsoar.AppPermissionManager
 import org.xcsoar.mobile.core.MapMode
 import org.xcsoar.mobile.core.DataFile
 import org.xcsoar.mobile.core.REPOSITORY_URI
+import org.xcsoar.mobile.ui.analysis.LocalTerrain
+import org.xcsoar.mobile.ui.analysis.TerrainLoader
 import org.xcsoar.mobile.ui.data.DataFilesScreen
 import org.xcsoar.mobile.ui.data.DownloadScreen
 import org.xcsoar.mobile.ui.data.DownloadViewModel
@@ -134,6 +141,27 @@ private enum class Screen { FLIGHT, DATA_FILES, DOWNLOAD, MAP_SETTINGS, WAYPOINT
                             NOTAMS, FLIGHT_LOG, PROFILES, TEAM_CODE, TEAM_REFERENCE, RADIO,
                             ATC, ATC_REFERENCE, AIRSPACE_DETAILS, WELCOME, SUMMARY }
 
+/**
+ * The map's terrain for the analysis maps, from the native core; null
+ * without one (the fake core draws no map).
+ */
+private fun MainActivity.terrainLoader(): TerrainLoader? {
+    val core = (application as XcsoarApp).core ?: return null
+    return { north, west, south, east, width, height ->
+        try {
+            core.terrainImage(north, west, south, east, width, height)?.let { rgba ->
+                Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                    .apply { copyPixelsFromBuffer(ByteBuffer.wrap(rgba)) }
+                    .asImageBitmap()
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
+    }
+}
+
 /** The task on the map: building the edited task, or moving a target. */
 private sealed interface TaskOnMap {
     data object Edit : TaskOnMap
@@ -176,12 +204,15 @@ private fun AnimatedContentTransitionScope<Screen>.pageTransition(): ContentTran
  * the map under it.
  */
 @Composable
-private fun Page(content: @Composable () -> Unit) {
-    Box(Modifier
-        .fillMaxSize()
-        .pointerInput(Unit) {
-            awaitPointerEventScope { while (true) awaitPointerEvent() }
-        }) { content() }
+private fun Page(terrain: TerrainLoader?, content: @Composable () -> Unit) {
+    // the analysis maps draw the map's terrain behind them
+    CompositionLocalProvider(LocalTerrain provides terrain) {
+        Box(Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                awaitPointerEventScope { while (true) awaitPointerEvent() }
+            }) { content() }
+    }
 }
 
 class MainActivity : ComponentActivity() {
@@ -234,6 +265,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             var theme by remember { mutableStateOf(app.theme) }
+            val terrain = remember { terrainLoader() }
             var tileRows by remember { mutableStateOf(app.tileRows) }
             val dark = when (theme) {
                 ThemeChoice.WHITE -> false
@@ -593,7 +625,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     label = "page",
                 ) { page ->
-                    if (page != Screen.FLIGHT) Page {
+                    if (page != Screen.FLIGHT) Page(terrain) {
                         when (page) {
                             Screen.TILE_PICKER -> TilePickerScreen(tilePickerViewModel) {
                                 flightViewModel.refreshTiles()

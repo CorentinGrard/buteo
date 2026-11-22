@@ -138,6 +138,15 @@ interface XcsoarCore {
      */
     suspend fun setMapMode(mode: MapMode, index: Int = 0) {}
 
+    /**
+     * The map's terrain for the box [north]..[south], [west]..[east]
+     * (degrees), north up, on the flat projection of the app's charts:
+     * RGBA rows from the top, [width] x [height]; null without a map or
+     * terrain.
+     */
+    suspend fun terrainImage(north: Double, west: Double, south: Double, east: Double,
+                             width: Int, height: Int): ByteArray? = null
+
     /** The place under pixel ([x], [y]) of the map; null without a map. */
     suspend fun mapLocationAt(x: Int, y: Int): GeoPosition? = null
 

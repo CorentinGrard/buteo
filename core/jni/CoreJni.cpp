@@ -37,6 +37,7 @@
 #include <iterator>
 #include <limits>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -402,6 +403,32 @@ Java_org_xcsoar_mobile_NativeCore_nativeMapSetMode(JNIEnv *, jclass,
                                                    jint index)
 {
   return xcs_map_set_mode(ToCore(core), mode, index);
+}
+
+/** @return RGBA rows from the top, or null (no map or terrain) */
+JNIEXPORT jbyteArray JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeMapTerrainImage(JNIEnv *env, jclass,
+                                                        jlong core,
+                                                        jdouble north,
+                                                        jdouble west,
+                                                        jdouble south,
+                                                        jdouble east,
+                                                        jint width,
+                                                        jint height)
+{
+  if (width <= 0 || height <= 0)
+    return nullptr;
+
+  std::vector<uint8_t> rgba(std::size_t(width) * height * 4);
+  if (xcs_map_terrain_image(ToCore(core), north, west, south, east, width,
+                            height, rgba.data(), rgba.size()) != XCS_OK)
+    return nullptr;
+
+  jbyteArray array = env->NewByteArray(jsize(rgba.size()));
+  if (array != nullptr)
+    env->SetByteArrayRegion(array, 0, jsize(rgba.size()),
+                            reinterpret_cast<const jbyte *>(rgba.data()));
+  return array;
 }
 
 /** @return {latitude, longitude}, or null without a map */

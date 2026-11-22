@@ -56,6 +56,10 @@ internal object NativeCore {
     @JvmStatic external fun nativeMapPan(core: Long, dx: Float, dy: Float): Int
     @JvmStatic external fun nativeMapScale(core: Long, factor: Float): Int
     @JvmStatic external fun nativeMapSetMode(core: Long, mode: Int, index: Int): Int
+    /** @return RGBA rows from the top, or null (no map or terrain) */
+    @JvmStatic external fun nativeMapTerrainImage(core: Long, north: Double, west: Double,
+                                                  south: Double, east: Double,
+                                                  width: Int, height: Int): ByteArray?
     /** @return {latitude, longitude}, or null without a map */
     @JvmStatic external fun nativeMapLocationAt(core: Long, x: Int, y: Int): DoubleArray?
     @JvmStatic external fun nativeMapFollow(core: Long): Int

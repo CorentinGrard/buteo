@@ -3,12 +3,19 @@
 
 package org.xcsoar.mobile.ui.analysis
 
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.res.stringResource
@@ -38,8 +44,6 @@ import org.xcsoar.mobile.core.XY
 import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.setup.ValueRow
 import org.xcsoar.mobile.ui.theme.XcsTheme
-import kotlin.math.PI
-import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
 
@@ -283,19 +287,27 @@ internal fun TaskPage(a: Analysis) {
     val nameStyle = TextStyle(color = colors.text, fontSize = 12.sp)
     val description = stringResource(R.string.ana_task_description)
 
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    val inset = with(LocalDensity.current) { 24.dp.toPx() }
     Box(Modifier
             .fillMaxWidth()
             .aspectRatio(1.2f)
-            .background(colors.panel, RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .background(colors.panel)
+            .onSizeChanged { size = it }
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center) {
         if (points.size < 2) {
             Text(stringResource(R.string.ana_no_task), color = colors.textSecondary, fontSize = 15.sp)
             return@Box
         }
-        Canvas(Modifier.matchParentSize().padding(24.dp)) {
-            val at = flatProjection(points.map { it.location } + points.map { it.target } +
-                                    points.flatMap { it.zone } + trace)
+        val all = points.map { it.location } + points.map { it.target } +
+            points.flatMap { it.zone } + trace
+        val map = if (size == IntSize.Zero) null
+                  else FlatMap(all, size.width.toFloat(), size.height.toFloat(), inset)
+        TerrainBehind(map, size.width, size.height)
+        Canvas(Modifier.matchParentSize()) {
+            val at = (map ?: FlatMap(all, this.size.width, this.size.height, inset))::at
             // the zones under the flight, as upstream's OZRenderer
             for (p in points.filter { it.zone.size >= 2 }) {
                 val zone = path(p.zone, at).apply { close() }
@@ -320,27 +332,6 @@ internal fun TaskPage(a: Analysis) {
     task.aatToGo?.let { ValueRow(stringResource(R.string.ana_aat_to_go), Format.duration(it)) }
     task.distanceToGo?.let { ValueRow(stringResource(R.string.ana_distance_to_go), Format.distance(it)) }
     task.targetSpeed?.let { ValueRow(stringResource(R.string.ana_target_speed), Format.taskSpeed(it)) }
-}
-
-/**
- * North up on a flat projection fitting [all] into the canvas, as the
- * contest page draws the flight.
- */
-internal fun DrawScope.flatProjection(all: List<LatLon>): (LatLon) -> Offset {
-    val minLat = all.minOf { it.latitude }
-    val maxLat = all.maxOf { it.latitude }
-    val minLon = all.minOf { it.longitude }
-    val maxLon = all.maxOf { it.longitude }
-    val cosLat = cos((minLat + maxLat) / 2 * PI / 180)
-    val spanX = max((maxLon - minLon) * cosLat, 1e-6)
-    val spanY = max(maxLat - minLat, 1e-6)
-    val scale = min(size.width / spanX, size.height / spanY)
-    val offsetX = (size.width - spanX * scale) / 2
-    val offsetY = (size.height - spanY * scale) / 2
-    return { p ->
-        Offset((offsetX + (p.longitude - minLon) * cosLat * scale).toFloat(),
-               (offsetY + (maxLat - p.latitude) * scale).toFloat())
-    }
 }
 
 internal fun path(points: List<LatLon>, at: (LatLon) -> Offset) = Path().apply {

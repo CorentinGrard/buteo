@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <string>
 
 struct ANativeWindow;
@@ -103,6 +105,18 @@ SetMode(unsigned mode, unsigned index) noexcept;
 [[gnu::pure]]
 GeoPoint
 LocationAt(int x, int y) noexcept;
+
+/**
+ * The map's terrain (its colours and shading) for the box from
+ * @p north_west to @p south_east, north up, on the flat projection
+ * the app's charts use: RGBA, row by row from the top, into @p rgba
+ * (width * height * 4 bytes).  For the analysis maps.
+ *
+ * @return false without a map, terrain, or with the terrain off
+ */
+bool
+TerrainImage(GeoPoint north_west, GeoPoint south_east,
+             unsigned width, unsigned height, uint8_t *rgba) noexcept;
 
 /** The task changed (edited or active): draw it again. */
 void

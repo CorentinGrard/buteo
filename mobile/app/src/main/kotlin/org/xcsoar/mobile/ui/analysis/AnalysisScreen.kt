@@ -3,6 +3,13 @@
 
 package org.xcsoar.mobile.ui.analysis
 
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
@@ -300,17 +307,24 @@ internal fun ContestMap(contest: ContestInfo, modifier: Modifier = Modifier.aspe
     val all = trace + best
     val description = stringResource(R.string.ana_contest_description)
 
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    val inset = with(LocalDensity.current) { 16.dp.toPx() }
     Box(modifier
             .fillMaxWidth()
-            .background(colors.panel, RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .background(colors.panel)
+            .onSizeChanged { size = it }
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center) {
         if (all.size < 2) {
             Text(stringResource(R.string.no_data_yet), color = colors.textSecondary, fontSize = 15.sp)
             return@Box
         }
-        Canvas(Modifier.matchParentSize().padding(16.dp)) {
-            val at = flatProjection(all)
+        val map = if (size == IntSize.Zero) null
+                  else FlatMap(all, size.width.toFloat(), size.height.toFloat(), inset)
+        TerrainBehind(map, size.width, size.height)
+        Canvas(Modifier.matchParentSize()) {
+            val at = (map ?: FlatMap(all, this.size.width, this.size.height, inset))::at
             if (trace.size >= 2)
                 drawPath(path(trace, at), colors.textSecondary, style = Stroke(2f))
             if (best.size >= 2) {

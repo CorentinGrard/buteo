@@ -43,6 +43,10 @@
 #include "Engine/Task/Factory/AbstractTaskFactory.hpp"
 #include "Engine/Task/ObservationZones/Boundary.hpp"
 #include "Geo/GeoBounds.hpp"
+#include "Projection/WindowProjection.hpp"
+#include "Renderer/BackgroundRenderer.hpp"
+#include "ui/canvas/BufferCanvas.hpp"
+#include "ui/opengl/System.hpp"
 #include "CoreTask.hpp"
 #include "Terrain/RasterTerrain.hpp"
 #include "UISettings.hpp"
@@ -73,12 +77,14 @@
 #include "ui/event/PeriodicTimer.hpp"
 
 #include <android/native_window.h>
+#include <EGL/egl.h>
 
 #include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <memory>
 #include <optional>
+#include <vector>
 
 namespace {
 
@@ -976,6 +982,65 @@ CoreMap::LocationAt(int x, int y) noexcept
     return GeoPoint::Invalid();
 
   return graphics->map->Projection().ScreenToGeo({x, y});
+}
+
+bool
+CoreMap::TerrainImage(GeoPoint north_west, GeoPoint south_east,
+                      unsigned width, unsigned height, uint8_t *rgba) noexcept
+{
+  /* the EGL context, current with the map's surface or without one
+     (ReleaseSurface()) */
+  if (graphics == nullptr || data_components == nullptr ||
+      data_components->terrain == nullptr ||
+      eglGetCurrentContext() == EGL_NO_CONTEXT)
+    return false;
+
+  const auto &terrain_settings = CommonInterface::GetMapSettings().terrain;
+  if (!terrain_settings.enable)
+    return false;
+
+  /* the app's flat projection: the box's middle, as many pixels per
+     metre north-south as the image is high */
+  const PixelSize size{width, height};
+  const GeoPoint center = north_west.Middle(south_east);
+  const double height_m =
+    GeoPoint(center.longitude, north_west.latitude)
+    .DistanceS(GeoPoint(center.longitude, south_east.latitude));
+  if (!(height_m > 0))
+    return false;
+
+  WindowProjection projection;
+  projection.SetScreenSize(size);
+  projection.SetScreenOrigin(PixelRect{size}.GetCenter());
+  projection.SetGeoLocation(center);
+  projection.SetScreenAngle(Angle::Zero());
+  projection.SetScale(height / height_m);
+  projection.UpdateScreenBounds();
+
+  BufferCanvas canvas;
+  canvas.Create(size);
+  canvas.Begin();
+  canvas.Clear(COLOR_WHITE);
+
+  BackgroundRenderer background;
+  background.SetTerrain(data_components->terrain.get());
+  background.SetShadingAngle(projection, terrain_settings,
+                             CommonInterface::Calculated());
+  background.Draw(canvas, projection, terrain_settings);
+
+  /* OpenGL reads from the bottom row up */
+  std::vector<uint8_t> pixels(std::size_t(width) * height * 4);
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
+  glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+  canvas.End();
+
+  const std::size_t row = std::size_t(width) * 4;
+  for (unsigned y = 0; y < height; ++y)
+    std::copy_n(pixels.data() + (height - 1 - y) * row, row, rgba + y * row);
+
+  /* the map draws its next frame into its own surface again */
+  Render();
+  return true;
 }
 
 void
