@@ -10,7 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -167,8 +167,9 @@ private fun FileCard(
              overflow = TextOverflow.Ellipsis)
         Text(loaded ?: formats, color = if (loaded != null) colors.safe else colors.textSecondary,
              fontSize = 15.sp)
-        Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        // the buttons go to a second line on a narrow screen or a long language
+        FlowRow(Modifier.padding(top = 4.dp), itemVerticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (busy) {
                 CircularProgressIndicator(Modifier.size(32.dp), color = colors.text,
                                           strokeWidth = 3.dp)

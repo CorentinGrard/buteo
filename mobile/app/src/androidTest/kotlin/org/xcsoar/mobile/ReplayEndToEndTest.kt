@@ -65,9 +65,9 @@ class ReplayEndToEndTest {
         compose.onNodeWithText(text(R.string.menu_flights)).performScrollTo().performClick()
         compose.onNodeWithText(flight.name, substring = true).performClick()
         waitFor("the flight's analysis", STARTUP_MS) {
-            descriptions("Time ").any { !it.contains(Format.INVALID) }
+            descriptions("${text(R.string.summary_time)} ").any { !it.contains(Format.INVALID) }
         }
-        compose.onNodeWithText("Replay").performClick()
+        compose.onNodeWithText(text(R.string.flights_replay)).performClick()
         waitFor("the replay bar", STARTUP_MS) {
             exists(hasContentDescription(text(R.string.replay_skip)))
         }

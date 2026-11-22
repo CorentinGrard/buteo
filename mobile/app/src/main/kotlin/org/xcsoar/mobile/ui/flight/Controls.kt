@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,6 +51,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -130,9 +133,14 @@ fun Stepper(
             up = false
             onDecrease()
         }
+        // the middle takes what the buttons leave: a long caption wraps
+        // rather than pushing them off the screen
         Column(horizontalAlignment = Alignment.CenterHorizontally,
-               modifier = Modifier.clearAndSetSemantics { contentDescription = "$name $spoken" }) {
-            Caption(caption)
+               modifier = Modifier
+                   .weight(1f)
+                   .padding(horizontal = 4.dp)
+                   .clearAndSetSemantics { contentDescription = "$name $spoken" }) {
+            Caption(caption, maxLines = 2, textAlign = TextAlign.Center)
             AnimatedContent(
                 targetState = text,
                 transitionSpec = {
@@ -210,8 +218,12 @@ fun Segmented(
                                 RoundedCornerShape(9.dp)),
                 contentAlignment = Alignment.Center,
             ) {
+                // a long label shrinks to fit its segment (a word is never
+                // broken), and only then is cut with an ellipsis
                 Text(label, color = if (isSelected) colors.onSelected else colors.text,
-                     fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                     autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = 16.sp),
+                     fontWeight = FontWeight.SemiBold, maxLines = 1, textAlign = TextAlign.Center,
+                     overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 4.dp))
             }
         }
     }

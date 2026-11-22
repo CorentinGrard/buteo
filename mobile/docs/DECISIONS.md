@@ -519,3 +519,12 @@ on a French phone, "Européen" sat under "Welcome".
   "METAR, TAF, RASP", "ETE", "Cloud, SkyLines, LiveTrack24" are not in
   the resources.  Chips and tags are stored in sentence case ("No GPS",
   XCSoar's) and shown in capitals with the language's own rules.
+- A French text is a third longer than the English, and a 320 dp phone
+  has the room of a 4-inch one: the controls give way instead of
+  cutting.  `Segmented` shrinks a label to 11 sp (a word is never
+  broken) before it ellipsizes, a `Stepper` caption wraps to two lines
+  and leaves the buttons their place, buttons that do not fit go to a
+  second line (`FlowRow`).  The French screenshots are 390 dp wide and
+  missed all of this: `fr_safety_320` and `fr_data_files_320` are the
+  narrow ones, and a new page is worth a look in the `l5` emulator
+  (320 dp) with `persist.sys.locale fr-FR`.

@@ -72,32 +72,47 @@ class FrenchPagesScreenshotTest {
         }
     }
 
-    @Test
-    @Config(qualifiers = "fr-w390dp-h1300dp-xxhdpi")
-    fun safety() = capture("safety") {
-        XcsTheme(dark = false) {
-            SafetyContent(mapOf(SafetyOption.ARRIVAL_HEIGHT to 300.0,
-                                SafetyOption.TERRAIN_HEIGHT to 150.0,
-                                SafetyOption.MC to 0.5, SafetyOption.STARTUP_MC to 0.0,
-                                SafetyOption.RISK_FACTOR to 0.3, SafetyOption.ALTERNATES to 0.0,
-                                SafetyOption.TURN_BACK_MARKER to 1.0),
-                          { _, _ -> }, {})
-        }
+    @androidx.compose.runtime.Composable
+    private fun SafetyPage() = XcsTheme(dark = false) {
+        SafetyContent(mapOf(SafetyOption.ARRIVAL_HEIGHT to 300.0,
+                            SafetyOption.TERRAIN_HEIGHT to 150.0,
+                            SafetyOption.MC to 0.5, SafetyOption.STARTUP_MC to 0.0,
+                            SafetyOption.RISK_FACTOR to 0.3, SafetyOption.ALTERNATES to 0.0,
+                            SafetyOption.TURN_BACK_MARKER to 1.0),
+                      { _, _ -> }, {})
+    }
+
+    @androidx.compose.runtime.Composable
+    private fun DataFilesPage() = XcsTheme(dark = false) {
+        DataFilesContent(
+            DataFilesState(
+                DataStatus(
+                    MapStatus(listOf("/data/XCSoarData/maps/alps_hd.xcm"), terrain = true),
+                    FileStatus(emptyList(), 0),
+                    FileStatus(listOf("/data/XCSoarData/waypoints/alps.cup"), 1250)),
+                error = "Airspace: unknown file format".asText()),
+            {}, {}, {}, onDownload = {})
     }
 
     @Test
-    fun dataFiles() = capture("data_files") {
-        XcsTheme(dark = false) {
-            DataFilesContent(
-                DataFilesState(
-                    DataStatus(
-                        MapStatus(listOf("/data/XCSoarData/maps/alps_hd.xcm"), terrain = true),
-                        FileStatus(emptyList(), 0),
-                        FileStatus(listOf("/data/XCSoarData/waypoints/alps.cup"), 1250)),
-                    error = "Airspace: unknown file format".asText()),
-                {}, {}, {}, onDownload = {})
-        }
-    }
+    @Config(qualifiers = "fr-w390dp-h1300dp-xxhdpi")
+    fun safety() = capture("safety") { SafetyPage() }
+
+    @Test
+    fun dataFiles() = capture("data_files") { DataFilesPage() }
+
+    /*
+     * The narrowest phones (320 dp): the long captions wrap, a segment's
+     * label shrinks, buttons go to a second line; nothing is cut or
+     * pushed off the screen.
+     */
+    @Test
+    @Config(qualifiers = "fr-w320dp-h1300dp-xxhdpi")
+    fun safetyNarrow() = capture("safety_320") { SafetyPage() }
+
+    @Test
+    @Config(qualifiers = "fr-w320dp-h844dp-xxhdpi")
+    fun dataFilesNarrow() = capture("data_files_320") { DataFilesPage() }
 
     @Test
     fun profiles() = capture("profiles") {

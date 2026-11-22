@@ -47,6 +47,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
@@ -360,13 +361,17 @@ private fun CaptionLine(title: String, comment: String, commentColor: Color) {
     }
 }
 
-/** Upper-case caption above a value. */
+/**
+ * Upper-case caption above a value: one line, cut with an ellipsis, unless
+ * [maxLines] allows it to wrap.
+ */
 @Composable
 fun Caption(text: String, modifier: Modifier = Modifier,
-            color: Color = XcsTheme.colors.textSecondary) {
+            color: Color = XcsTheme.colors.textSecondary, maxLines: Int = 1,
+            textAlign: TextAlign? = null) {
     Text(text.uppercase(), color = color, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-         letterSpacing = 0.06.em, maxLines = 1, softWrap = false,
-         overflow = TextOverflow.Ellipsis, modifier = modifier)
+         letterSpacing = 0.06.em, maxLines = maxLines, softWrap = maxLines > 1,
+         overflow = TextOverflow.Ellipsis, textAlign = textAlign, modifier = modifier)
 }
 
 /** "1842 m": the value large, the unit small and secondary. */

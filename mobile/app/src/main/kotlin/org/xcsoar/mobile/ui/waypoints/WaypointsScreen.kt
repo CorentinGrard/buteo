@@ -11,10 +11,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,8 +21,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
@@ -36,7 +32,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -51,6 +46,7 @@ import org.xcsoar.mobile.core.WaypointFilter
 import org.xcsoar.mobile.core.WaypointInfo
 import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.ScreenHeader
+import org.xcsoar.mobile.ui.flight.Segmented
 import org.xcsoar.mobile.ui.menuPath
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
@@ -110,30 +106,11 @@ fun WaypointsContent(
     ) {
         ScreenHeader(title ?: stringResource(R.string.go_to), onBack)
 
-        Row(Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .background(colors.panel, RoundedCornerShape(12.dp))
-                .selectableGroup()) {
-            for ((label, filter) in listOf(stringResource(R.string.landable) to WaypointFilter.LANDABLE,
-                                           stringResource(R.string.waypoints_airports)
-                                               to WaypointFilter.AIRPORT,
-                                           stringResource(R.string.waypoints_all)
-                                               to WaypointFilter.ALL)) {
-                val selected = state.filter == filter
-                Box(Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .selectable(selected, role = Role.Tab) { onFilter(filter) }
-                        .padding(4.dp)
-                        .background(if (selected) colors.selected else Color.Transparent,
-                                    RoundedCornerShape(9.dp)),
-                    contentAlignment = Alignment.Center) {
-                    Text(label, color = if (selected) colors.onSelected else colors.text,
-                         fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                }
-            }
-        }
+        val filters = listOf(stringResource(R.string.landable) to WaypointFilter.LANDABLE,
+                             stringResource(R.string.waypoints_airports) to WaypointFilter.AIRPORT,
+                             stringResource(R.string.waypoints_all) to WaypointFilter.ALL)
+        Segmented(filters.map { it.first }, filters.indexOfFirst { it.second == state.filter },
+                  { onFilter(filters[it].second) }, Modifier.fillMaxWidth())
 
         OutlinedTextField(
             value = state.query,
