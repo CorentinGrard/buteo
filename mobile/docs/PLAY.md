@@ -155,7 +155,8 @@ Play counts that. A draft to check:
 - Data types, each **optional**, purpose **App functionality**,
   collected (live tracking, NOTAMs, WeGlide), not shared: Play does
   not count a transfer the pilot starts and expects (turning tracking
-  on, tapping Upload) as sharing:
+  on, tapping Upload) as sharing. Processed ephemerally: **No** (the
+  services keep the tracks and the uploaded flight):
   - Location: **Precise location** (and approximate).
   - Personal info: **Name** (in the flight log, LiveTrack24 user name),
     **User IDs** (WeGlide ID, SkyLines key), **Other info** (date of
