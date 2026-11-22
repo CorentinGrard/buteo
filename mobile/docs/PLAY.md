@@ -138,9 +138,13 @@ runs, a foreground service with a visible notification keeps the GPS,
 the glide calculations, airspace warnings and the flight log (IGC)
 going when the screen is off or another app is in front: a pilot
 cannot keep the screen on for a whole flight. It starts when the pilot
-opens Buteo." Video: a screen recording (YouTube, unlisted): open
-Buteo, show the notification, turn the screen off and on, the flight
-screen still running. No background location permission: Buteo does
+opens Buteo." Video (YouTube, unlisted, the same link for both
+tasks): one captioned screen recording of about 2 minutes. In it, the
+notification shows, another app comes to the front, the screen turns
+off and on, and the pilot turns on Live tracking. It was recorded on
+an emulator fed with the fixes of `test/data/01lz1hq1.igc`, with the
+app's network blocked so that no fake position reached a tracking
+server. No background location permission: Buteo does
 not request `ACCESS_BACKGROUND_LOCATION`, so no background location
 declaration.
 
