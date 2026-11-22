@@ -139,12 +139,13 @@ the glide calculations, airspace warnings and the flight log (IGC)
 going when the screen is off or another app is in front: a pilot
 cannot keep the screen on for a whole flight. It starts when the pilot
 opens Buteo." Video (YouTube, unlisted, the same link for both
-tasks): one captioned screen recording of about 2 minutes. In it, the
-notification shows, another app comes to the front, the screen turns
-off and on, and the pilot turns on Live tracking. It was recorded on
-an emulator fed with the fixes of `test/data/01lz1hq1.igc`, with the
-app's network blocked so that no fake position reached a tracking
-server. No background location permission: Buteo does
+tasks): one captioned screen recording of 5 minutes on a Pixel 7. In
+it, the notification shows, another app comes to the front, the pilot
+comes back through the notification and turns on Live tracking. The
+phone's GPS provider was fed (an adb test provider) with a thermal of
+`test/data/01lz1hq1.igc` moved to Burgundy, the app's barometer was
+idled, and its network was blocked, so that no fake position reached a
+tracking server. No background location permission: Buteo does
 not request `ACCESS_BACKGROUND_LOCATION`, so no background location
 declaration.
 
