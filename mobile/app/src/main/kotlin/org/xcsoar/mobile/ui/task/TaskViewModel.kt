@@ -18,6 +18,8 @@ import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.TaskFileInfo
 import org.xcsoar.mobile.core.TaskInfo
 import org.xcsoar.mobile.core.TaskOp
+import org.xcsoar.mobile.core.TaskPointInfo
+import org.xcsoar.mobile.core.TaskRule
 import org.xcsoar.mobile.core.WaypointInfo
 import org.xcsoar.mobile.core.WeGlideTask
 import org.xcsoar.mobile.core.WeGlideTaskList
@@ -179,6 +181,68 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
         edit(TaskOp.SET_RADIUS, index, value)
     }
 
+    private fun point(index: Int): TaskPointInfo? = stateFlow.value.task?.points?.getOrNull(index)
+
+    /** The inner radius of an annular sector or keyhole, as [changeRadius]. */
+    fun changeInnerRadius(index: Int, direction: Int) {
+        val radius = point(index)?.zone?.innerRadius ?: return
+        val step = radiusStep(if (direction > 0) radius else radius - 1)
+        edit(TaskOp.SET_INNER_RADIUS, index,
+             (radius + direction * step).coerceAtLeast(MIN_RADIUS))
+    }
+
+    /** A sector's start (or [end]) radial, ± [ANGLE_STEP] degrees. */
+    fun changeRadial(index: Int, end: Boolean, direction: Int) {
+        val zone = point(index)?.zone ?: return
+        val radial = (if (end) zone.endRadial else zone.startRadial) ?: return
+        edit(if (end) TaskOp.SET_END_RADIAL else TaskOp.SET_START_RADIAL, index,
+             ((radial + direction * ANGLE_STEP) % 360 + 360) % 360)
+    }
+
+    /** A symmetric sector's or keyhole's angle, ± [ANGLE_STEP] degrees. */
+    fun changeAngle(index: Int, direction: Int) {
+        val angle = point(index)?.zone?.angle ?: return
+        edit(TaskOp.SET_SECTOR_ANGLE, index,
+             (angle + direction * ANGLE_STEP).coerceIn(ANGLE_STEP, 360.0))
+    }
+
+    /** One of the task's rules, in the core's units ([TaskRule]). */
+    fun setRule(rule: TaskRule, value: Double) = edit(TaskOp.SET_RULE, rule.code, value)
+
+    fun addOptionalStart(waypoint: WaypointInfo) =
+        edit(TaskOp.ADD_OPTIONAL_START, value = waypoint.id.toDouble())
+
+    fun removeOptionalStart(index: Int) = edit(TaskOp.REMOVE_OPTIONAL_START, index)
+
+    /* the targets of the active area task, as upstream's target dialog */
+
+    /** ± [TARGET_RANGE_STEP], from the nearest (-1) to the farthest (1) point. */
+    fun changeTargetRange(index: Int, direction: Int) {
+        val target = point(index)?.target ?: return
+        edit(TaskOp.SET_TARGET_RANGE, index,
+             (target.range + direction * TARGET_RANGE_STEP).coerceIn(-1.0, 1.0))
+    }
+
+    /** ± [TARGET_RADIAL_STEP] degrees from the leg, -180..180. */
+    fun changeTargetRadial(index: Int, direction: Int) {
+        val target = point(index)?.target ?: return
+        var radial = target.radial + direction * TARGET_RADIAL_STEP
+        if (radial > 180) radial -= 360
+        if (radial < -180) radial += 360
+        edit(TaskOp.SET_TARGET_RADIAL, index, radial)
+    }
+
+    /** Locked, or moved by XCSoar's optimiser. */
+    fun setTargetLocked(index: Int, locked: Boolean) =
+        edit(TaskOp.LOCK_TARGET, index, if (locked) 1.0 else 0.0)
+
+    /** The target there, if inside its area. */
+    fun moveTarget(index: Int, latitude: Double, longitude: Double) =
+        run(text(R.string.task_target_outside)) {
+            core.setTaskTarget(index, latitude, longitude)
+            null
+        }
+
     /** ± [AAT_TIME_STEP] seconds. */
     fun changeMinTime(direction: Int) {
         val time = stateFlow.value.task?.aatMinTime ?: return
@@ -263,6 +327,10 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
         private const val REFRESH_MS = 3000L
         private const val MIN_RADIUS = 100.0
         const val AAT_TIME_STEP = 15 * 60.0
+        /** Zone radials and angles, as upstream's zone editors. */
+        const val ANGLE_STEP = 10.0
+        const val TARGET_RANGE_STEP = 0.05
+        const val TARGET_RADIAL_STEP = 5.0
         private const val MAX_AAT_TIME = 12 * 3600.0
 
         /** Zone size steps: 100 m below 1 km, 500 m below 5 km, else 1 km. */

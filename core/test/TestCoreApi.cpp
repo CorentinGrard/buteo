@@ -264,6 +264,12 @@ WaypointIds(xcs_core *core, unsigned n)
   return ids;
 }
 
+static bool
+Has(const std::string &json, const char *part)
+{
+  return json.find(part) != std::string::npos;
+}
+
 static void
 TestTask(xcs_core *core)
 {
@@ -272,7 +278,7 @@ TestTask(xcs_core *core)
   const auto ids = WaypointIds(core, 3);
   ok1(ids.size() == 3);
   if (ids.size() != 3) {
-    skip(35, 0, "no waypoints");
+    skip(36 + 23, 0, "no waypoints");
     return;
   }
 
@@ -341,6 +347,40 @@ TestTask(xcs_core *core)
   ok1(edited.rfind("{\"type\":5,", 0) == 0);
   ok1(edited.find("\"aat_min_time\"") != std::string::npos);
 
+  /* zone shapes: what upstream's zone editors change */
+  ok1(xcs_task_edit(core, XCS_TASK_SET_POINT_TYPE, 1, 11 /* AAT_SEGMENT */) == XCS_OK);
+  ok1(xcs_task_edit(core, XCS_TASK_SET_START_RADIAL, 1, 45) == XCS_OK &&
+      xcs_task_edit(core, XCS_TASK_SET_END_RADIAL, 1, 135) == XCS_OK);
+  edited = TaskJson(core, XCS_TASK_EDITED);
+  ok1(Has(edited, "\"shape\":\"sector\"") && Has(edited, "\"start_radial\":4.5E1") &&
+      Has(edited, "\"end_radial\":1.35E2"));
+  ok1(xcs_task_edit(core, XCS_TASK_SET_SECTOR_ANGLE, 1, 90) == XCS_ERROR_INVALID_ARGUMENT);
+  ok1(xcs_task_edit(core, XCS_TASK_SET_INNER_RADIUS, 1, 500) == XCS_ERROR_INVALID_ARGUMENT);
+  ok1(xcs_task_edit(core, XCS_TASK_SET_POINT_TYPE, 1, 16 /* AAT_ANNULAR_SECTOR */) == XCS_OK &&
+      xcs_task_edit(core, XCS_TASK_SET_INNER_RADIUS, 1, 500) == XCS_OK &&
+      Has(TaskJson(core, XCS_TASK_EDITED), "\"inner_radius\":5E2"));
+
+  /* the task's rules (TaskPropertiesPanel) */
+  ok1(xcs_task_edit(core, XCS_TASK_SET_RULE, XCS_TASK_RULE_START_OPEN, 750) == XCS_OK);
+  ok1(xcs_task_edit(core, XCS_TASK_SET_RULE, XCS_TASK_RULE_START_OPEN, 1440) ==
+      XCS_ERROR_INVALID_ARGUMENT);
+  ok1(xcs_task_edit(core, XCS_TASK_SET_RULE, XCS_TASK_RULE_START_MAX_HEIGHT, 1500) == XCS_OK &&
+      xcs_task_edit(core, XCS_TASK_SET_RULE, XCS_TASK_RULE_START_HEIGHT_REF, 1) == XCS_OK);
+  /* an area task has no FAI start and finish rules */
+  ok1(xcs_task_edit(core, XCS_TASK_SET_RULE, XCS_TASK_RULE_FAI_START_FINISH, 1) ==
+      XCS_ERROR_INVALID_ARGUMENT);
+  ok1(xcs_task_edit(core, XCS_TASK_SET_RULE, 99, 0) == XCS_ERROR_INVALID_ARGUMENT);
+  edited = TaskJson(core, XCS_TASK_EDITED);
+  ok1(Has(edited, "\"start_open\":750,\"start_close\":-1,") &&
+      Has(edited, "\"start_max_height\":1500,\"start_height_ref\":\"msl\"") &&
+      Has(edited, "\"fai_allowed\":false"));
+
+  /* another start (OptionalStartsDialog) */
+  ok1(xcs_task_edit(core, XCS_TASK_ADD_OPTIONAL_START, 0, ids[2]) == XCS_OK &&
+      Has(TaskJson(core, XCS_TASK_EDITED), "\"optional_starts\":[{\"waypoint_id\":"));
+  ok1(xcs_task_edit(core, XCS_TASK_REMOVE_OPTIONAL_START, 1, 0) ==
+      XCS_ERROR_INVALID_ARGUMENT);
+
   /* save, find and load it again */
   ok1(xcs_task_save(core, "../escape") == XCS_ERROR_INVALID_ARGUMENT);
   ok1(xcs_task_save(core, "core-api-test") == XCS_OK);
@@ -353,6 +393,10 @@ TestTask(xcs_core *core)
   ok1(xcs_task_edit(core, XCS_TASK_CANCEL, 0, 0) == XCS_OK);
   ok1(xcs_task_load(core, saved.c_str(), 0) == XCS_OK &&
       TaskJson(core, XCS_TASK_EDITED).rfind("{\"type\":5,", 0) == 0);
+  /* the rules and the other start are in the file */
+  edited = TaskJson(core, XCS_TASK_EDITED);
+  ok1(Has(edited, "\"start_open\":750,") &&
+      Has(edited, "\"optional_starts\":[{\"waypoint_id\":"));
   ok1(xcs_task_edit(core, XCS_TASK_CANCEL, 0, 0) == XCS_OK);
   std::filesystem::remove(saved);
 
@@ -361,6 +405,37 @@ TestTask(xcs_core *core)
   ok1(xcs_task_edit(core, XCS_TASK_ADVANCE, 0, 1) == XCS_OK &&
       TaskJson(core, XCS_TASK_ACTIVE).find("\"active\":1") != std::string::npos);
   ok1(xcs_task_edit(core, XCS_TASK_RESTART, 0, 0) == XCS_OK);
+
+  /* the targets of an active area task (TargetDialog): the turn point
+     has one, the start and finish not */
+  xcs_task_edit(core, XCS_TASK_BEGIN, 0, 0);
+  xcs_task_edit(core, XCS_TASK_SET_TYPE, 0, 5 /* AAT */);
+  ok1(xcs_task_edit(core, XCS_TASK_COMMIT, 0, 0) == XCS_OK);
+  active = TaskJson(core, XCS_TASK_ACTIVE);
+  ok1(Count(active, "\"target\":{") == 1);
+  ok1(xcs_task_edit(core, XCS_TASK_SET_TARGET_RANGE, 0, 0.5) == XCS_ERROR_INVALID_ARGUMENT);
+  ok1(xcs_task_edit(core, XCS_TASK_SET_TARGET_RANGE, 1, 1.5) == XCS_ERROR_INVALID_ARGUMENT);
+  /* moved by the pilot: locked, so the optimiser leaves it */
+  ok1(xcs_task_edit(core, XCS_TASK_SET_TARGET_RANGE, 1, 0.5) == XCS_OK &&
+      Has(TaskJson(core, XCS_TASK_ACTIVE), "\"range\":5E-1,") &&
+      Has(TaskJson(core, XCS_TASK_ACTIVE), "\"locked\":true"));
+  ok1(xcs_task_edit(core, XCS_TASK_LOCK_TARGET, 1, 0) == XCS_OK &&
+      Has(TaskJson(core, XCS_TASK_ACTIVE), "\"locked\":false"));
+  /* only inside the area */
+  ok1(xcs_task_set_target_location(core, 1, 0, 0) == XCS_ERROR_INVALID_ARGUMENT);
+  {
+    active = TaskJson(core, XCS_TASK_ACTIVE);
+    const auto target = active.find("\"target\":{");
+    const auto lat = active.find("\"latitude\":", target);
+    const auto lon = active.find("\"longitude\":", target);
+    ok1(target != std::string::npos && lat != std::string::npos &&
+        lon != std::string::npos &&
+        xcs_task_set_target_location(core, 1,
+                                     std::strtod(active.c_str() + lat + 11, nullptr),
+                                     std::strtod(active.c_str() + lon + 12, nullptr))
+        == XCS_OK &&
+        Has(TaskJson(core, XCS_TASK_ACTIVE), "\"locked\":true"));
+  }
 
   /* an empty task is no task */
   xcs_task_edit(core, XCS_TASK_BEGIN, 0, 0);
@@ -919,6 +994,18 @@ TestTiles(xcs_core *core)
 }
 
 /* a recorded flight's analysis from its file, as AnalyseFlight finds it */
+/** The app's language changed: the core reads its catalogue again and
+    the tiles come back with their titles. */
+static void
+TestLanguage(xcs_core *core)
+{
+  ok1(xcs_reload_language(nullptr) == XCS_ERROR_INVALID_ARGUMENT);
+  ok1(xcs_reload_language(core) == XCS_OK &&
+      Contains(GetJson([core](char *b, size_t s, size_t *l){
+        return xcs_tiles_update(core, XCS_TILES_CRUISE, b, s, l);
+      }), "\"title\":\""));
+}
+
 static void
 TestFlightFile(xcs_core *core)
 {
@@ -1605,7 +1692,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 23 + 2);
 
   Recorder recorder;
   TestCreateArguments(recorder);
@@ -1642,6 +1729,7 @@ main()
   TestRasp(core);
   TestNotam(core);
   TestTiles(core);
+  TestLanguage(core);
   TestFlightFile(core);
   TestTilePages(core);
   TestStatusPages(core);

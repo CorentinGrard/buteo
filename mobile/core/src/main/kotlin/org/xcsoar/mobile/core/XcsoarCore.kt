@@ -339,6 +339,12 @@ interface XcsoarCore {
      */
     suspend fun editTask(op: TaskOp, index: Int = 0, value: Double = 0.0) {}
 
+    /**
+     * Move the target of area [index] of the active task to this place,
+     * inside the area (else it throws); locks it.
+     */
+    suspend fun setTaskTarget(index: Int, latitude: Double, longitude: Double) {}
+
     /** The task files XCSoar finds. */
     suspend fun taskFiles(): List<TaskFileInfo> = emptyList()
 

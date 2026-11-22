@@ -1813,6 +1813,47 @@ msgstr ""
 msgid "Scores"
 msgstr ""
 
+#. task_rule_none
+msgctxt "Task rules"
+msgid "None"
+msgstr ""
+
+#. task_fai_rules_detail
+msgid "No start speed or height limit; the finish at most 1000 m below the start"
+msgstr ""
+
+#. task_arm_start_detail
+msgid "The start counts once you arm it"
+msgstr ""
+
+#. task_score_exit_detail
+msgid "The start is when you leave its zone, not when you enter it"
+msgstr ""
+
+#. task_start_radial
+msgid "From radial"
+msgstr ""
+
+#. task_end_radial
+msgid "To radial"
+msgstr ""
+
+#. task_other_starts
+msgid "Other starts"
+msgstr ""
+
+#. task_add_start
+msgid "Add another start"
+msgstr ""
+
+#. task_or_starts
+msgid "or %1$s"
+msgstr ""
+
+#. task_target_outside
+msgid "The target must be inside its area"
+msgstr ""
+
 #. flights_cannot_delete
 msgid "Could not delete %1$s"
 msgstr ""

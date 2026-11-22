@@ -1297,6 +1297,16 @@ Java_org_xcsoar_mobile_NativeCore_nativeTaskEdit(JNIEnv *, jclass,
   return xcs_task_edit(ToCore(core), op, index, value);
 }
 
+JNIEXPORT jint JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeTaskSetTarget(JNIEnv *, jclass,
+                                                      jlong core, jint index,
+                                                      jdouble latitude,
+                                                      jdouble longitude)
+{
+  return xcs_task_set_target_location(ToCore(core), index, latitude,
+                                      longitude);
+}
+
 JNIEXPORT jstring JNICALL
 Java_org_xcsoar_mobile_NativeCore_nativeTaskListFiles(JNIEnv *env, jclass,
                                                       jlong core)

@@ -19,6 +19,7 @@
  */
 class OrderedTask;
 struct TaskBehaviour;
+struct GeoPoint;
 
 namespace CoreTask {
 
@@ -95,6 +96,50 @@ SetRadius(unsigned index, double radius) noexcept;
 /** Minimum time of an area task, seconds. */
 bool
 SetAATMinTime(double seconds) noexcept;
+
+/** Inner radius (m) of an annular sector or keyhole. */
+bool
+SetInnerRadius(unsigned index, double radius) noexcept;
+
+/** Start (or end) radial of a sector, degrees true. */
+bool
+SetRadial(unsigned index, bool end, double degrees) noexcept;
+
+/** Angle of a symmetric sector or keyhole, degrees. */
+bool
+SetSectorAngle(unsigned index, double degrees) noexcept;
+
+/** One of the task's rules (xcs_task_rule), as TaskPropertiesPanel. */
+bool
+SetRule(unsigned rule, double value) noexcept;
+
+/** Another start the pilot may take (OptionalStartsDialog). */
+bool
+AddOptionalStart(unsigned waypoint_id) noexcept;
+
+bool
+RemoveOptionalStart(unsigned index) noexcept;
+
+/*
+ * The targets of the active area task, as TargetDialog: only points
+ * not yet passed; a target moved by the pilot is locked.
+ */
+
+/** -1 (nearest) .. 1 (farthest point of the area). */
+bool
+SetTargetRange(unsigned index, double range) noexcept;
+
+/** Degrees from the leg's direction, -180..180. */
+bool
+SetTargetRadial(unsigned index, double degrees) noexcept;
+
+/** A point inside the area. */
+bool
+SetTargetLocation(unsigned index, GeoPoint location) noexcept;
+
+/** Unlocked targets are moved by XCSoar's optimiser. */
+bool
+LockTarget(unsigned index, bool locked) noexcept;
 
 /**
  * The task files XCSoar finds (.tsk files in XCSoarData/tasks and the

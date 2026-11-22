@@ -48,6 +48,7 @@ import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.TaskInfo
 import org.xcsoar.mobile.core.TaskPointInfo
 import org.xcsoar.mobile.ui.Format
+import org.xcsoar.mobile.ui.LinkRow
 import org.xcsoar.mobile.ui.PageLayout
 import org.xcsoar.mobile.ui.flight.Caption
 import org.xcsoar.mobile.ui.flight.Stepper
@@ -70,15 +71,22 @@ class TaskActions(
     val setType: (Int) -> Unit = {},
     val setPointType: (Int, Int) -> Unit = { _, _ -> },
     val changeRadius: (Int, Int) -> Unit = { _, _ -> },
+    val changeInnerRadius: (Int, Int) -> Unit = { _, _ -> },
+    /** point, end radial (else start), direction */
+    val changeRadial: (Int, Boolean, Int) -> Unit = { _, _, _ -> },
+    val changeAngle: (Int, Int) -> Unit = { _, _ -> },
     val changeMinTime: (Int) -> Unit = {},
+    val addOptionalStart: () -> Unit = {},
+    val removeOptionalStart: (Int) -> Unit = {},
+    val openRules: () -> Unit = {},
     val save: (String) -> Unit = {},
     val openFiles: () -> Unit = {},
     val dismissMessage: () -> Unit = {},
 )
 
 @Composable
-fun TaskScreen(viewModel: TaskViewModel, onAddPoint: () -> Unit, onOpenFiles: () -> Unit,
-               onBack: () -> Unit) {
+fun TaskScreen(viewModel: TaskViewModel, onAddPoint: () -> Unit, onAddStart: () -> Unit,
+               onOpenRules: () -> Unit, onOpenFiles: () -> Unit, onBack: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     DisposableEffect(Unit) {
         viewModel.open()
@@ -91,7 +99,11 @@ fun TaskScreen(viewModel: TaskViewModel, onAddPoint: () -> Unit, onOpenFiles: ()
         addPoint = onAddPoint, select = viewModel::select, remove = viewModel::remove,
         moveUp = viewModel::moveUp, moveDown = viewModel::moveDown, clear = viewModel::clear,
         setType = viewModel::setType, setPointType = viewModel::setPointType,
-        changeRadius = viewModel::changeRadius, changeMinTime = viewModel::changeMinTime,
+        changeRadius = viewModel::changeRadius, changeInnerRadius = viewModel::changeInnerRadius,
+        changeRadial = viewModel::changeRadial, changeAngle = viewModel::changeAngle,
+        changeMinTime = viewModel::changeMinTime,
+        addOptionalStart = onAddStart, removeOptionalStart = viewModel::removeOptionalStart,
+        openRules = onOpenRules,
         save = viewModel::save, openFiles = onOpenFiles,
         dismissMessage = viewModel::dismissMessage,
     ))
@@ -251,6 +263,19 @@ private fun Summary(task: TaskInfo, editing: Boolean, actions: TaskActions) {
 
         if (editing && task.points.isNotEmpty() && !task.valid && task.errors.isNotBlank())
             Text(task.errors.trim(), color = colors.caution, fontSize = 15.sp)
+
+        // the start gate and height limits: on the task page, as on a
+        // briefing; changed on their own page
+        val summary = rulesSummary(task.rules)
+        if (editing)
+            Box(Modifier.background(colors.sheet, RoundedCornerShape(12.dp))) {
+                LinkRow(stringResource(R.string.task_rules),
+                        summary.ifEmpty { stringResource(R.string.task_rule_none) },
+                        onClick = actions.openRules)
+            }
+        else if (summary.isNotEmpty() && task.points.isNotEmpty())
+            Text("${stringResource(R.string.task_rules)} · $summary",
+                 color = colors.textSecondary, fontSize = 15.sp)
     }
 }
 
@@ -298,6 +323,11 @@ private fun PointRow(index: Int, point: TaskPointInfo, task: TaskInfo, editing: 
                 Text("${pointLabel(index, point)} · ${point.typeName}$size",
                      color = colors.textSecondary, fontSize = 14.sp, maxLines = 1,
                      overflow = TextOverflow.Ellipsis)
+                if (point.kind == "start" && task.optionalStarts.isNotEmpty())
+                    Text(stringResource(R.string.task_or_starts,
+                                        task.optionalStarts.joinToString { it.name.trim() }),
+                         color = colors.textSecondary, fontSize = 14.sp, maxLines = 2,
+                         overflow = TextOverflow.Ellipsis)
             }
             if (index > 0) {
                 val leg = Format.distance(point.leg)
@@ -307,13 +337,14 @@ private fun PointRow(index: Int, point: TaskPointInfo, task: TaskInfo, editing: 
         }
 
         if (editing && selected)
-            PointEditor(index, point, task.points.size, actions)
+            PointEditor(index, point, task, actions)
     }
 }
 
 /** Zone type and size, order, removal of one point. */
 @Composable
-private fun PointEditor(index: Int, point: TaskPointInfo, count: Int, actions: TaskActions) {
+private fun PointEditor(index: Int, point: TaskPointInfo, task: TaskInfo, actions: TaskActions) {
+    val count = task.points.size
     Column(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp),
            verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (point.types.size > 1)
@@ -324,11 +355,12 @@ private fun PointEditor(index: Int, point: TaskPointInfo, count: Int, actions: T
                         actions.setPointType(index, choice.type)
                     }
             }
-        point.radius?.let { radius ->
+        val zone = point.zone
+        zone.radius?.let { radius ->
             val size = Format.distance(radius)
             val value = size.text
             Stepper(stringResource(R.string.task_zone_size_name),
-                    if (point.typeName.contains("line", ignoreCase = true))
+                    if (zone.shape == "line")
                         "${stringResource(R.string.task_half_width)} · ${size.unit}"
                     else "${stringResource(R.string.task_radius)} · ${size.unit}",
                     value, "$value ${size.unit}",
@@ -337,6 +369,32 @@ private fun PointEditor(index: Int, point: TaskPointInfo, count: Int, actions: T
                     onIncrease = { actions.changeRadius(index, +1) },
                     modifier = Modifier.fillMaxWidth())
         }
+        zone.innerRadius?.let { radius ->
+            val size = Format.distance(radius)
+            val name = stringResource(R.string.task_inner_radius)
+            Stepper(name, "$name · ${size.unit}", size.text, "${size.text} ${size.unit}",
+                    canDecrease = radius > 100, canIncrease = true,
+                    onDecrease = { actions.changeInnerRadius(index, -1) },
+                    onIncrease = { actions.changeInnerRadius(index, +1) },
+                    modifier = Modifier.fillMaxWidth())
+        }
+        // upstream's sector editor: the radials, or the angle of a sector
+        // centred on the legs' bisector
+        zone.startRadial?.let {
+            AngleStepper(stringResource(R.string.task_start_radial), it, bearing = true,
+                         onChange = { d -> actions.changeRadial(index, false, d) })
+        }
+        zone.endRadial?.let {
+            AngleStepper(stringResource(R.string.task_end_radial), it, bearing = true,
+                         onChange = { d -> actions.changeRadial(index, true, d) })
+        }
+        zone.angle?.let {
+            AngleStepper(stringResource(R.string.task_sector_angle), it, bearing = false,
+                         canDecrease = it > TaskViewModel.ANGLE_STEP, canIncrease = it < 360,
+                         onChange = { d -> actions.changeAngle(index, d) })
+        }
+        if (point.kind == "start")
+            OptionalStarts(task, actions)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TaskButton(stringResource(R.string.task_up), outlined = true, enabled = index > 0,
                        modifier = Modifier.weight(1f)) { actions.moveUp(index) }
@@ -347,6 +405,41 @@ private fun PointEditor(index: Int, point: TaskPointInfo, count: Int, actions: T
             }
         }
     }
+}
+
+/** Degrees: a bearing ("045°") or an angle ("90°"), in [TaskViewModel.ANGLE_STEP]s. */
+@Composable
+private fun AngleStepper(name: String, degrees: Double, bearing: Boolean,
+                         canDecrease: Boolean = true, canIncrease: Boolean = true,
+                         onChange: (Int) -> Unit) {
+    val text = if (bearing) Format.bearing(degrees).text else Math.round(degrees).toString()
+    Stepper(name, "$name · °", "$text°", "$text°",
+            canDecrease = canDecrease, canIncrease = canIncrease,
+            onDecrease = { onChange(-1) }, onIncrease = { onChange(+1) },
+            modifier = Modifier.fillMaxWidth())
+}
+
+/**
+ * The other starts the pilot may take (upstream's optional starts):
+ * XCSoar takes the one flown through.
+ */
+@Composable
+private fun OptionalStarts(task: TaskInfo, actions: TaskActions) {
+    val colors = XcsTheme.colors
+    Caption(stringResource(R.string.task_other_starts), Modifier.padding(start = 4.dp))
+    task.optionalStarts.forEachIndexed { i, start ->
+        Row(Modifier
+                .fillMaxWidth()
+                .background(colors.sheet, RoundedCornerShape(12.dp))
+                .padding(start = 14.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Text(start.name.trim(), color = colors.text, fontSize = 17.sp, maxLines = 1,
+                 overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            TaskButton(stringResource(R.string.data_remove)) { actions.removeOptionalStart(i) }
+        }
+    }
+    TaskButton(stringResource(R.string.task_add_start), outlined = true,
+               modifier = Modifier.fillMaxWidth(), onClick = actions.addOptionalStart)
 }
 
 @Composable

@@ -87,6 +87,8 @@ class TranslationsTest {
             "notam_title", "plane_handicap", "plane_handicap_name", "plane_spoken_litres",
             "plane_weglide_type", "radio_title", "ramp_imhof", "ramp_pastel", "setup_ballast",
             "sound_tone_vario", "sound_volume", "sound_volume_name", "task_list_scores",
-            "task_nominal", "track_cloud", "track_test", "units_altitude", "units_distance")
+            "task_nominal", "track_cloud", "track_test", "units_altitude", "units_distance",
+            // ICAO abbreviations; XCSoar's "Angle"
+            "task_agl", "task_msl", "task_sector_angle")
     }
 }

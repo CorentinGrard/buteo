@@ -75,6 +75,7 @@
 #include "Engine/Task/AbstractTask.hpp"
 #include "Engine/Task/Points/TaskWaypoint.hpp"
 #include "Engine/Waypoint/Waypoint.hpp"
+#include "Geo/GeoPoint.hpp"
 #include "Input/InputQueue.hpp"
 #include "Profile/Profile.hpp"
 #include "Profile/Keys.hpp"
@@ -1219,11 +1220,63 @@ xcs_task_edit(xcs_core *core, uint32_t op, uint32_t index, double value)
       CoreTask::Restart();
       return XCS_OK;
 
+    case XCS_TASK_SET_INNER_RADIUS:
+      ok = CoreTask::SetInnerRadius(index, value);
+      break;
+
+    case XCS_TASK_SET_START_RADIAL:
+    case XCS_TASK_SET_END_RADIAL:
+      ok = CoreTask::SetRadial(index, op == XCS_TASK_SET_END_RADIAL, value);
+      break;
+
+    case XCS_TASK_SET_SECTOR_ANGLE:
+      ok = CoreTask::SetSectorAngle(index, value);
+      break;
+
+    case XCS_TASK_SET_RULE:
+      ok = CoreTask::SetRule(index, value);
+      break;
+
+    case XCS_TASK_ADD_OPTIONAL_START:
+      ok = integer && CoreTask::AddOptionalStart(unsigned(value));
+      break;
+
+    case XCS_TASK_REMOVE_OPTIONAL_START:
+      ok = CoreTask::RemoveOptionalStart(index);
+      break;
+
+    case XCS_TASK_SET_TARGET_RANGE:
+      ok = CoreTask::SetTargetRange(index, value);
+      break;
+
+    case XCS_TASK_SET_TARGET_RADIAL:
+      ok = CoreTask::SetTargetRadial(index, value);
+      break;
+
+    case XCS_TASK_LOCK_TARGET:
+      ok = (value == 0 || value == 1) && CoreTask::LockTarget(index, value != 0);
+      break;
+
     default:
       ok = false;
     }
 
     return ok ? XCS_OK : XCS_ERROR_INVALID_ARGUMENT;
+  });
+}
+
+xcs_status
+xcs_task_set_target_location(xcs_core *core, uint32_t index,
+                             double latitude, double longitude)
+{
+  if (core == nullptr || !(latitude >= -90 && latitude <= 90) ||
+      !(longitude >= -180 && longitude <= 180))
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+  return RunOnMain(*core, [index, latitude, longitude]{
+    const GeoPoint location{Angle::Degrees(longitude), Angle::Degrees(latitude)};
+    return CoreTask::SetTargetLocation(index, location)
+      ? XCS_OK : XCS_ERROR_INVALID_ARGUMENT;
   });
 }
 

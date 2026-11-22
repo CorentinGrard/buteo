@@ -17,6 +17,7 @@ import org.xcsoar.mobile.core.ProfileInfo
 import org.xcsoar.mobile.core.SafetyOption
 import org.xcsoar.mobile.core.TaskInfo
 import org.xcsoar.mobile.core.TaskPointInfo
+import org.xcsoar.mobile.core.TaskRules
 import org.xcsoar.mobile.core.WeGlideTask
 import org.xcsoar.mobile.core.WeGlideTaskList
 import org.xcsoar.mobile.core.WindInfo
@@ -31,6 +32,7 @@ import org.xcsoar.mobile.ui.setup.FlightSetup
 import org.xcsoar.mobile.ui.setup.FlightSetupContent
 import org.xcsoar.mobile.ui.task.TaskContent
 import org.xcsoar.mobile.ui.task.TaskFilesContent
+import org.xcsoar.mobile.ui.task.TaskRulesContent
 import org.xcsoar.mobile.ui.task.TaskState
 import org.xcsoar.mobile.ui.task.WeGlideTasks
 import org.xcsoar.mobile.ui.theme.XcsTheme
@@ -143,6 +145,16 @@ class FrenchPagesScreenshotTest {
                                   leg = 14_200.0),
                     TaskPointInfo(1, "Grenoble Le Versoud", "finish", 14, "Cylindre d'arrivée",
                                   3000.0, leg = 31_900.0)))), {})
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "fr-w320dp-h1000dp-xxhdpi")
+    fun taskRulesNarrow() = capture("task_rules_320") {
+        XcsTheme(dark = false) {
+            TaskRulesContent(TaskRules(startOpen = 12 * 60 + 35, startMaxHeight = 1500.0,
+                                       startHeightRef = "msl", finishMinHeight = 300.0,
+                                       faiAllowed = true), {})
         }
     }
 

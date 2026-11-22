@@ -530,6 +530,9 @@ class NativeXcsoarCore(
     override suspend fun editTask(op: TaskOp, index: Int, value: Double) =
         command { NativeCore.nativeTaskEdit(it, op.code, index, value) }
 
+    override suspend fun setTaskTarget(index: Int, latitude: Double, longitude: Double) =
+        command { NativeCore.nativeTaskSetTarget(it, index, latitude, longitude) }
+
     override suspend fun taskFiles(): List<TaskFileInfo> = lock.withLock {
         check(handle != 0L) { "core not started" }
         val json = withContext(Dispatchers.IO) { NativeCore.nativeTaskListFiles(handle) }

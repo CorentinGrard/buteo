@@ -1814,6 +1814,47 @@ msgstr "Du jour"
 msgid "Scores"
 msgstr "Scores"
 
+#. task_rule_none
+msgctxt "Task rules"
+msgid "None"
+msgstr "Aucune"
+
+#. task_fai_rules_detail
+msgid "No start speed or height limit; the finish at most 1000 m below the start"
+msgstr "Ni vitesse ni hauteur max. au départ ; l'arrivée au plus 1000 m sous le départ"
+
+#. task_arm_start_detail
+msgid "The start counts once you arm it"
+msgstr "Le départ compte une fois armé"
+
+#. task_score_exit_detail
+msgid "The start is when you leave its zone, not when you enter it"
+msgstr "Le départ est la sortie de sa zone, pas l'entrée"
+
+#. task_start_radial
+msgid "From radial"
+msgstr "Radiale de début"
+
+#. task_end_radial
+msgid "To radial"
+msgstr "Radiale de fin"
+
+#. task_other_starts
+msgid "Other starts"
+msgstr "Autres départs"
+
+#. task_add_start
+msgid "Add another start"
+msgstr "Ajouter un autre départ"
+
+#. task_or_starts
+msgid "or %1$s"
+msgstr "ou %1$s"
+
+#. task_target_outside
+msgid "The target must be inside its area"
+msgstr "L'objectif doit être dans sa zone"
+
 #. flights_cannot_delete
 msgid "Could not delete %1$s"
 msgstr "Suppression de %1$s impossible"

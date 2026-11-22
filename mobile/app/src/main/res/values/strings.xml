@@ -678,6 +678,34 @@
     <string name="task_list_declared">Declared</string>
     <string name="task_list_today">Today</string>
     <string name="task_list_scores">Scores</string>
+    <string name="task_rules">Rules</string>
+    <string name="task_rule_none" po:msgctxt="Task rules">None</string>
+    <string name="task_no_limit">Unlimited</string>
+    <string name="task_start_open">Start open time</string>
+    <string name="task_start_close">Start close time</string>
+    <string name="task_start_max_speed">Start max. speed</string>
+    <string name="task_start_max_height">Start max. height</string>
+    <string name="task_finish_min_height">Finish min. height</string>
+    <string name="task_agl">AGL</string>
+    <string name="task_msl">MSL</string>
+    <string name="task_fai_rules">FAI start / finish rules</string>
+    <string name="task_fai_rules_detail">No start speed or height limit; the finish at most 1000 m below the start</string>
+    <string name="task_arm_start">Arm start manually</string>
+    <string name="task_arm_start_detail">The start counts once you arm it</string>
+    <string name="task_score_exit">Score start exit</string>
+    <string name="task_score_exit_detail">The start is when you leave its zone, not when you enter it</string>
+    <string name="task_navigate_nearest">Navigate to nearest point</string>
+    <string name="task_navigate_nearest_detail">Navigate to the nearest point of the start and finish zones.</string>
+    <string name="task_pev_wait">PEV start wait time</string>
+    <string name="task_pev_window">PEV start window</string>
+    <string name="task_inner_radius">Inner radius</string>
+    <string name="task_start_radial">From radial</string>
+    <string name="task_end_radial">To radial</string>
+    <string name="task_sector_angle">Angle</string>
+    <string name="task_other_starts">Other starts</string>
+    <string name="task_add_start">Add another start</string>
+    <string name="task_or_starts">or %1$s</string>
+    <string name="task_target_outside">The target must be inside its area</string>
 
     <!-- the flight log -->
     <string name="flights_cannot_delete">Could not delete %1$s</string>

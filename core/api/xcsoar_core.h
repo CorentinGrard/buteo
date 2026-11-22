@@ -802,6 +802,31 @@ enum {
  * (the index of the point flown to) only for the active task.  "errors"
  * is XCSoar's validation message for an invalid task.
  *
+ * A point's "zone" has its "shape" ("cylinder", "line", "sector",
+ * "annular_sector", "symmetric_sector", "keyhole", "fai_sector", …)
+ * and the sizes the pilot may change, as upstream's zone editors:
+ * "radius" (m), "inner_radius" (m), "start_radial" and "end_radial"
+ * (degrees true), "angle" (degrees).
+ *
+ *   "optional_starts": [{"waypoint_id": 7, "name": "Alès"}, ...],
+ *   "rules": {"start_open": 750, "start_close": -1,
+ *             "start_max_speed": 0.0, "start_max_height": 0,
+ *             "start_height_ref": "agl", "finish_min_height": 0,
+ *             "finish_height_ref": "agl", "fai_start_finish": false,
+ *             "fai_allowed": false, "start_requires_arm": false,
+ *             "start_score_exit": false, "navigate_nearest": false,
+ *             "pev_start_wait": 0, "pev_start_window": 0}
+ *
+ * The rules are TaskPropertiesPanel's (see xcs_task_rule): start gate
+ * times in local minutes of the day (-1: none), m/s, m, s; 0 means no
+ * limit.  "fai_allowed": the task type has FAI start and finish rules.
+ *
+ * For an active area task, each area point has its "target" ("range"
+ * -1..1, "radial" degrees from the leg, "locked", "movable": not passed
+ * yet, "latitude", "longitude"), and "area" has TargetDialog's numbers:
+ * "estimated_time" and "time_delta" (to the minimum time, s),
+ * "speed_remaining" and "speed_achieved" (m/s) when known.
+ *
  * @param which XCS_TASK_ACTIVE or XCS_TASK_EDITED (XCS_ERROR_FAILED if
  * no edit is in progress)
  * @param length_r as for xcs_get_data_status()
@@ -837,7 +862,54 @@ typedef enum xcs_task_op {
   XCS_TASK_ADVANCE = 12,
   /** Active task: start again, as if not flown yet. */
   XCS_TASK_RESTART = 13,
+  /** Inner radius `value` (m) of point `index`'s zone. */
+  XCS_TASK_SET_INNER_RADIUS = 14,
+  /** Start radial `value` (degrees true) of point `index`'s sector. */
+  XCS_TASK_SET_START_RADIAL = 15,
+  XCS_TASK_SET_END_RADIAL = 16,
+  /** Angle `value` (degrees) of point `index`'s symmetric sector. */
+  XCS_TASK_SET_SECTOR_ANGLE = 17,
+  /** Rule `index` (xcs_task_rule) to `value`. */
+  XCS_TASK_SET_RULE = 18,
+  /** Another start: waypoint `value`. */
+  XCS_TASK_ADD_OPTIONAL_START = 19,
+  /** Remove optional start `index`. */
+  XCS_TASK_REMOVE_OPTIONAL_START = 20,
+  /** Active area task: the target of point `index` at `value` (-1..1)
+      from the nearest to the farthest point of its area; locks it. */
+  XCS_TASK_SET_TARGET_RANGE = 21,
+  /** Active area task: the target's radial `value` (degrees from the
+      leg, -180..180); locks it. */
+  XCS_TASK_SET_TARGET_RADIAL = 22,
+  /** Active area task: lock (`value` 1) the target of point `index`, or
+      let XCSoar's optimiser move it (0). */
+  XCS_TASK_LOCK_TARGET = 23,
 } xcs_task_op;
+
+/** The task's rules, XCS_TASK_SET_RULE's `index`. */
+typedef enum xcs_task_rule {
+  /** Start gate opens / closes at `value` local minutes of the day;
+      -1 for none. */
+  XCS_TASK_RULE_START_OPEN = 0,
+  XCS_TASK_RULE_START_CLOSE = 1,
+  /** m/s; 0 for no limit. */
+  XCS_TASK_RULE_START_MAX_SPEED = 2,
+  /** m; 0 for no limit. */
+  XCS_TASK_RULE_START_MAX_HEIGHT = 3,
+  /** 0 above the start point (AGL), 1 above sea level (MSL). */
+  XCS_TASK_RULE_START_HEIGHT_REF = 4,
+  XCS_TASK_RULE_FINISH_MIN_HEIGHT = 5,
+  XCS_TASK_RULE_FINISH_HEIGHT_REF = 6,
+  /** 0/1: FAI start and finish rules (FAI task types only). */
+  XCS_TASK_RULE_FAI_START_FINISH = 7,
+  /** 0/1 */
+  XCS_TASK_RULE_START_REQUIRES_ARM = 8,
+  XCS_TASK_RULE_START_SCORE_EXIT = 9,
+  XCS_TASK_RULE_NAVIGATE_NEAREST = 10,
+  /** s after a pilot event (PEV), 0..1800. */
+  XCS_TASK_RULE_PEV_START_WAIT = 11,
+  XCS_TASK_RULE_PEV_START_WINDOW = 12,
+} xcs_task_rule;
 
 /**
  * Change the task.  Operations other than XCS_TASK_BEGIN, ADVANCE and
@@ -847,6 +919,15 @@ typedef enum xcs_task_op {
  */
 XCS_EXPORT xcs_status
 xcs_task_edit(xcs_core *core, uint32_t op, uint32_t index, double value);
+
+/**
+ * Active area task: move the target of point `index` to this place,
+ * which must be inside its area (XCS_ERROR_INVALID_ARGUMENT otherwise);
+ * locks it, as dragging it on upstream's target map does.
+ */
+XCS_EXPORT xcs_status
+xcs_task_set_target_location(xcs_core *core, uint32_t index,
+                             double latitude, double longitude);
 
 /**
  * The task files XCSoar finds (.tsk files in XCSoarData/tasks and the

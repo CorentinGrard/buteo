@@ -363,8 +363,19 @@ Run: `./output/MACOS_CORE/bin/CoreSmoke DATA_DIR [FLIGHT.igc]`
       save as .tsk; Next / Previous / Restart on the active task.  C API
       `xcs_task_get` / `xcs_task_edit` / `xcs_task_list_files` /
       `xcs_task_load` / `xcs_task_save` (`core/host/CoreTask.cpp`).
-      Checked on a Pixel 7.  Later: the task on the map's own overlays,
-      sector angles, start open/close times, optional starts, AAT targets
+      Checked on a Pixel 7.  Since 2026-11-22, as upstream's dialogs:
+      each zone's shape settings (sector radials, symmetric and keyhole
+      angles, inner radius; fixed zones such as FAI sectors stay
+      fixed), the rules on their own page (start gate open and close
+      times, start max speed and height, finish min height with AGL /
+      MSL, FAI start and finish rules, arming, start exit, nearest
+      point, PEV wait and window), other starts under the start point,
+      and the active area task's targets in the C API (range, radial,
+      lock, a place in the area; `xcs_task_set_target_location`).
+      TestCoreApi (25 checks); checked on the Pixel 7 in French: an
+      annular sector's radial and inner radius, a 13:35 start gate,
+      1500 m MSL, another start.  Next: editing on the map, the targets
+      on the map
 - [~] Airspace warnings: banner above the cards (red inside, orange
       ahead or crossing the task, time and distance to it), "Ack" until it
       changes and "Day" (`xcs_get_airspace_warnings`,

@@ -105,6 +105,7 @@ import org.xcsoar.mobile.ui.weather.WeatherScreen
 import org.xcsoar.mobile.ui.weather.WeatherViewModel
 import org.xcsoar.mobile.ui.setup.FlightSetupScreen
 import org.xcsoar.mobile.ui.task.TaskFilesScreen
+import org.xcsoar.mobile.ui.task.TaskRulesScreen
 import org.xcsoar.mobile.ui.task.TaskScreen
 import org.xcsoar.mobile.ui.task.TaskViewModel
 import org.xcsoar.mobile.ui.units.UnitsScreen
@@ -123,7 +124,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 private enum class Screen { FLIGHT, DATA_FILES, DOWNLOAD, MAP_SETTINGS, WAYPOINTS, FLIGHT_SETUP, FLIGHTS,
-                            TASK, TASK_FILES, TASK_ADD_POINT, UNITS, ANALYSIS,
+                            TASK, TASK_FILES, TASK_ADD_POINT, TASK_ADD_START, TASK_RULES,
+                            UNITS, ANALYSIS,
                             CREW, PLANE_EDIT, PILOT, TILE_PICKER,
                             AIRSPACE_ALERTS, SAFETY, WIND, STATUS, SOUND, TRACKING, WEATHER,
                             NOTAMS, FLIGHT_LOG, PROFILES, TEAM_CODE, TEAM_REFERENCE, RADIO,
@@ -134,7 +136,7 @@ private val Screen.depth: Int
     get() = when (this) {
         Screen.FLIGHT -> 0
         Screen.DOWNLOAD, Screen.PLANE_EDIT, Screen.TASK_FILES, Screen.TASK_ADD_POINT,
-        Screen.TEAM_REFERENCE, Screen.ATC_REFERENCE,
+        Screen.TASK_ADD_START, Screen.TASK_RULES, Screen.TEAM_REFERENCE, Screen.ATC_REFERENCE,
         // open from the page that holds them (D25)
         Screen.PILOT, Screen.FLIGHT_LOG, Screen.NOTAMS, Screen.UNITS, Screen.WIND -> 2
         else -> 1
@@ -691,8 +693,16 @@ class MainActivity : ComponentActivity() {
                             Screen.TASK -> TaskScreen(
                                 taskViewModel,
                                 onAddPoint = { screen = Screen.TASK_ADD_POINT },
+                                onAddStart = { screen = Screen.TASK_ADD_START },
+                                onOpenRules = { screen = Screen.TASK_RULES },
                                 onOpenFiles = { screen = Screen.TASK_FILES },
                                 onBack = { screen = Screen.FLIGHT })
+                            Screen.TASK_RULES -> TaskRulesScreen(
+                                taskViewModel, onBack = { screen = Screen.TASK })
+                            Screen.TASK_ADD_START -> WaypointsScreen(
+                                pickViewModel, onDone = { screen = Screen.TASK },
+                                title = stringResource(R.string.task_add_start),
+                                onPick = taskViewModel::addOptionalStart)
                             Screen.TASK_FILES -> TaskFilesScreen(
                                 taskViewModel, onBack = { screen = Screen.TASK })
                             Screen.TASK_ADD_POINT -> WaypointsScreen(
