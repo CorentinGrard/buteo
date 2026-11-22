@@ -534,3 +534,34 @@ on a French phone, "Européen" sat under "Welcome".
   missed all of this: `fr_safety_320` and `fr_data_files_320` are the
   narrow ones, and a new page is worth a look in the `l5` emulator
   (320 dp) with `persist.sys.locale fr-FR`.
+
+## D29 — The map in the design's colours, airspace as bands
+**Status:** Accepted (2026-11-22)
+
+The core draws XCSoar's map (D17) with XCSoar's looks: pure red and blue
+airspace in thick ICAO bands, magenta landables, a violet task.  The
+"Design rework" canvas (D19) draws airspace as a thin outline over a
+light fill, red when inside; landables green when reachable and orange
+when not; the task in magenta (the app's `task` colour).
+
+- The core sets Buteo's look over XCSoar's after creating it
+  (`core/map/CoreMap.cpp`, `ApplyButeoLook()`), in the app's colours
+  (`ui/theme`).  Settings without a page in the app (landable style,
+  airspace fill modes) are set in memory, not saved: the profile stays
+  XCSoar's.  Airspace colours from the pilot's profile stay; XCSoar's
+  pure primaries take the design's tones.
+- Airspace keeps a band along the inside of its outline (XCSoar's
+  padding, a third of its width, lighter) instead of the canvas's
+  light fill: over France's stacked airspace the fills added up to a
+  grey wash over the whole map.  An airspace with a warning is filled
+  and outlined in orange, one the glider is inside of in red, as the
+  warning banner, until acknowledged.
+- Landables: XCSoar's "traffic lights" vector symbols, green reachable,
+  orange otherwise (orange is caution: marginal and unreachable alike),
+  with a thin ink outline.  The canvas rings them in white, but XCSoar
+  draws the runway with the same pen, and ring and runway ran into one
+  white blot.
+- Two small upstream changes make this possible without changing
+  XCSoar's own drawing: `AirspaceLook` has the fill alpha and optional
+  warning colours (OpenGL), `WaypointLook` the landables' outline pen;
+  their defaults are what XCSoar drew before.

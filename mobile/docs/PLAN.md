@@ -286,8 +286,12 @@ Run: `./output/MACOS_CORE/bin/CoreSmoke DATA_DIR [FLIGHT.igc]`
       ~10/s); interactions draw at once
 - [x] Fix: start without GPS fix and home waypoint crashed (no position);
       the map now starts on home, else on the middle of the map file
-- [~] Daylight map look matching the design: Pastel terrain offered;
-      airspace and waypoint styles still XCSoar's
+- [x] Daylight map look matching the design: Pastel terrain offered;
+      airspace in the design's tones as thin outlines with a light band,
+      filled orange (warning) or red (inside) until acknowledged;
+      landables green / orange; the task in the app's magenta (D29,
+      2026-11-22).  Checked on the Pixel 7 in a replay through CTA
+      Limoges and R20H3 Avord
 - [x] Map settings screen (Menu → Map): terrain on/off and colours
       (XCSoar's ramps; Pastel is closest to the design), topography,
       trail length (`xcs_map_set_option`, XCSoar's profile keys)

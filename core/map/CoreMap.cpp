@@ -39,6 +39,7 @@
 #include "Terrain/RasterTerrain.hpp"
 #include "UISettings.hpp"
 #include "MapSettings.hpp"
+#include "ui/canvas/PortableColor.hpp"
 #include "Terrain/TerrainSettings.hpp"
 #include "Profile/Profile.hpp"
 #include "Profile/Current.hpp"
@@ -110,6 +111,100 @@ private:
 
 void ZoomFrame() noexcept;
 
+/*
+ * Buteo's map look, the "Design rework" canvas's (D19): airspace as a
+ * thin outline with a light band inside, filled orange with a warning
+ * ahead and red inside; landables green when reachable, orange when
+ * not; the task in the app's magenta.  The app's own
+ * colours (ui/theme), over XCSoar's looks; colours from the pilot's
+ * profile stay, XCSoar's pure primaries take the design's tones.
+ *
+ * The canvas fills each airspace lightly; over France's stacked
+ * airspace the fills added up to a grey wash over the whole map, so the
+ * light tint is a band along the inside of the outline (XCSoar's
+ * padding, narrower) and only a warned airspace is filled.
+ */
+constexpr RGB8Color LOOK_BLUE{0x1f, 0x5b, 0xd6};
+constexpr RGB8Color LOOK_RED{0xb4, 0x2a, 0x30};
+constexpr RGB8Color LOOK_ORANGE{0xc2, 0x41, 0x0c};
+constexpr RGB8Color LOOK_GREEN{0x0b, 0x7a, 0x5c};
+constexpr RGB8Color LOOK_TASK{0xb5, 0x17, 0x9e};
+/* the task's colour halfway to white: legs and zones not flown to */
+constexpr RGB8Color LOOK_TASK_LIGHT{0xda, 0x8b, 0xce};
+/* XCSoar's magenta classes ("other", unclassified), apart from the task */
+constexpr RGB8Color LOOK_VIOLET{0x6d, 0x3f, 0xa0};
+
+RGB8Color
+ToneAirspaceColor(RGB8Color color) noexcept
+{
+  if (color == RGB8_RED)
+    return LOOK_RED;
+  if (color == RGB8_BLUE)
+    return LOOK_BLUE;
+  if (color == RGB8_MAGENTA)
+    return LOOK_VIOLET;
+  return color;
+}
+
+/** The settings behind the look, which have no page in the app; before
+    the looks are created from them.  Not saved in the profile. */
+void
+ApplyButeoSettings(MapSettings &settings) noexcept
+{
+  auto &airspace = settings.airspace;
+  /* the renderer that colours warned airspaces (XCSoar's "fill all"
+     draws them all alike) */
+  if (airspace.fill_mode == AirspaceRendererSettings::FillMode::ALL)
+    airspace.fill_mode = AirspaceRendererSettings::FillMode::DEFAULT;
+  for (auto &c : airspace.classes) {
+    c.border_color = ToneAirspaceColor(c.border_color);
+    c.fill_color = ToneAirspaceColor(c.fill_color);
+  }
+  /* AAT areas: yellow in XCSoar, the task's colour here */
+  airspace.classes[AATASK].SetColors(LOOK_TASK);
+
+  settings.waypoint.landable_style =
+    WaypointRendererSettings::LandableStyle::TRAFFIC_LIGHTS;
+  settings.waypoint.vector_landable_rendering = true;
+}
+
+void
+ApplyButeoLook(MapLook &look) noexcept
+{
+  auto &airspace = look.airspace;
+  /* a band a third of XCSoar's, lighter */
+  airspace.thick_pen.Create(Layout::ScalePenWidth(4), COLOR_BLACK);
+  airspace.fill_alpha = 0x30;
+  airspace.warning_colors = true;
+  airspace.warning_color = Color(LOOK_ORANGE);
+  airspace.inside_color = Color(LOOK_RED);
+  airspace.warning_pen.Create(Layout::ScalePenWidth(3), airspace.warning_color);
+  airspace.inside_pen.Create(Layout::ScalePenWidth(3), airspace.inside_color);
+
+  /* reachable or not: orange is caution, as everywhere in the app */
+  auto &waypoint = look.waypoint;
+  waypoint.reachable_brush.Create(Color(LOOK_GREEN));
+  waypoint.orange_brush.Create(Color(LOOK_ORANGE));
+  waypoint.terrain_unreachable_brush.Create(Color(LOOK_ORANGE));
+  waypoint.unreachable_brush.Create(Color(LOOK_ORANGE));
+  /* the canvas rings them in white, but XCSoar draws the runway with
+     the same pen: ring and runway ran into one white blot */
+  waypoint.landable_pen.Create(Layout::ScalePenWidth(1), Color(0x0e, 0x12, 0x10));
+
+  /* the line to the target solid, the legs dashed, as the canvas */
+  auto &task = look.task;
+  const Color task_color{LOOK_TASK}, light{LOOK_TASK_LIGHT};
+  task.oz_current_pen.Create(Pen::SOLID, Layout::ScalePenWidth(3), task_color);
+  task.oz_active_pen.Create(Pen::SOLID, Layout::ScalePenWidth(2), task_color);
+  task.oz_inactive_pen.Create(Pen::SOLID, Layout::ScalePenWidth(1), light);
+  task.leg_active_pen.Create(Pen::DASH2, Layout::ScalePenWidth(2), task_color);
+  task.leg_inactive_pen.Create(Pen::DASH2, Layout::ScalePenWidth(2), light);
+  task.arrow_active_pen.Create(Layout::ScalePenWidth(2), task_color);
+  task.arrow_inactive_pen.Create(Layout::ScalePenWidth(1), light);
+  task.bearing_pen.Create(Layout::ScalePenWidth(3), task_color);
+  task.isoline_pen.Create(Pen::DASH2, Layout::ScalePenWidth(1), task_color);
+}
+
 /** Created on the first Attach(), kept until the process exits. */
 struct Graphics {
   UI::Display display{EGL_DEFAULT_DISPLAY};
@@ -135,7 +230,9 @@ struct Graphics {
     const auto &ui = CommonInterface::GetUISettings();
     Layout::Initialise(display, size, ui.GetPercentScale(), ui.custom_dpi);
     Fonts::Initialize();
+    ApplyButeoSettings(CommonInterface::SetMapSettings());
     map_look.Initialise(ui.map, Fonts::map, Fonts::map_bold);
+    ApplyButeoLook(map_look);
     traffic_look.Initialise(Fonts::map);
 
     map = std::make_unique<CoreMapWindow>(map_look, traffic_look);
