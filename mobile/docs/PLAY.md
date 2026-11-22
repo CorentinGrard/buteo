@@ -131,8 +131,9 @@ with a staged rollout.
 | Foreground service | Type **Location**, see below |
 | Data safety | See below |
 
-**Foreground service (Location).** Use: navigation and flight
-recording. Text: "Buteo is a glide computer for glider pilots. While it
+**Foreground service (Location).** Tasks: **Navigation** and
+**User-initiated location sharing** (live tracking), not "Background
+location updates" (no background location permission). Text: "Buteo is a glide computer for glider pilots. While it
 runs, a foreground service with a visible notification keeps the GPS,
 the glide calculations, airspace warnings and the flight log (IGC)
 going when the screen is off or another app is in front: a pilot
