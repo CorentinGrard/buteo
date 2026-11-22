@@ -17,7 +17,7 @@ nothing counts as done without its tests (levels L0–L5 in ARCHITECTURE §6).
 | M1 | Headless core behind the C API, replay tests on the host | ☑ done |
 | M2 | Android skeleton: replay an IGC, see live InfoBoxes | ◐ demo works on the emulator |
 | M3 | Moving map in the new app | ◐ map, gestures, hold card on the phone |
-| M4 | Flyable with internal GPS: task, Go To, MC, airspace warnings, vario audio, IGC logging | ◐ all features in, flown once (2026-10-10), L5 passes on the phone; not yet compared with another instrument |
+| M4 | Flyable with internal GPS: task, Go To, MC, airspace warnings, vario audio, IGC logging | ◐ all features in, flown (2026-10-10, 2026-11-21), L5 passes on the phone; IGC log the same as upstream XCSoar's; not yet compared with a certified instrument |
 | M5 | External devices: Bluetooth / BLE / USB, drivers, declaration | ☐ on hold: no hardware ([not done](#not-done-no-external-hardware)) |
 | M6 | Settings, profiles, data management | ◐ most pages in, every tile opens its page |
 | M7 | Cockpit polish and beta release | ☐ |
@@ -430,8 +430,20 @@ Run: `./output/MACOS_CORE/bin/CoreSmoke DATA_DIR [FLIGHT.igc]`
       plane's details through JNI and back
 - [~] **Demo / field test:** a real flight with the app open on the
       phone (2026-10-10): no bug seen by the pilot, IGC recorded, "last
-      flown" plane kept.  Not yet compared with a certified instrument
-      or the upstream XCSoar app
+      flown" plane kept.  Upstream XCSoar (Play, 7.45.3) logged that
+      flight too, but Buteo's copy went with `org.xcsoar.mobile`'s data.
+      Compared with upstream XCSoar (7.46.1) on the 2026-11-21 flight,
+      both apps logging on the same phone (LS 4, 13:52–15:21 UTC):
+      3,178 fixes each, 3,080 at the same second with the same
+      position and GNSS altitude, pressure altitude within 1 m (6
+      fixes); the other 98 are cruise fixes (every 5 s) one second
+      apart.  Both G records verify (`VerifyGRecord`).  `AnalyseFlight`
+      on each: take-off 13:57:16 / :17, release 14:00:26 / :22, landing
+      15:21:16 both, OLC classic 33.53 / 33.59 km (the shifted fixes).
+      Headers differ only in the glider type (WeGlide's "LS-4" against
+      "LS4") and the version.  Not yet compared with a certified
+      instrument, nor the values shown in flight (vario, wind, final
+      glide)
 
 ## M5 — External devices
 - [ ] Port abstraction: `xcs_port_ops` (platform supplies a byte stream)
@@ -884,6 +896,10 @@ caution).  From a fresh install tested on a Redmi 5 and the Pixel 7.
 ---
 
 ## Log
+
+- 2026-11-22 — The 2026-11-21 flight's IGC log compared with upstream
+  XCSoar's, recorded on the same phone: the same fixes, both G records
+  valid, the same take-off and landing (M4 field test).
 
 - 2026-11-20 (evening) — Releases (D24): a tag v<x.y.z> builds the APK
   and the Play bundle signed with Buteo's own key (generated here,
