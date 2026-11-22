@@ -58,8 +58,9 @@ computer over USB. The folders inside are XCSoar's (`maps`, `airspace`,
   graphical InfoBoxes are there.
 - XCSoar's simulator mode.
 - Translations of the app's own words: XCSoar's parts (tile names,
-  airspace classes, status pages) follow the phone's language, the
-  rest is in English.
+  status pages) follow the phone's language, and so do the flight
+  screen and its menu, in French and where XCSoar has the same words;
+  the other pages are in English for now.
 
 Found something XCSoar does that you miss? It is probably one of the
 items above, or not yet listed: please tell us.

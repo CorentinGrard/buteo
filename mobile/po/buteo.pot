@@ -1,0 +1,334 @@
+# Buteo's own texts: those XCSoar has too are translated in
+# po/ (mobile/docs/DECISIONS.md D28).
+msgid ""
+msgstr ""
+"Project-Id-Version: Buteo\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. flight_running
+msgid "Flight computer running. Tap to open."
+msgstr ""
+
+#. north
+msgid "North"
+msgstr ""
+
+#. go_to
+msgid "Go to"
+msgstr ""
+
+#. go_to_name
+msgid "Go to %1$s"
+msgstr ""
+
+#. decrease_name
+msgid "Decrease %1$s"
+msgstr ""
+
+#. increase_name
+msgid "Increase %1$s"
+msgstr ""
+
+#. replay_status
+msgctxt "Status"
+msgid "Replay"
+msgstr ""
+
+#. flight_starting
+msgid "Starting…"
+msgstr ""
+
+#. flight_no_polar
+msgid "No polar"
+msgstr ""
+
+#. flight_set_up_plane
+msgid "Set up a plane"
+msgstr ""
+
+#. flight_open_menu
+msgid "Open menu"
+msgstr ""
+
+#. flight_centre
+msgid "Centre on aircraft"
+msgstr ""
+
+#. flight_set_mc
+msgid "Set MC"
+msgstr ""
+
+#. flight_set_mc_to
+msgid "Set MacCready to %1$s"
+msgstr ""
+
+#. flight_mc_auto
+msgid "MC auto"
+msgstr ""
+
+#. flight_mc_automatic
+msgid "automatic, %1$s"
+msgstr ""
+
+#. flight_no_target
+msgid "No target"
+msgstr ""
+
+#. flight_choose_target
+msgid "Choose where to go"
+msgstr ""
+
+#. flight_next_no_fix
+msgid "Next %1$s, waiting for a GPS fix"
+msgstr ""
+
+#. flight_next_spoken
+msgid "Next %1$s, %2$s, bearing %3$s, arrival %4$s"
+msgstr ""
+
+#. flight_set_wind
+msgid "Set the wind"
+msgstr ""
+
+#. flight_wind_from
+msgid "Wind from %1$s"
+msgstr ""
+
+#. flight_vario_spoken
+msgid "Vario %1$s, average %2$s, netto %3$s %4$s"
+msgstr ""
+
+#. flight_final
+msgid "Final"
+msgstr ""
+
+#. flight_final_spoken
+msgid "Final glide %1$s"
+msgstr ""
+
+#. flight_thermal_assistant
+msgid "Thermal assistant"
+msgstr ""
+
+#. flight_thermal_assistant_lift
+msgid "Thermal assistant: strongest lift %1$s"
+msgstr ""
+
+#. tile_open
+msgctxt "Button"
+msgid "Open"
+msgstr ""
+
+#. tile_change
+msgid "Change tile"
+msgstr ""
+
+#. warning_inside
+msgid "Inside airspace"
+msgstr ""
+
+#. warning_task_crosses
+msgid "Task crosses"
+msgstr ""
+
+#. warning_ahead
+msgid "Airspace ahead"
+msgstr ""
+
+#. warning_in_time
+msgid "in %1$s"
+msgstr ""
+
+#. warning_more
+msgid "+%1$d more"
+msgstr ""
+
+#. warning_ack
+msgid "Ack"
+msgstr ""
+
+#. warning_day
+msgid "Day"
+msgstr ""
+
+#. warning_ack_spoken
+msgid "Acknowledge %1$s"
+msgstr ""
+
+#. warning_day_spoken
+msgid "Acknowledge %1$s for today"
+msgstr ""
+
+#. replay_play
+msgid "Play replay"
+msgstr ""
+
+#. replay_pause
+msgid "Pause replay"
+msgstr ""
+
+#. replay_speed
+msgid "Replay speed %1$s, faster"
+msgstr ""
+
+#. replay_skip
+msgid "Skip 10 minutes"
+msgstr ""
+
+#. replay_stop
+msgid "Stop replay"
+msgstr ""
+
+#. map_items_here
+msgid "At this point"
+msgstr ""
+
+#. map_items_nothing
+msgid "Nothing here"
+msgstr ""
+
+#. map_items_self
+msgid "Your glider"
+msgstr ""
+
+#. map_items_traffic
+msgid "FLARM traffic"
+msgstr ""
+
+#. map_items_item
+msgid "Item"
+msgstr ""
+
+#. menu_close
+msgid "Close menu"
+msgstr ""
+
+#. menu_quick_settings
+msgid "Quick settings"
+msgstr ""
+
+#. menu_tiles
+msgid "Tiles"
+msgstr ""
+
+#. menu_rows
+msgid "Rows"
+msgstr ""
+
+#. menu_map_up
+msgid "Map up"
+msgstr ""
+
+#. menu_theme
+msgid "Theme"
+msgstr ""
+
+#. menu_vario_sound
+msgid "Vario sound"
+msgstr ""
+
+#. menu_muted
+msgid "Muted"
+msgstr ""
+
+#. menu_go_to
+msgid "Go to waypoint"
+msgstr ""
+
+#. menu_go_to_detail
+msgid "Nearest landable first"
+msgstr ""
+
+#. menu_task_detail
+msgid "Edit, next, previous"
+msgstr ""
+
+#. menu_flight_setup
+msgid "Flight setup"
+msgstr ""
+
+#. menu_flight_setup_detail
+msgid "MacCready, ballast, bugs, QNH, wind"
+msgstr ""
+
+#. menu_analysis_detail
+msgid "Barograph, thermals, polar, wind"
+msgstr ""
+
+#. menu_ground
+msgid "Before and after the flight"
+msgstr ""
+
+#. menu_crew
+msgid "Aircraft & crew"
+msgstr ""
+
+#. menu_crew_detail
+msgid "Plane, co-pilot, pilot, WeGlide"
+msgstr ""
+
+#. menu_flights
+msgid "Flights"
+msgstr ""
+
+#. menu_flights_detail
+msgid "Share, upload to WeGlide, replay"
+msgstr ""
+
+#. menu_airspace_on
+msgid "Warnings on, classes, NOTAMs"
+msgstr ""
+
+#. menu_airspace_off
+msgid "Warnings off, classes, NOTAMs"
+msgstr ""
+
+#. menu_safety
+msgid "Safety heights"
+msgstr ""
+
+#. menu_safety_detail
+msgid "Arrival, terrain, safety MC"
+msgstr ""
+
+#. menu_sound
+msgid "Sound"
+msgstr ""
+
+#. menu_sound_detail
+msgid "Vario tone, voice callouts"
+msgstr ""
+
+#. menu_map_units
+msgid "Map & units"
+msgstr ""
+
+#. menu_map_units_detail
+msgid "Terrain, topography, trail, units"
+msgstr ""
+
+#. menu_units_detail
+msgid "Altitude, speed, lift…"
+msgstr ""
+
+#. menu_tracking
+msgid "Live tracking"
+msgstr ""
+
+#. menu_data_files
+msgid "Data files"
+msgstr ""
+
+#. menu_data_files_detail
+msgid "Map, airspace, waypoints"
+msgstr ""
+
+#. menu_profiles_detail
+msgid "Switch, new, import"
+msgstr ""
+
+#. menu_status_detail
+msgid "Flight times, GPS, task rules, share position"
+msgstr ""

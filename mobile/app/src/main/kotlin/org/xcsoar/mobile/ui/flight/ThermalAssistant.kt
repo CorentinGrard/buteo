@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
@@ -23,6 +24,7 @@ import org.xcsoar.mobile.ui.theme.XcsTheme
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.sin
+import org.xcsoar.mobile.R
 
 /**
  * The thermal assistant around the glider while circling: where on its
@@ -39,10 +41,10 @@ fun ThermalAssistantOverlay(
 ) {
     val colors = XcsTheme.colors
     val strongest = strongestBearing(graphic)
-    Canvas(modifier.clearAndSetSemantics {
-        contentDescription = strongest?.let { "Thermal assistant: strongest lift " +
-            "${Format.bearing(it).text}°" } ?: "Thermal assistant"
-    }) {
+    val spoken = strongest?.let {
+        stringResource(R.string.flight_thermal_assistant_lift, "${Format.bearing(it).text}°")
+    } ?: stringResource(R.string.flight_thermal_assistant)
+    Canvas(modifier.clearAndSetSemantics { contentDescription = spoken }) {
         thermalAssistant(graphic, centre, radius.toPx(), upBearing, colors, halo = true)
     }
 }

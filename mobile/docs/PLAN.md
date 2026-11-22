@@ -632,7 +632,20 @@ the core already links but that has never run in this app:
       Checked on a Pixel 7: settings, download and airspace rebuild
 - [x] File manager: download waypoints, airspace, maps from the XCSoar repository
       (Data files → Download, M2)
-- [ ] Translations: convert `po/*.po` → Android `strings.xml` at build time
+- [~] Translations (D28): `values/strings.xml` in English, translated
+      at build time from XCSoar's `po/` (the same English) and Buteo's
+      own `mobile/po/` by `mobile/tools/po2strings.py`; a translation
+      with other placeholders is left out.  `TranslationsTest` formats
+      every text in all 33 languages and keeps French complete; French
+      screenshots of the flight screen, menu, replay bar and an airspace
+      warning (short phone too).  Done (2026-11-22): the flight screen,
+      its cards, chips and edge bars, the menu, the replay bar, the map's
+      hold card, the airspace banner (116 texts; German gets 35 from
+      XCSoar).  Checked on the Pixel 7 in French; L5 finds its buttons
+      by the app's texts, in the phone's language.  Next: the first
+      start (Welcome), then each page; ViewModel messages (task, replay
+      errors); spoken callouts in the language; Android's per-app
+      language list (`localeConfig`) once more pages are done
 
 ### Not done: weather and tracking
 
@@ -896,6 +909,10 @@ caution).  From a fresh install tested on a Redmi 5 and the Pixel 7.
 ---
 
 ## Log
+
+- 2026-11-22 — Translations (D28): the flight screen and the menu in
+  the phone's language, French complete, others from XCSoar's
+  catalogues where the English matches.
 
 - 2026-11-22 — The 2026-11-21 flight's IGC log compared with upstream
   XCSoar's, recorded on the same phone: the same fixes, both G records

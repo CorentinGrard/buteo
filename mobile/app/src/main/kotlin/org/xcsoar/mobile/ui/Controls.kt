@@ -3,6 +3,7 @@
 
 package org.xcsoar.mobile.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.material3.HorizontalDivider
@@ -41,6 +42,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -54,6 +57,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.xcsoar.mobile.ui.theme.XcsTheme
+
+/**
+ * A text in capitals, as the chips and tags show it ("NO GPS"), with the
+ * language's own rules: the resources keep XCSoar's sentence case.
+ */
+@Composable
+fun upperStringResource(@StringRes id: Int): String =
+    stringResource(id).uppercase(LocalConfiguration.current.locales[0])
 
 /**
  * A 56 dp button: [primary] filled, [outlined] on a panel, else plain

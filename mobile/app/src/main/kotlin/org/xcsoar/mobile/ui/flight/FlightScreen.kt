@@ -4,6 +4,7 @@
 package org.xcsoar.mobile.ui.flight
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -51,6 +52,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.tooling.preview.Preview
@@ -67,10 +69,12 @@ import org.xcsoar.mobile.core.TileLayout
 import org.xcsoar.mobile.core.TileGraphic
 import kotlinx.coroutines.flow.StateFlow
 import org.xcsoar.mobile.core.TileValue
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.theme.ThemeChoice
 import org.xcsoar.mobile.ui.theme.XcsColors
 import org.xcsoar.mobile.ui.theme.XcsTheme
+import org.xcsoar.mobile.ui.upperStringResource
 
 @Composable
 fun FlightScreen(
@@ -477,18 +481,24 @@ private fun MapArea(
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 when {
-                    state == null -> StatusChip("Starting…", colors.textSecondary)
+                    state == null -> StatusChip(stringResource(R.string.flight_starting),
+                                                 colors.textSecondary)
                     else -> {
                         WindChip(state.wind, onClick = onWind)
-                        if (state.position == null) StatusChip("NO GPS", colors.caution)
+                        if (state.position == null)
+                            StatusChip(upperStringResource(R.string.flight_no_gps), colors.caution)
                         // upstream's "No polar is set up, so final glide and speed to
                         // fly are off"
                         if (state.noPolar)
-                            StatusChip("NO POLAR", colors.caution, onClick = onNoPolar,
-                                       onClickLabel = "Set up a plane")
+                            StatusChip(upperStringResource(R.string.flight_no_polar),
+                                       colors.caution,
+                                       onClick = onNoPolar,
+                                       onClickLabel = stringResource(R.string.flight_set_up_plane))
                         if (state.replay && replay == null)
-                            StatusChip("REPLAY", colors.neutralSafe)
-                        if (!state.flying) StatusChip("On ground", colors.text)
+                            StatusChip(upperStringResource(R.string.replay_status),
+                                       colors.neutralSafe)
+                        if (!state.flying)
+                            StatusChip(stringResource(R.string.flight_on_ground), colors.text)
                     }
                 }
                 if (lastEvent != null) StatusChip(lastEvent, colors.textSecondary)
@@ -828,6 +838,7 @@ private fun MenuPreview() {
  * Flights, NOTAMs from Airspace, units from the map, the wind from
  * Flight setup.
  */
+@Composable
 fun flightMenu(
     onOpenWaypoints: () -> Unit = {},
     onOpenTask: () -> Unit = {},
@@ -860,33 +871,37 @@ fun flightMenu(
     onTheme: (ThemeChoice) -> Unit = {},
 ) = FlightMenu(
     inFlight = listOf(
-        MenuAction("Go to waypoint", "Nearest landable first", onClick = onOpenWaypoints),
-        MenuAction("Task", "Edit, next, previous", onClick = onOpenTask),
-        MenuAction("Flight setup", "MacCready, ballast, bugs, QNH, wind",
-                   onClick = onOpenFlightSetup),
-        MenuAction("Analysis", "Barograph, thermals, polar, wind", onClick = onOpenAnalysis),
+        menuAction(R.string.menu_go_to, R.string.menu_go_to_detail, onOpenWaypoints),
+        menuAction(R.string.menu_task, R.string.menu_task_detail, onOpenTask),
+        menuAction(R.string.menu_flight_setup, R.string.menu_flight_setup_detail,
+                   onOpenFlightSetup),
+        menuAction(R.string.menu_analysis, R.string.menu_analysis_detail, onOpenAnalysis),
     ),
     sections = listOf(
-        MenuSection("Before and after the flight", listOf(
-            MenuAction("Aircraft & crew", "Plane, co-pilot, pilot, WeGlide",
-                       onClick = onOpenCrew),
-            MenuAction("Weather", "METAR, TAF, RASP", onClick = onOpenWeather),
-            MenuAction("Flights", "Share, upload to WeGlide, replay", onClick = onOpenFlights),
+        MenuSection(stringResource(R.string.menu_ground), listOf(
+            menuAction(R.string.menu_crew, R.string.menu_crew_detail, onOpenCrew),
+            // ICAO's abbreviations and names stay as they are
+            MenuAction(stringResource(R.string.menu_weather), "METAR, TAF, RASP",
+                       onClick = onOpenWeather),
+            menuAction(R.string.menu_flights, R.string.menu_flights_detail, onOpenFlights),
         )),
-        MenuSection("Settings", listOf(
-            MenuAction("Airspace", describe(airspaceAlerts), onClick = onOpenAirspaceAlerts),
-            MenuAction("Safety heights", "Arrival, terrain, safety MC", onClick = onOpenSafety),
-            MenuAction("Sound", "Vario tone, voice callouts", onClick = onOpenSound),
+        MenuSection(stringResource(R.string.menu_settings), listOf(
+            // whether XCSoar warns: warnings off is shown nowhere else
+            menuAction(R.string.airspace,
+                       if (airspaceAlerts.warnings) R.string.menu_airspace_on
+                       else R.string.menu_airspace_off, onOpenAirspaceAlerts),
+            menuAction(R.string.menu_safety, R.string.menu_safety_detail, onOpenSafety),
+            menuAction(R.string.menu_sound, R.string.menu_sound_detail, onOpenSound),
             onOpenMapSettings?.let {
-                MenuAction("Map & units", "Terrain, topography, trail, units", onClick = it)
-            } ?: MenuAction("Units", "Altitude, speed, lift…", onClick = onOpenUnits),
-            MenuAction("Live tracking", "Cloud, SkyLines, LiveTrack24",
+                menuAction(R.string.menu_map_units, R.string.menu_map_units_detail, it)
+            } ?: menuAction(R.string.menu_units, R.string.menu_units_detail, onOpenUnits),
+            MenuAction(stringResource(R.string.menu_tracking), "Cloud, SkyLines, LiveTrack24",
                        onClick = onOpenTracking),
-            MenuAction("Data files", "Map, airspace, waypoints", onClick = onOpenDataFiles),
-            MenuAction("Profiles", "Switch, new, import", onClick = onOpenProfiles),
+            menuAction(R.string.menu_data_files, R.string.menu_data_files_detail,
+                       onOpenDataFiles),
+            menuAction(R.string.menu_profiles, R.string.menu_profiles_detail, onOpenProfiles),
             // what XCSoar sees, for when something looks wrong
-            MenuAction("Status", "Flight times, GPS, task rules, share position",
-                       onClick = onOpenStatus),
+            menuAction(R.string.menu_status, R.string.menu_status_detail, onOpenStatus),
         )),
     ),
     tileLayout = tileLayout,
@@ -901,7 +916,6 @@ fun flightMenu(
     onTheme = onTheme,
 )
 
-/** "Warnings on, classes, NOTAMs": what the Airspace page holds, and
-    whether XCSoar warns (warnings off is shown nowhere else). */
-private fun describe(alerts: AirspaceAlerts): String =
-    "Warnings ${if (alerts.warnings) "on" else "off"}, classes, NOTAMs"
+@Composable
+private fun menuAction(@StringRes label: Int, @StringRes detail: Int, onClick: () -> Unit) =
+    MenuAction(stringResource(label), stringResource(detail), onClick = onClick)

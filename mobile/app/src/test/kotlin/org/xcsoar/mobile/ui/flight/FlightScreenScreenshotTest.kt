@@ -318,3 +318,57 @@ class AirspaceWarningScreenshotTest {
         }
     }
 }
+
+/**
+ * The flight screen in French (D28): its texts are longer than the
+ * English ones, and they must still fit, on a short phone too.
+ */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [36], qualifiers = "fr-w390dp-h844dp-xxhdpi")
+class FrenchFlightScreenshotTest {
+    private fun capture(name: String, content: @Composable () -> Unit) =
+        captureRoboImage("src/test/screenshots/$name.png", content = content)
+
+    @Test
+    fun noPolar() = capture("fr_no_polar_chip") {
+        XcsTheme(dark = false) {
+            FlightContent(FakeXcsoarCore.syntheticState(120).copy(noPolar = true), null,
+                          circling = false, {})
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "fr-w360dp-h720dp-xhdpi")
+    fun menuShortPhone() = capture("fr_flight_menu_short_phone") {
+        XcsTheme(dark = false) {
+            FlightContent(FakeXcsoarCore.syntheticState(120), null, circling = false, {},
+                          menu = flightMenu(orientation = MapOrientation.TRACK_UP,
+                                            varioSound = true),
+                          menuOpen = true)
+        }
+    }
+
+    @Test
+    fun replay() = capture("fr_replay_bar") {
+        XcsTheme(dark = false) {
+            FlightContent(FakeXcsoarCore.syntheticState(120).copy(replay = true), null,
+                          circling = false, {},
+                          replay = ReplayControls(ReplaySpeed(20.0, paused = true)))
+        }
+    }
+
+    @Test
+    fun airspaceWarning() = capture("fr_airspace_warning") {
+        XcsTheme(dark = false) {
+            FlightContent(
+                FakeXcsoarCore.syntheticState(120), null, circling = false, {},
+                warnings = listOf(
+                    org.xcsoar.mobile.core.AirspaceWarningInfo(
+                        "1", "near", "LF-R 46 N MONTAGNE NOIRE", "Restricted", "FL95", "SFC",
+                        distance = 1800.0, time = 85.0),
+                    org.xcsoar.mobile.core.AirspaceWarningInfo(
+                        "2", "task", "CTA LIMOGES", "Class D", "FL145", "FL115")))
+        }
+    }
+}

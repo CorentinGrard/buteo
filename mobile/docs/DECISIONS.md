@@ -471,3 +471,37 @@ bottom of the menu.
   its end-to-end test replays from Flights), and its "Open a file…"
   too: an IGC file copied into `XCSoarData/logs` is a flight like the
   others.  The `demo.igc` older versions copied there is deleted.
+
+## D28 — Translations from XCSoar's catalogues and Buteo's own
+**Status:** Accepted (2026-11-22)
+
+The core already speaks the phone's language (tile names, status pages,
+from XCSoar's built-in catalogues), the app's own words were English:
+on a French phone, "Européen" sat under "Welcome".
+
+- The English is Android's: `app/src/main/res/values/strings.xml`, read
+  with `stringResource()`.  Android's resources, not gettext through the
+  core: Compose reads them without JNI, the phone's per-app language
+  applies, and Compose Multiplatform has the same format for iOS (D2).
+- The translations are generated at build time
+  (`mobile/tools/po2strings.py`, Gradle task `translatedStrings`) into
+  `values-<lang>/strings.xml`, for XCSoar's 33 languages.  A text that
+  XCSoar has (the same English and context, no placeholders) takes
+  XCSoar's translation from `po/<lang>.po`, so existing translations
+  carry over (ARCHITECTURE "Language"); Buteo's own texts are in
+  `mobile/po/buteo.pot` and `mobile/po/<lang>.po`.  Kept apart from
+  `po/`: upstream merges stay clean, and XCSoar's `make update-po` would
+  drop msgids its sources do not have.
+- Where the same English means something else, a `po:msgctxt` gives it
+  a context of XCSoar's (`Button`, `Status`…): "Open" a tile's page is
+  not XCSoar's "Open" ("Ouvert", an open airspace).
+- A translation whose placeholders differ from the English is left out
+  (the English shows): a wrong one throws when the text is formatted,
+  in flight.  `TranslationsTest` formats every text in every language.
+- French is complete, the pilot's language, and a test keeps it so.
+  Other languages get XCSoar's translations and English for the rest
+  until someone translates `mobile/po/<lang>.po`.
+- ICAO abbreviations and names stay as they are (`doc/i18n.rst`):
+  "METAR, TAF, RASP", "ETE", "Cloud, SkyLines, LiveTrack24" are not in
+  the resources.  Chips and tags are stored in sentence case ("No GPS",
+  XCSoar's) and shown in capitals with the language's own rules.

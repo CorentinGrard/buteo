@@ -27,6 +27,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
@@ -39,6 +41,8 @@ import org.xcsoar.mobile.core.AirspaceWarningInfo
 import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import kotlin.math.roundToInt
+import org.xcsoar.mobile.R
+import org.xcsoar.mobile.ui.upperStringResource
 
 /**
  * The most severe airspace warning, over everything else on the map
@@ -103,29 +107,37 @@ private fun BannerContent(
             Text(warning.name, color = colors.onAlert, fontSize = 18.sp,
                  fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(listOf(warning.`class`, "${warning.base} – ${warning.top}",
-                        if (more > 0) "+$more more" else "")
+                        if (more > 0) stringResource(R.string.warning_more, more) else "")
                      .filter { it.isNotBlank() }.joinToString(" · "),
                  color = colors.onAlert, fontSize = 14.sp, maxLines = 1,
                  overflow = TextOverflow.Ellipsis)
         }
-        AckButton("Ack", "Acknowledge ${warning.name}") { onAcknowledge(false) }
-        AckButton("Day", "Acknowledge ${warning.name} for today") { onAcknowledge(true) }
+        AckButton(stringResource(R.string.warning_ack),
+                  stringResource(R.string.warning_ack_spoken, warning.name)) {
+            onAcknowledge(false)
+        }
+        AckButton(stringResource(R.string.warning_day),
+                  stringResource(R.string.warning_day_spoken, warning.name)) {
+            onAcknowledge(true)
+        }
     }
 }
 
-/** "INSIDE", or "IN 1:25 · 1.2 KM" before entering. */
+/** "INSIDE AIRSPACE", or "AIRSPACE AHEAD · IN 1:25 · 1.2 KM" before entering. */
+@Composable
 private fun headline(w: AirspaceWarningInfo): String {
-    if (w.inside) return "INSIDE AIRSPACE"
-    val parts = mutableListOf(if (w.state == "task") "TASK CROSSES" else "AIRSPACE AHEAD")
+    if (w.inside) return upperStringResource(R.string.warning_inside)
+    val parts = mutableListOf(stringResource(if (w.state == "task") R.string.warning_task_crosses
+                                             else R.string.warning_ahead))
     w.time?.takeIf { it >= 0 }?.let {
         val s = it.roundToInt()
-        parts += "in %d:%02d".format(s / 60, s % 60)
+        parts += stringResource(R.string.warning_in_time, "%d:%02d".format(s / 60, s % 60))
     }
     w.distance?.takeIf { it >= 0 }?.let {
         val d = Format.distance(it)
         parts += "${d.text} ${d.unit}"
     }
-    return parts.joinToString(" · ").uppercase()
+    return parts.joinToString(" · ").uppercase(LocalConfiguration.current.locales[0])
 }
 
 @Composable

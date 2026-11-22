@@ -40,6 +40,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.AnnotatedString
@@ -56,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import org.xcsoar.mobile.core.ChartPoint
 import org.xcsoar.mobile.core.ThermalBandInfo
 import org.xcsoar.mobile.core.TileGraphic
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.analysis.ChartMapper
 import org.xcsoar.mobile.ui.analysis.area
@@ -89,6 +91,8 @@ fun InfoBox(
 ) {
     val colors = XcsTheme.colors
     val spoken = "$title ${value.text} ${value.unit} $comment".trim()
+    val openLabel = stringResource(R.string.tile_open)
+    val changeLabel = stringResource(R.string.tile_change)
     val shape = RoundedCornerShape(12.dp)
     val feedback = remember { HoldFeedback() }
     val haptic = LocalHapticFeedback.current
@@ -126,9 +130,9 @@ fun InfoBox(
                 contentDescription = spoken
                 if (onClick != null) {
                     role = Role.Button
-                    onClick("Open") { onClick(); true }
+                    onClick(openLabel) { onClick(); true }
                 }
-                if (onLongClick != null) onLongClick("Change tile") { onLongClick(); true }
+                if (onLongClick != null) onLongClick(changeLabel) { onLongClick(); true }
             },
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {

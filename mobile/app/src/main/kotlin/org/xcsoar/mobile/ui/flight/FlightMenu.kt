@@ -51,10 +51,12 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.ui.Chevron
 import org.xcsoar.mobile.ui.SettingsGroup
@@ -113,9 +115,9 @@ class FlightMenu(
 )
 
 /** The orientations the menu offers, in its order. */
-private val ORIENTATIONS = listOf(MapOrientation.NORTH_UP to "North",
-                                  MapOrientation.TRACK_UP to "Track",
-                                  MapOrientation.TARGET_UP to "Target")
+private val ORIENTATIONS = listOf(MapOrientation.NORTH_UP to R.string.north,
+                                  MapOrientation.TRACK_UP to R.string.track,
+                                  MapOrientation.TARGET_UP to R.string.target)
 
 /**
  * The menu as a sheet over the flight screen: in-flight actions first,
@@ -135,7 +137,8 @@ fun FlightMenuSheet(visible: Boolean, menu: FlightMenu, onClose: () -> Unit,
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.45f))
                 .clickable(interactionSource = remember { MutableInteractionSource() },
-                           indication = null, onClickLabel = "Close menu", onClick = onClose))
+                           indication = null, onClickLabel = stringResource(R.string.menu_close),
+                           onClick = onClose))
         }
 
         val shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
@@ -159,12 +162,14 @@ fun FlightMenuSheet(visible: Boolean, menu: FlightMenu, onClose: () -> Unit,
             ) {
                 Row(Modifier.fillMaxWidth().height(72.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    Text("Menu", color = colors.text, fontSize = 24.sp, fontWeight = FontWeight.Bold,
+                    Text(stringResource(R.string.menu), color = colors.text, fontSize = 24.sp,
+                         fontWeight = FontWeight.Bold,
                          modifier = Modifier.weight(1f).padding(start = 4.dp))
                     CloseButton(onClose)
                 }
 
-                Caption("In flight", Modifier.padding(start = 4.dp, bottom = 8.dp))
+                Caption(stringResource(R.string.menu_in_flight),
+                        Modifier.padding(start = 4.dp, bottom = 8.dp))
                 menu.inFlight.chunked(2).forEach { row ->
                     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(bottom = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -175,10 +180,13 @@ fun FlightMenuSheet(visible: Boolean, menu: FlightMenu, onClose: () -> Unit,
                     }
                 }
 
-                Caption("Quick settings",
+                Caption(stringResource(R.string.menu_quick_settings),
                         Modifier.padding(start = 4.dp, top = 12.dp, bottom = 8.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LabelledSegmented("Tiles", listOf("Auto", "Cruise", "Circling"),
+                    LabelledSegmented(stringResource(R.string.menu_tiles),
+                                      listOf(stringResource(R.string.auto),
+                                             stringResource(R.string.cruise),
+                                             stringResource(R.string.circling)),
                                       selected = when (menu.tileLayout) {
                                           null -> 0
                                           false -> 1
@@ -187,12 +195,14 @@ fun FlightMenuSheet(visible: Boolean, menu: FlightMenu, onClose: () -> Unit,
                                       onSelect = {
                                           menu.onTileLayout(if (it == 0) null else it == 2)
                                       })
-                    LabelledSegmented("Rows", TILE_ROWS.map { it.toString() },
+                    LabelledSegmented(stringResource(R.string.menu_rows),
+                                      TILE_ROWS.map { it.toString() },
                                       selected = menu.tileRows - TILE_ROWS.first,
                                       onSelect = { menu.onTileRows(TILE_ROWS.first + it) })
                     menu.orientation?.let { orientation ->
                         // heading and wind up (set elsewhere) select none
-                        LabelledSegmented("Map up", ORIENTATIONS.map { it.second },
+                        LabelledSegmented(stringResource(R.string.menu_map_up),
+                                          ORIENTATIONS.map { stringResource(it.second) },
                                           selected = ORIENTATIONS.indexOfFirst {
                                               it.first == orientation
                                           },
@@ -200,12 +210,15 @@ fun FlightMenuSheet(visible: Boolean, menu: FlightMenu, onClose: () -> Unit,
                                               menu.onOrientation(ORIENTATIONS[it].first)
                                           })
                     }
-                    LabelledSegmented("Theme", ThemeChoice.entries.map { it.label },
+                    LabelledSegmented(stringResource(R.string.menu_theme),
+                                      ThemeChoice.entries.map { stringResource(it.label) },
                                       selected = menu.theme.ordinal,
                                       onSelect = { menu.onTheme(ThemeChoice.entries[it]) })
                     menu.varioSound?.let { on ->
                         SettingsGroup {
-                            SwitchRow("Vario sound", if (on) "On" else "Muted", on,
+                            SwitchRow(stringResource(R.string.menu_vario_sound),
+                                      stringResource(if (on) R.string.on
+                                                     else R.string.menu_muted), on,
                                       onChange = menu.onVarioSound)
                         }
                     }
@@ -227,12 +240,13 @@ fun FlightMenuSheet(visible: Boolean, menu: FlightMenu, onClose: () -> Unit,
 @Composable
 private fun CloseButton(onClose: () -> Unit) {
     val colors = XcsTheme.colors
+    val label = stringResource(R.string.menu_close)
     Box(
         Modifier
             .size(56.dp)
             .background(colors.panel, RoundedCornerShape(16.dp))
-            .clickable(role = Role.Button, onClickLabel = "Close menu", onClick = onClose)
-            .semantics { contentDescription = "Close menu" },
+            .clickable(role = Role.Button, onClickLabel = label, onClick = onClose)
+            .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.size(18.dp)) {

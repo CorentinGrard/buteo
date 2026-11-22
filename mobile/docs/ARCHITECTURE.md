@@ -295,4 +295,4 @@ On top of that:
   and device setup. Some screens are then disabled while flying.
 - **Language:** reuse XCSoar's gettext catalogues (`po/*.po`) by converting
   them to Android string resources at build time, so existing translations
-  carry over.
+  carry over (D28; Buteo's own texts in `mobile/po/`).

@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +33,7 @@ import org.xcsoar.mobile.core.FinalGlide
 import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import kotlin.math.abs
+import org.xcsoar.mobile.R
 
 /** Full scale of the vario bar, ± m/s. */
 private const val VARIO_RANGE = 5.0
@@ -72,9 +74,10 @@ fun VarioBar(
         // the track
         val track = maxHeight >= 104.dp
         val showNetto = maxHeight >= 160.dp
+        val spoken = stringResource(R.string.flight_vario_spoken, varioText.text,
+                                    averageText.text, nettoText.text, varioText.unit)
         EdgeCard((if (track) Modifier.fillMaxHeight() else Modifier).clearAndSetSemantics {
-            contentDescription = "Vario ${varioText.text}, average ${averageText.text}, " +
-                "netto ${nettoText.text} ${varioText.unit}"
+            contentDescription = spoken
         }) {
             // the colour must agree with the rounded number
             BarValue(varioText, if (lift) colors.lift else colors.text, 24)
@@ -82,7 +85,7 @@ fun VarioBar(
                 BarTrack(vario?.takeIf { abs(it) >= 0.05 }, VARIO_RANGE,
                          if (lift) colors.lift else colors.sink, average, Modifier.weight(1f))
             if (showNetto) {
-                Caption("Netto")
+                Caption(stringResource(R.string.netto))
                 Text(nettoText.text, color = colors.text, style = XcsTheme.numberStyle,
                      fontSize = 16.sp, maxLines = 1)
             }
@@ -103,10 +106,11 @@ fun FinalGlideBar(finalGlide: FinalGlide?, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier) {
         // on a short screen, the number without its track
         val track = maxHeight >= 120.dp
+        val spoken = stringResource(R.string.flight_final_spoken, "${value.text} ${value.unit}")
         EdgeCard((if (track) Modifier.fillMaxHeight() else Modifier).clearAndSetSemantics {
-            contentDescription = "Final glide ${value.text} ${value.unit}"
+            contentDescription = spoken
         }) {
-            Caption("Final")
+            Caption(stringResource(R.string.flight_final))
             BarValue(value, color ?: colors.text, 20)
             if (track)
                 BarTrack(difference, FINAL_GLIDE_RANGE, color ?: colors.text, null,

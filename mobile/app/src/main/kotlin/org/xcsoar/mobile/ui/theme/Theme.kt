@@ -3,6 +3,7 @@
 
 package org.xcsoar.mobile.ui.theme
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
@@ -150,10 +151,10 @@ private val barlowFonts = XcsFonts(
 val LocalXcsColors = staticCompositionLocalOf { sunlight }
 
 /** The pilot's choice of theme: the phone's (the default), white (sunlight) or dark (night). */
-enum class ThemeChoice(val label: String) {
-    SYSTEM("System"),
-    WHITE("White"),
-    DARK("Dark"),
+enum class ThemeChoice(@StringRes val label: Int) {
+    SYSTEM(R.string.theme_system),
+    WHITE(R.string.theme_white),
+    DARK(R.string.theme_dark),
 }
 
 @Composable

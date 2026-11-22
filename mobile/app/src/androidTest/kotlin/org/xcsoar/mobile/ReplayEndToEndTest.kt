@@ -5,6 +5,7 @@ package org.xcsoar.mobile
 
 import android.Manifest
 import android.os.Build
+import androidx.annotation.StringRes
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
@@ -60,39 +61,41 @@ class ReplayEndToEndTest {
 
         // Flights, the flight's page with the core's analysis of the
         // file, and its Replay
-        compose.onNodeWithContentDescription("Menu").performClick()
-        compose.onNodeWithText("Flights").performScrollTo().performClick()
+        compose.onNodeWithContentDescription(text(R.string.menu)).performClick()
+        compose.onNodeWithText(text(R.string.menu_flights)).performScrollTo().performClick()
         compose.onNodeWithText(flight.name, substring = true).performClick()
         waitFor("the flight's analysis", STARTUP_MS) {
             descriptions("Time ").any { !it.contains(Format.INVALID) }
         }
         compose.onNodeWithText("Replay").performClick()
         waitFor("the replay bar", STARTUP_MS) {
-            exists(hasContentDescription("Skip 10 minutes"))
+            exists(hasContentDescription(text(R.string.replay_skip)))
         }
 
         // XCSoar sees the take-off a few minutes into the file; "On ground"
         // also goes when the core has no state ("Starting…"): not a take-off
-        compose.onNodeWithContentDescription("Skip 10 minutes").performClick()
+        compose.onNodeWithContentDescription(text(R.string.replay_skip)).performClick()
         waitFor("the take-off", FLIGHT_MS) {
-            !exists(hasText("On ground")) && !exists(hasText("Starting…")) &&
-                exists(hasContentDescription("Stop replay"))
+            !exists(hasText(text(R.string.flight_on_ground))) &&
+                !exists(hasText(text(R.string.flight_starting))) &&
+                exists(hasContentDescription(text(R.string.replay_stop)))
         }
 
+        val vario = prefix(R.string.flight_vario_spoken)
         waitFor("a climb or sink on the vario", FLIGHT_MS) {
-            descriptions("Vario ").any { !it.startsWith("Vario 0.0,") &&
-                                         !it.startsWith("Vario ${Format.INVALID},") }
+            descriptions(vario).any { !it.startsWith("${vario}0.0") &&
+                                      !it.startsWith("$vario${Format.INVALID}") }
         }
 
         // a circling estimate needs a few turns
-        compose.onNodeWithContentDescription("Skip 10 minutes").performClick()
+        compose.onNodeWithContentDescription(text(R.string.replay_skip)).performClick()
         waitFor("a wind estimate", FLIGHT_MS) {
-            descriptions("Wind from ").any { !it.contains(Format.INVALID) }
+            descriptions(prefix(R.string.flight_wind_from)).any { !it.contains(Format.INVALID) }
         }
 
-        compose.onNodeWithContentDescription("Stop replay").performClick()
+        compose.onNodeWithContentDescription(text(R.string.replay_stop)).performClick()
         waitFor("the replay stopped", STARTUP_MS) {
-            !exists(hasContentDescription("Stop replay"))
+            !exists(hasContentDescription(text(R.string.replay_stop)))
         }
     }
 
@@ -170,8 +173,16 @@ class ReplayEndToEndTest {
             compose.onNodeWithText("Set up later").performClick()
         if (exists(hasText("Not now")))
             compose.onNodeWithText("Not now").performClick()
-        waitFor("the core started", STARTUP_MS) { exists(hasText("On ground")) }
+        waitFor("the core started", STARTUP_MS) {
+            exists(hasText(text(R.string.flight_on_ground)))
+        }
     }
+
+    /** The app's text, in the phone's language. */
+    private fun text(@StringRes id: Int) = compose.activity.getString(id)
+
+    /** The app's text up to its first placeholder: "Wind from ". */
+    private fun prefix(@StringRes id: Int) = text(id).substringBefore("%1\$")
 
     private fun exists(matcher: SemanticsMatcher) =
         compose.onAllNodes(matcher, useUnmergedTree = true)

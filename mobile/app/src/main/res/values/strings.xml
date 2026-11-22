@@ -1,6 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Buteo</string>
+<!-- The English texts.  Translations are generated from po/ and
+     mobile/po/ (mobile/docs/DECISIONS.md D28): reuse XCSoar's English
+     where it fits, give a po:msgctxt where the same English means
+     something else, and after a change run
+     mobile/tools/po2strings.py pot (see mobile/po/README.md). -->
+<resources xmlns:po="urn:buteo:po">
+    <string name="app_name" translatable="false">Buteo</string>
     <string name="flight_channel">Flight</string>
     <string name="flight_running">Flight computer running. Tap to open.</string>
+
+    <!-- shared -->
+    <string name="close">Close</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="auto">Auto</string>
+    <string name="cruise">Cruise</string>
+    <string name="circling">Circling</string>
+    <string name="north">North</string>
+    <string name="track">Track</string>
+    <string name="target">Target</string>
+    <string name="go_to">Go to</string>
+    <string name="go_to_name">Go to %1$s</string>
+    <string name="decrease_name">Decrease %1$s</string>
+    <string name="increase_name">Increase %1$s</string>
+    <string name="mac_cready">MacCready</string>
+    <string name="airspace">Airspace</string>
+    <string name="waypoint">Waypoint</string>
+    <string name="landable">Landable</string>
+    <string name="terrain">Terrain</string>
+    <string name="thermal">Thermal</string>
+    <string name="task_point">Task point</string>
+    <string name="netto">Netto</string>
+    <string name="next">Next</string>
+    <string name="replay_status" po:msgctxt="Status">Replay</string>
+    <string name="stop">Stop</string>
+
+    <!-- the flight screen -->
+    <string name="flight_starting">Starting…</string>
+    <string name="flight_no_gps">No GPS</string>
+    <string name="flight_no_polar">No polar</string>
+    <string name="flight_set_up_plane">Set up a plane</string>
+    <string name="flight_on_ground">On ground</string>
+    <string name="flight_open_menu">Open menu</string>
+    <string name="flight_zoom_out">Zoom out</string>
+    <string name="flight_zoom_in">Zoom in</string>
+    <string name="flight_centre">Centre on aircraft</string>
+    <string name="flight_set_mc">Set MC</string>
+    <string name="flight_set_mc_to">Set MacCready to %1$s</string>
+    <string name="flight_mc_auto">MC auto</string>
+    <string name="flight_mc_automatic">automatic, %1$s</string>
+    <string name="flight_no_target">No target</string>
+    <string name="flight_choose_target">Choose where to go</string>
+    <string name="flight_next_no_fix">Next %1$s, waiting for a GPS fix</string>
+    <string name="flight_next_spoken">Next %1$s, %2$s, bearing %3$s, arrival %4$s</string>
+    <string name="flight_set_wind">Set the wind</string>
+    <string name="flight_wind_from">Wind from %1$s</string>
+    <string name="flight_vario_spoken">Vario %1$s, average %2$s, netto %3$s %4$s</string>
+    <string name="flight_final">Final</string>
+    <string name="flight_final_spoken">Final glide %1$s</string>
+    <string name="flight_thermal_assistant">Thermal assistant</string>
+    <string name="flight_thermal_assistant_lift">Thermal assistant: strongest lift %1$s</string>
+    <string name="tile_open" po:msgctxt="Button">Open</string>
+    <string name="tile_change">Change tile</string>
+
+    <!-- airspace warnings -->
+    <string name="warning_inside">Inside airspace</string>
+    <string name="warning_task_crosses">Task crosses</string>
+    <string name="warning_ahead">Airspace ahead</string>
+    <string name="warning_in_time">in %1$s</string>
+    <string name="warning_more">+%1$d more</string>
+    <string name="warning_ack">Ack</string>
+    <string name="warning_day">Day</string>
+    <string name="warning_ack_spoken">Acknowledge %1$s</string>
+    <string name="warning_day_spoken">Acknowledge %1$s for today</string>
+
+    <!-- the replay bar -->
+    <string name="replay_play">Play replay</string>
+    <string name="replay_pause">Pause replay</string>
+    <string name="replay_speed">Replay speed %1$s, faster</string>
+    <string name="replay_skip">Skip 10 minutes</string>
+    <string name="replay_stop">Stop replay</string>
+
+    <!-- holding the map -->
+    <string name="map_items_here">At this point</string>
+    <string name="map_items_nothing">Nothing here</string>
+    <string name="map_items_self">Your glider</string>
+    <string name="map_items_traffic">FLARM traffic</string>
+    <string name="map_items_item">Item</string>
+
+    <!-- the menu -->
+    <string name="menu">Menu</string>
+    <string name="menu_close">Close menu</string>
+    <string name="menu_in_flight">In flight</string>
+    <string name="menu_quick_settings">Quick settings</string>
+    <string name="menu_tiles">Tiles</string>
+    <string name="menu_rows">Rows</string>
+    <string name="menu_map_up">Map up</string>
+    <string name="menu_theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_white">White</string>
+    <string name="theme_dark">Dark</string>
+    <string name="menu_vario_sound">Vario sound</string>
+    <string name="menu_muted">Muted</string>
+    <string name="menu_go_to">Go to waypoint</string>
+    <string name="menu_go_to_detail">Nearest landable first</string>
+    <string name="menu_task">Task</string>
+    <string name="menu_task_detail">Edit, next, previous</string>
+    <string name="menu_flight_setup">Flight setup</string>
+    <string name="menu_flight_setup_detail">MacCready, ballast, bugs, QNH, wind</string>
+    <string name="menu_analysis">Analysis</string>
+    <string name="menu_analysis_detail">Barograph, thermals, polar, wind</string>
+    <string name="menu_ground">Before and after the flight</string>
+    <string name="menu_crew">Aircraft &amp; crew</string>
+    <string name="menu_crew_detail">Plane, co-pilot, pilot, WeGlide</string>
+    <string name="menu_weather">Weather</string>
+    <string name="menu_flights">Flights</string>
+    <string name="menu_flights_detail">Share, upload to WeGlide, replay</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_airspace_on">Warnings on, classes, NOTAMs</string>
+    <string name="menu_airspace_off">Warnings off, classes, NOTAMs</string>
+    <string name="menu_safety">Safety heights</string>
+    <string name="menu_safety_detail">Arrival, terrain, safety MC</string>
+    <string name="menu_sound">Sound</string>
+    <string name="menu_sound_detail">Vario tone, voice callouts</string>
+    <string name="menu_map_units">Map &amp; units</string>
+    <string name="menu_map_units_detail">Terrain, topography, trail, units</string>
+    <string name="menu_units">Units</string>
+    <string name="menu_units_detail">Altitude, speed, lift…</string>
+    <string name="menu_tracking">Live tracking</string>
+    <string name="menu_data_files">Data files</string>
+    <string name="menu_data_files_detail">Map, airspace, waypoints</string>
+    <string name="menu_profiles">Profiles</string>
+    <string name="menu_profiles_detail">Switch, new, import</string>
+    <string name="menu_status">Status</string>
+    <string name="menu_status_detail">Flight times, GPS, task rules, share position</string>
 </resources>

@@ -1,0 +1,335 @@
+# Buteo's own texts: those XCSoar has too are translated in
+# po/ (mobile/docs/DECISIONS.md D28).
+msgid ""
+msgstr ""
+"Project-Id-Version: Buteo\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. flight_running
+msgid "Flight computer running. Tap to open."
+msgstr "Calculateur de vol en marche. Touchez pour ouvrir."
+
+#. north
+msgid "North"
+msgstr "Nord"
+
+#. go_to
+msgid "Go to"
+msgstr "Aller"
+
+#. go_to_name
+msgid "Go to %1$s"
+msgstr "Aller à %1$s"
+
+#. decrease_name
+msgid "Decrease %1$s"
+msgstr "Diminuer %1$s"
+
+#. increase_name
+msgid "Increase %1$s"
+msgstr "Augmenter %1$s"
+
+#. replay_status
+msgctxt "Status"
+msgid "Replay"
+msgstr "Rejeu"
+
+#. flight_starting
+msgid "Starting…"
+msgstr "Démarrage…"
+
+#. flight_no_polar
+msgid "No polar"
+msgstr "Pas de polaire"
+
+#. flight_set_up_plane
+msgid "Set up a plane"
+msgstr "Configurer un planeur"
+
+#. flight_open_menu
+msgid "Open menu"
+msgstr "Ouvrir le menu"
+
+#. flight_centre
+msgid "Centre on aircraft"
+msgstr "Centrer sur le planeur"
+
+#. flight_set_mc
+msgid "Set MC"
+msgstr "Régler MC"
+
+#. flight_set_mc_to
+msgid "Set MacCready to %1$s"
+msgstr "Régler MacCready à %1$s"
+
+#. flight_mc_auto
+msgid "MC auto"
+msgstr "MC auto"
+
+#. flight_mc_automatic
+msgid "automatic, %1$s"
+msgstr "automatique, %1$s"
+
+#. flight_no_target
+msgid "No target"
+msgstr "Pas de destination"
+
+#. flight_choose_target
+msgid "Choose where to go"
+msgstr "Choisir la destination"
+
+#. flight_next_no_fix
+msgid "Next %1$s, waiting for a GPS fix"
+msgstr "Suivant : %1$s, en attente du GPS"
+
+#. flight_next_spoken
+msgid "Next %1$s, %2$s, bearing %3$s, arrival %4$s"
+msgstr "Suivant : %1$s, %2$s, cap %3$s, arrivée %4$s"
+
+#. flight_set_wind
+msgid "Set the wind"
+msgstr "Régler le vent"
+
+#. flight_wind_from
+msgid "Wind from %1$s"
+msgstr "Vent du %1$s"
+
+#. flight_vario_spoken
+msgid "Vario %1$s, average %2$s, netto %3$s %4$s"
+msgstr "Vario %1$s, moyenne %2$s, netto %3$s %4$s"
+
+#. flight_final
+msgid "Final"
+msgstr "Finale"
+
+#. flight_final_spoken
+msgid "Final glide %1$s"
+msgstr "Finale %1$s"
+
+#. flight_thermal_assistant
+msgid "Thermal assistant"
+msgstr "Assistant thermique"
+
+#. flight_thermal_assistant_lift
+msgid "Thermal assistant: strongest lift %1$s"
+msgstr "Assistant thermique : ascendance la plus forte au %1$s"
+
+#. tile_open
+msgctxt "Button"
+msgid "Open"
+msgstr "Ouvrir"
+
+#. tile_change
+msgid "Change tile"
+msgstr "Changer de tuile"
+
+#. warning_inside
+msgid "Inside airspace"
+msgstr "Dans la zone"
+
+#. warning_task_crosses
+msgid "Task crosses"
+msgstr "Sur le circuit"
+
+#. warning_ahead
+msgid "Airspace ahead"
+msgstr "Zone devant"
+
+#. warning_in_time
+msgid "in %1$s"
+msgstr "dans %1$s"
+
+#. warning_more
+msgid "+%1$d more"
+msgstr "+%1$d"
+
+#. warning_ack
+msgid "Ack"
+msgstr "OK"
+
+#. warning_day
+msgid "Day"
+msgstr "Jour"
+
+#. warning_ack_spoken
+msgid "Acknowledge %1$s"
+msgstr "Confirmer %1$s"
+
+#. warning_day_spoken
+msgid "Acknowledge %1$s for today"
+msgstr "Confirmer %1$s pour aujourd'hui"
+
+#. replay_play
+msgid "Play replay"
+msgstr "Lire le rejeu"
+
+#. replay_pause
+msgid "Pause replay"
+msgstr "Mettre le rejeu en pause"
+
+#. replay_speed
+msgid "Replay speed %1$s, faster"
+msgstr "Vitesse du rejeu %1$s, plus vite"
+
+#. replay_skip
+msgid "Skip 10 minutes"
+msgstr "Avancer de 10 minutes"
+
+#. replay_stop
+msgid "Stop replay"
+msgstr "Arrêter le rejeu"
+
+#. map_items_here
+msgid "At this point"
+msgstr "À cet endroit"
+
+#. map_items_nothing
+msgid "Nothing here"
+msgstr "Rien ici"
+
+#. map_items_self
+msgid "Your glider"
+msgstr "Votre planeur"
+
+#. map_items_traffic
+msgid "FLARM traffic"
+msgstr "Trafic FLARM"
+
+#. map_items_item
+msgid "Item"
+msgstr "Élément"
+
+#. menu_close
+msgid "Close menu"
+msgstr "Fermer le menu"
+
+#. menu_quick_settings
+msgid "Quick settings"
+msgstr "Réglages rapides"
+
+#. menu_tiles
+msgid "Tiles"
+msgstr "Tuiles"
+
+#. menu_rows
+msgid "Rows"
+msgstr "Lignes"
+
+#. menu_map_up
+msgid "Map up"
+msgstr "En haut"
+
+#. menu_theme
+msgid "Theme"
+msgstr "Thème"
+
+#. menu_vario_sound
+msgid "Vario sound"
+msgstr "Son du vario"
+
+#. menu_muted
+msgid "Muted"
+msgstr "Coupé"
+
+#. menu_go_to
+msgid "Go to waypoint"
+msgstr "Aller à une balise"
+
+#. menu_go_to_detail
+msgid "Nearest landable first"
+msgstr "Les vachables proches d'abord"
+
+#. menu_task_detail
+msgid "Edit, next, previous"
+msgstr "Modifier, suivant, précédent"
+
+#. menu_flight_setup
+msgid "Flight setup"
+msgstr "Configuration vol"
+
+#. menu_flight_setup_detail
+msgid "MacCready, ballast, bugs, QNH, wind"
+msgstr "MacCready, ballast, moucherons, QNH, vent"
+
+#. menu_analysis_detail
+msgid "Barograph, thermals, polar, wind"
+msgstr "Barogramme, thermiques, polaire, vent"
+
+#. menu_ground
+msgid "Before and after the flight"
+msgstr "Avant et après le vol"
+
+#. menu_crew
+msgid "Aircraft & crew"
+msgstr "Planeur et équipage"
+
+#. menu_crew_detail
+msgid "Plane, co-pilot, pilot, WeGlide"
+msgstr "Planeur, copilote, pilote, WeGlide"
+
+#. menu_flights
+msgid "Flights"
+msgstr "Vols"
+
+#. menu_flights_detail
+msgid "Share, upload to WeGlide, replay"
+msgstr "Partager, envoyer à WeGlide, rejouer"
+
+#. menu_airspace_on
+msgid "Warnings on, classes, NOTAMs"
+msgstr "Alertes activées, classes, NOTAM"
+
+#. menu_airspace_off
+msgid "Warnings off, classes, NOTAMs"
+msgstr "Alertes désactivées, classes, NOTAM"
+
+#. menu_safety
+msgid "Safety heights"
+msgstr "Hauteurs de sécurité"
+
+#. menu_safety_detail
+msgid "Arrival, terrain, safety MC"
+msgstr "Arrivée, relief, MC de sécurité"
+
+#. menu_sound
+msgid "Sound"
+msgstr "Son"
+
+#. menu_sound_detail
+msgid "Vario tone, voice callouts"
+msgstr "Son du vario, annonces vocales"
+
+#. menu_map_units
+msgid "Map & units"
+msgstr "Carte et unités"
+
+#. menu_map_units_detail
+msgid "Terrain, topography, trail, units"
+msgstr "Relief, topographie, trace, unités"
+
+#. menu_units_detail
+msgid "Altitude, speed, lift…"
+msgstr "Altitude, vitesse, ascendance…"
+
+#. menu_tracking
+msgid "Live tracking"
+msgstr "Suivi en direct"
+
+#. menu_data_files
+msgid "Data files"
+msgstr "Fichiers de données"
+
+#. menu_data_files_detail
+msgid "Map, airspace, waypoints"
+msgstr "Carte, espaces aériens, balises"
+
+#. menu_profiles_detail
+msgid "Switch, new, import"
+msgstr "Changer, nouveau, importer"
+
+#. menu_status_detail
+msgid "Flight times, GPS, task rules, share position"
+msgstr "Heures de vol, GPS, règles du circuit, partager la position"

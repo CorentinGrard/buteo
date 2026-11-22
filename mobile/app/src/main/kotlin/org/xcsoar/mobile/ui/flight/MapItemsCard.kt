@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.xcsoar.mobile.core.MapItemInfo
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
@@ -54,12 +56,13 @@ fun MapItemsCard(
         Column(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth().padding(start = 14.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Caption("At this point", Modifier.weight(1f))
+                Caption(stringResource(R.string.map_items_here), Modifier.weight(1f))
+                val close = stringResource(R.string.close)
                 Box(
                     Modifier
                         .size(56.dp)
-                        .clickable(role = Role.Button, onClickLabel = "Close", onClick = onClose)
-                        .semantics { contentDescription = "Close" },
+                        .clickable(role = Role.Button, onClickLabel = close, onClick = onClose)
+                        .semantics { contentDescription = close },
                     contentAlignment = Alignment.Center,
                 ) {
                     Canvas(Modifier.size(16.dp)) {
@@ -73,7 +76,8 @@ fun MapItemsCard(
             }
             Column(Modifier.heightIn(max = 200.dp).verticalScroll(rememberScrollState())) {
                 if (items.isEmpty())
-                    Text("Nothing here", color = colors.textSecondary, fontSize = 16.sp,
+                    Text(stringResource(R.string.map_items_nothing), color = colors.textSecondary,
+                         fontSize = 16.sp,
                          modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp))
                 items.forEachIndexed { i, item ->
                     if (i > 0)
@@ -99,12 +103,14 @@ fun MapItemsCard(
                                     .widthIn(min = 72.dp)
                                     .background(colors.task, RoundedCornerShape(10.dp))
                                     .clickable(role = Role.Button,
-                                               onClickLabel = "Go to ${item.name}") {
+                                               onClickLabel = stringResource(R.string.go_to_name,
+                                                                       item.name ?: "")) {
                                         onGoto(waypointId)
                                     }
                                     .padding(horizontal = 12.dp),
                                 contentAlignment = Alignment.Center) {
-                                Text("Go to", color = colors.onSelected, fontSize = 15.sp,
+                                Text(stringResource(R.string.go_to), color = colors.onSelected,
+                                     fontSize = 15.sp,
                                      fontWeight = FontWeight.SemiBold)
                             }
                     }
@@ -115,20 +121,23 @@ fun MapItemsCard(
 }
 
 /** A title and a detail line for one item. */
+@Composable
 private fun describe(item: MapItemInfo): Pair<String, String> {
     val elevation = item.elevation?.let { Format.altitude(it) }?.let { "${it.text} ${it.unit}" }
+    val waypoint = stringResource(R.string.waypoint)
     return when (item.type) {
-        "airspace" -> (item.name ?: "Airspace") to
+        "airspace" -> (item.name ?: stringResource(R.string.airspace)) to
             listOfNotNull(item.`class`, if (item.base != null && item.top != null)
                 "${item.base} – ${item.top}" else null).joinToString(" · ")
-        "waypoint" -> (item.name ?: "Waypoint") to
-            listOfNotNull(if (item.landable == true) "Landable" else "Waypoint", elevation,
+        "waypoint" -> (item.name ?: waypoint) to
+            listOfNotNull(if (item.landable == true) stringResource(R.string.landable)
+                          else waypoint, elevation,
                           item.frequency?.let { "$it MHz" }, item.detail).joinToString(" · ")
-        "location" -> "Terrain" to (elevation ?: "")
-        "self" -> "Your glider" to ""
-        "task" -> "Task point" to (item.name ?: "")
-        "thermal" -> "Thermal" to ""
-        "traffic" -> "FLARM traffic" to ""
-        else -> (item.name ?: "Item") to ""
+        "location" -> stringResource(R.string.terrain) to (elevation ?: "")
+        "self" -> stringResource(R.string.map_items_self) to ""
+        "task" -> stringResource(R.string.task_point) to (item.name ?: "")
+        "thermal" -> stringResource(R.string.thermal) to ""
+        "traffic" -> stringResource(R.string.map_items_traffic) to ""
+        else -> (item.name ?: stringResource(R.string.map_items_item)) to ""
     }
 }

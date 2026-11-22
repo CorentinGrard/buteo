@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -40,8 +41,10 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import org.xcsoar.mobile.core.NextWaypoint
 import org.xcsoar.mobile.core.Wind
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.theme.XcsTheme
+import org.xcsoar.mobile.ui.upperStringResource
 
 /*
  * Overlays drawn over the map.  The map is north up, so every direction
@@ -103,18 +106,20 @@ fun NextWaypointCard(
     val distance = Format.distance(next?.distance)
     val bearing = Format.bearing(next?.bearing)
     val arrival = Format.altitudeDifference(next?.altitudeDifference)
-    val name = next?.name?.ifEmpty { null } ?: if (next == null) "No target" else Format.INVALID
+    val noTarget = stringResource(R.string.flight_no_target)
+    val name = next?.name?.ifEmpty { null } ?: if (next == null) noTarget else Format.INVALID
 
     FloatingCard(
         modifier,
         elevated = elevated,
         onClick = onClick,
-        onClickLabel = "Choose where to go",
+        onClickLabel = stringResource(R.string.flight_choose_target),
         description = when {
-            next == null -> "No target"
-            next.distance == null -> "Next $name, waiting for a GPS fix"
-            else -> "Next $name, ${distance.text} ${distance.unit}, bearing ${bearing.text}, " +
-                "arrival ${arrival.text} ${arrival.unit}"
+            next == null -> noTarget
+            next.distance == null -> stringResource(R.string.flight_next_no_fix, name)
+            else -> stringResource(R.string.flight_next_spoken, name,
+                                   "${distance.text} ${distance.unit}", bearing.text,
+                                   "${arrival.text} ${arrival.unit}")
         },
     ) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
@@ -130,7 +135,8 @@ fun NextWaypointCard(
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 if (next != null) Row(verticalAlignment = Alignment.CenterVertically,
                                       horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("NEXT", color = colors.onSelected, fontSize = 11.sp,
+                    Text(upperStringResource(R.string.next), color = colors.onSelected,
+                         fontSize = 11.sp,
                          fontWeight = FontWeight.Bold, letterSpacing = 0.08.em,
                          modifier = Modifier
                              .background(colors.task, RoundedCornerShape(5.dp))
@@ -165,7 +171,8 @@ fun WindChip(wind: Wind?, modifier: Modifier = Modifier, onClick: (() -> Unit)? 
     val speed = Format.windSpeed(wind?.speed)
     val text = "${from.text}${from.unit} · ${speed.text} ${speed.unit}"
     FloatingCard(modifier, RoundedCornerShape(12.dp), onClick = onClick,
-                 onClickLabel = "Set the wind", description = "Wind from $text") {
+                 onClickLabel = stringResource(R.string.flight_set_wind),
+                 description = stringResource(R.string.flight_wind_from, text)) {
         Row(Modifier.padding(start = 6.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {

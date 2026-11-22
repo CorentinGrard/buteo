@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -29,6 +30,8 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import java.util.Locale
+import org.xcsoar.mobile.R
+import org.xcsoar.mobile.ui.upperStringResource
 
 /**
  * Over the map while a flight is replayed: the replayed time (UTC),
@@ -50,12 +53,13 @@ fun ReplayBar(
     val colors = XcsTheme.colors
     FloatingCard(modifier.fillMaxWidth()) {
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
-            Text("REPLAY", color = colors.neutralSafe, fontSize = 12.sp,
+            Text(upperStringResource(R.string.replay_status), color = colors.neutralSafe,
+                 fontSize = 12.sp,
                  fontWeight = FontWeight.Bold, letterSpacing = 0.06.em, maxLines = 1)
             Text(timeUtc?.let(::utcTime) ?: "--:--:--", color = colors.text,
                  style = XcsTheme.numberStyle, fontSize = 18.sp, maxLines = 1)
         }
-        BarButton(if (speed.paused) "Play replay" else "Pause replay",
+        BarButton(stringResource(if (speed.paused) R.string.replay_play else R.string.replay_pause),
                   { onPause(!speed.paused) }) {
             Canvas(Modifier.size(18.dp)) {
                 if (speed.paused)
@@ -72,11 +76,14 @@ fun ReplayBar(
             }
         }
         val label = "${speedText(speed.timeScale)}×"
-        BarButton("Replay speed $label, faster", { onSpeed(nextSpeed(speed.timeScale)) }) {
+        BarButton(stringResource(R.string.replay_speed, label),
+                  { onSpeed(nextSpeed(speed.timeScale)) }) {
             BarText(label)
         }
-        BarButton("Skip 10 minutes", onSkip) { BarText("+10′") }
-        BarButton("Stop replay", onStop) { BarText("Stop") }
+        BarButton(stringResource(R.string.replay_skip), onSkip) { BarText("+10′") }
+        BarButton(stringResource(R.string.replay_stop), onStop) {
+            BarText(stringResource(R.string.stop))
+        }
     }
 }
 

@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -53,8 +54,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import org.xcsoar.mobile.core.UnitGroup
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.theme.XcsTheme
+import org.xcsoar.mobile.ui.upperStringResource
 
 /**
  * Cockpit controls are at least 56 dp and act on release: Compose's
@@ -81,8 +84,12 @@ fun MacCreadyControl(
 ) {
     val unit = Format.unit(UnitGroup.VERTICAL_SPEED).name
     val text = macCready?.let { Format.macCready(it).text } ?: Format.INVALID
-    Stepper("MacCready", if (auto) "MC auto · $unit" else "MC · $unit", text,
-            if (auto) "automatic, $text $unit" else "$text $unit",
+    // "MC" is an abbreviation: it stays as it is
+    Stepper(stringResource(R.string.mac_cready),
+            if (auto) "${stringResource(R.string.flight_mc_auto)} · $unit" else "MC · $unit",
+            text,
+            if (auto) stringResource(R.string.flight_mc_automatic, "$text $unit")
+            else "$text $unit",
             canDecrease = macCready != null && macCready > 0,
             canIncrease = macCready != null && macCready < 5,
             onDecrease = { macCready?.let { onChange(Format.stepVerticalSpeed(it, -1)) } },
@@ -118,7 +125,8 @@ fun Stepper(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        StepButton("Decrease $name", plus = false, enabled = canDecrease) {
+        StepButton(stringResource(R.string.decrease_name, name), plus = false,
+                   enabled = canDecrease) {
             up = false
             onDecrease()
         }
@@ -140,7 +148,8 @@ fun Stepper(
                      fontWeight = FontWeight.Bold, fontSize = 26.sp, maxLines = 1)
             }
         }
-        StepButton("Increase $name", plus = true, enabled = canIncrease) {
+        StepButton(stringResource(R.string.increase_name, name), plus = true,
+                   enabled = canIncrease) {
             up = true
             onIncrease()
         }
@@ -216,13 +225,15 @@ fun Segmented(
 fun MenuButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = XcsTheme.colors
     val shape = RoundedCornerShape(16.dp)
+    val label = stringResource(R.string.menu)
     Box(
         modifier = modifier
             .defaultMinSize(TOUCH, TOUCH)
             .clip(shape)
             .background(colors.selected)
-            .clickable(role = Role.Button, onClickLabel = "Open menu", onClick = onClick)
-            .semantics { contentDescription = "Menu" },
+            .clickable(role = Role.Button, onClickLabel = stringResource(R.string.flight_open_menu),
+                       onClick = onClick)
+            .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.size(22.dp)) {
@@ -250,7 +261,8 @@ private fun Modifier.mapButton(): Modifier {
 fun ZoomButtons(onZoom: (steps: Int) -> Unit, modifier: Modifier = Modifier) {
     val colors = XcsTheme.colors
     Row(modifier.mapButton(), verticalAlignment = Alignment.CenterVertically) {
-        for ((label, steps) in listOf("Zoom out" to 1, "Zoom in" to -1)) {
+        for ((id, steps) in listOf(R.string.flight_zoom_out to 1, R.string.flight_zoom_in to -1)) {
+            val label = stringResource(id)
             if (steps < 0)
                 Box(Modifier.width(1.dp).height(32.dp).background(colors.panelBorder))
             Box(
@@ -278,12 +290,13 @@ fun ZoomButtons(onZoom: (steps: Int) -> Unit, modifier: Modifier = Modifier) {
 @Composable
 fun CentreButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = XcsTheme.colors
+    val label = stringResource(R.string.flight_centre)
     Box(
         modifier
             .size(TOUCH)
             .background(colors.selected, RoundedCornerShape(16.dp))
-            .clickable(role = Role.Button, onClickLabel = "Centre on aircraft", onClick = onClick)
-            .semantics { contentDescription = "Centre on aircraft" },
+            .clickable(role = Role.Button, onClickLabel = label, onClick = onClick)
+            .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.size(24.dp)) {
@@ -311,11 +324,12 @@ fun CentreButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 fun NorthMark(mapAngle: Double, modifier: Modifier = Modifier) {
     val colors = XcsTheme.colors
+    val label = stringResource(R.string.north)
     Column(
         modifier
             .size(TOUCH)
             .mapButton()
-            .clearAndSetSemantics { contentDescription = "North" },
+            .clearAndSetSemantics { contentDescription = label },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -344,14 +358,15 @@ fun SetMacCreadyButton(lift: Double, onClick: () -> Unit, modifier: Modifier = M
             .heightIn(min = TOUCH)
             .clip(RoundedCornerShape(16.dp))
             .background(colors.updraft)
-            .clickable(role = Role.Button, onClickLabel = "Set MacCready to ${value.text}",
+            .clickable(role = Role.Button,
+                       onClickLabel = stringResource(R.string.flight_set_mc_to, value.text),
                        onClick = onClick)
             .padding(horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text("SET MC", color = colors.onSelected, fontSize = 11.sp,
-             fontWeight = FontWeight.Bold, letterSpacing = 0.06.em, maxLines = 1)
+        Text(upperStringResource(R.string.flight_set_mc), color = colors.onSelected,
+             fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.06.em, maxLines = 1)
         Text(value.text, color = colors.onSelected, style = XcsTheme.numberStyle,
              fontWeight = FontWeight.Bold, fontSize = 22.sp, maxLines = 1)
     }

@@ -43,6 +43,11 @@ android {
         compose = true
     }
 
+    lint {
+        // a text without a translation shows in English (D28)
+        disable += "MissingTranslation"
+    }
+
     /* The release key (D24): its path and passwords come from
        ~/.gradle/gradle.properties, or from the release workflow's
        secrets.  Without them, release builds are signed with the debug
@@ -266,6 +271,50 @@ val coreDrawables = tasks.register<CoreDrawables>("coreDrawables") {
     mustRunAfter("nativeCoreDebug", "nativeCoreRelease")
 }
 
+/**
+ * The translations (mobile/docs/DECISIONS.md D28): values-<lang>/strings.xml
+ * from XCSoar's catalogues (po/) and Buteo's own (mobile/po/).
+ */
+abstract class TranslatedStrings : DefaultTask() {
+    @get:InputFile
+    abstract val script: RegularFileProperty
+
+    @get:InputFile
+    abstract val english: RegularFileProperty
+
+    @get:InputFiles
+    abstract val catalogues: ConfigurableFileCollection
+
+    @get:Internal
+    abstract val repoRoot: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @get:Inject
+    abstract val exec: ExecOperations
+
+    @TaskAction
+    fun generate() {
+        val root = repoRoot.get().asFile
+        val out = outputDir.get().asFile
+        out.deleteRecursively()
+        exec.exec {
+            commandLine("python3", script.get().asFile, "res", english.get().asFile, out,
+                        "--po-dir", root.resolve("po"),
+                        "--app-po-dir", root.resolve("mobile/po"))
+        }
+    }
+}
+
+val translatedStrings = tasks.register<TranslatedStrings>("translatedStrings") {
+    script.set(xcsoarRoot.file("mobile/tools/po2strings.py"))
+    english.set(layout.projectDirectory.file("src/main/res/values/strings.xml"))
+    catalogues.from(xcsoarRoot.dir("po").asFileTree.matching { include("*.po") },
+                    xcsoarRoot.dir("mobile/po").asFileTree.matching { include("*.po") })
+    repoRoot.set(xcsoarRoot)
+}
+
 /** The core for a build type: debug builds keep XCSoar's assertions. */
 fun nativeCore(debugBuild: Boolean) =
     tasks.register<NativeCoreLibrary>(if (debugBuild) "nativeCoreDebug" else "nativeCoreRelease") {
@@ -287,5 +336,7 @@ androidComponents {
         val core = if (variant.buildType == "debug") nativeCoreDebug else nativeCoreRelease
         variant.sources.jniLibs?.addGeneratedSourceDirectory(core, NativeCoreLibrary::outputDir)
         variant.sources.res?.addGeneratedSourceDirectory(coreDrawables, CoreDrawables::outputDir)
+        variant.sources.res?.addGeneratedSourceDirectory(translatedStrings,
+                                                         TranslatedStrings::outputDir)
     }
 }
