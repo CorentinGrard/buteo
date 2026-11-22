@@ -32,11 +32,14 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v7
-        with:
-          submodules: true
 
       - name: Mark git directory as safe
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # The UNIX build needs only lib/glm; android/UsbSerial and
+      # android/ioio are for the Android JNI headers (build/android.mk).
+      - name: Fetch lib/glm
+        run: git submodule update --init --depth 1 lib/glm
 
       - name: Cache downloads
         uses: actions/cache@v6
@@ -73,11 +76,14 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v7
-        with:
-          submodules: true
 
       - name: Mark git directory as safe
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # The UNIX build needs only lib/glm; android/UsbSerial and
+      # android/ioio are for the Android JNI headers (build/android.mk).
+      - name: Fetch lib/glm
+        run: git submodule update --init --depth 1 lib/glm
 
       - name: Cache downloads
         uses: actions/cache@v6
@@ -133,11 +139,14 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v7
-        with:
-          submodules: true
 
       - name: Mark git directory as safe
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # The UNIX build needs only lib/glm; android/UsbSerial and
+      # android/ioio are for the Android JNI headers (build/android.mk).
+      - name: Fetch lib/glm
+        run: git submodule update --init --depth 1 lib/glm
 
       - name: Cache downloads
         uses: actions/cache@v6
