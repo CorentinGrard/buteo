@@ -37,6 +37,7 @@ import org.xcsoar.mobile.core.FlightState
 import org.xcsoar.mobile.core.GlideComputerEvent
 import org.xcsoar.mobile.core.MapItemInfo
 import org.xcsoar.mobile.core.MapOption
+import org.xcsoar.mobile.core.MapMode
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.core.SoundOption
 import org.xcsoar.mobile.core.Thermal
@@ -612,6 +613,21 @@ class FlightViewModel(
 
     fun hideMapItems() {
         mapItemsFlow.value = null
+    }
+
+    /**
+     * The map shows the edited task or an area of the active one
+     * (framed, not following), or the flight again (following).
+     */
+    fun setMapMode(mode: MapMode, index: Int = 0) {
+        mapFollowsFlow.value = mode == MapMode.FLIGHT
+        mapItemsFlow.value = null
+        viewModelScope.launch {
+            try {
+                core.setMapMode(mode, index)
+            } catch (_: Exception) {
+            }
+        }
     }
 
     fun followMap() {

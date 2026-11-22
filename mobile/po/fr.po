@@ -1855,6 +1855,54 @@ msgstr "ou %1$s"
 msgid "The target must be inside its area"
 msgstr "L'objectif doit être dans sa zone"
 
+#. task_on_map
+msgid "On the map"
+msgstr "Sur la carte"
+
+#. task_map_hint_start
+msgid "Tap a waypoint on the map to add it, the start first"
+msgstr "Touchez une balise sur la carte pour l'ajouter, le départ d'abord"
+
+#. task_map_hint
+msgid "Tap a waypoint to add it"
+msgstr "Touchez une balise pour l'ajouter"
+
+#. task_map_no_waypoint
+msgid "No waypoint there"
+msgstr "Pas de balise ici"
+
+#. task_targets
+msgid "Targets"
+msgstr "Objectifs"
+
+#. task_target_of
+msgid "Target · %1$s"
+msgstr "Objectif · %1$s"
+
+#. task_previous_area
+msgid "Previous area"
+msgstr "Zone précédente"
+
+#. task_next_area
+msgid "Next area"
+msgstr "Zone suivante"
+
+#. task_target_hint
+msgid "Tap in the area to put the target there"
+msgstr "Touchez la zone pour y placer l'objectif"
+
+#. task_target_optimised_detail
+msgid "XCSoar moves it to finish at the minimum time"
+msgstr "XCSoar le déplace pour finir au temps minimum"
+
+#. task_area_time
+msgid "Task time"
+msgstr "Durée du circuit"
+
+#. task_speed_achieved
+msgid "Speed achieved"
+msgstr "Vitesse réalisée"
+
 #. flights_cannot_delete
 msgid "Could not delete %1$s"
 msgstr "Suppression de %1$s impossible"

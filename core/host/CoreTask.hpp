@@ -48,6 +48,11 @@ namespace CoreTask {
 std::string
 Describe(bool edited) noexcept;
 
+/** The task being edited, or nullptr. */
+[[gnu::pure]]
+const OrderedTask *
+GetEdited() noexcept;
+
 /** Start editing a copy of the active task (again, if already). */
 void
 BeginEdit() noexcept;

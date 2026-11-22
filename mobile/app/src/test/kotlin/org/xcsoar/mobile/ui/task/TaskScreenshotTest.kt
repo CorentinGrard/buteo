@@ -13,12 +13,21 @@ import org.xcsoar.mobile.core.TaskFileInfo
 import org.xcsoar.mobile.core.TaskInfo
 import org.xcsoar.mobile.core.WeGlideTask
 import org.xcsoar.mobile.core.WeGlideTaskList
+import org.xcsoar.mobile.core.AreaStats
 import org.xcsoar.mobile.core.OptionalStart
+import org.xcsoar.mobile.core.TargetInfo
 import org.xcsoar.mobile.core.TaskPointInfo
 import org.xcsoar.mobile.core.TaskRules
 import org.xcsoar.mobile.core.TaskTypeChoice
 import org.xcsoar.mobile.core.ZoneInfo
 import org.xcsoar.mobile.ui.theme.XcsTheme
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 
 /** L4: the task screen (mobile/docs/ARCHITECTURE.md §6). */
 @RunWith(RobolectricTestRunner::class)
@@ -101,6 +110,46 @@ class TaskScreenshotTest {
                                        startHeightRef = "msl", faiAllowed = true,
                                        pevStartWait = 300.0), {})
         }
+    }
+
+    /** The panel under the map, on the flight screen's sheet. */
+    @Composable
+    private fun Sheet(content: @Composable () -> Unit) = XcsTheme(dark = false) {
+        Box(Modifier.fillMaxWidth().background(XcsTheme.colors.sheet).padding(12.dp)) {
+            content()
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "w390dp-h420dp-xxhdpi")
+    fun editOnTheMap() = captureRoboImage("src/test/screenshots/task_map_edit.png") {
+        Sheet {
+            TaskEditPanelContent(TaskState(
+                TaskInfo(4, "Racing", editing = true, distance = 64_700.0, points = points),
+                selected = 1))
+        }
+    }
+
+    /** An active area task: its first area's target, upstream's numbers. */
+    private fun activeArea() = TaskInfo(
+        5, "AAT", valid = true, distance = 64_700.0, aatMinTime = 10_800.0, active = 1,
+        points = listOf(
+            points[0],
+            TaskPointInfo(2, "Dent de Crolles", "turn", 10, "Area cylinder", 10_000.0,
+                          leg = 14_200.0, zone = ZoneInfo("cylinder", 10_000.0),
+                          target = TargetInfo(range = 0.35, radial = -20.0, locked = true,
+                                              movable = true)),
+            TaskPointInfo(3, "Mont Granier", "turn", 10, "Area cylinder", 10_000.0,
+                          leg = 18_600.0, zone = ZoneInfo("cylinder", 10_000.0),
+                          target = TargetInfo(movable = true)),
+            points[3]),
+        area = AreaStats(estimatedTime = 11_520.0, timeDelta = 720.0, speedRemaining = 24.5,
+                         speedAchieved = 22.1))
+
+    @Test
+    @Config(qualifiers = "w390dp-h720dp-xxhdpi")
+    fun target() = captureRoboImage("src/test/screenshots/task_map_target.png") {
+        Sheet { TargetPanelContent(TaskState(activeArea()), 1) }
     }
 
     @Test

@@ -131,6 +131,16 @@ interface XcsoarCore {
     /** Centre on the aircraft again and follow it. */
     suspend fun followMap() {}
 
+    /**
+     * What the map shows: the flight, the edited task (to build it on
+     * the map) or area [index] of the active task (to move its target).
+     * The last two are framed, north up, and the map stops following.
+     */
+    suspend fun setMapMode(mode: MapMode, index: Int = 0) {}
+
+    /** The place under pixel ([x], [y]) of the map; null without a map. */
+    suspend fun mapLocationAt(x: Int, y: Int): GeoPosition? = null
+
     /** The map orientation (saved in the profile); null without a map. */
     suspend fun mapOrientation(): MapOrientation? = null
 
@@ -449,6 +459,13 @@ enum class GlideComputerEvent(val code: Int) {
         /** Unknown codes (from a newer core) map to [OTHER]. */
         fun fromCode(code: Int): GlideComputerEvent = byCode[code] ?: OTHER
     }
+}
+
+/** Values of `xcs_map_mode` (core/api/xcsoar_core.h). */
+enum class MapMode(val code: Int) {
+    FLIGHT(0),
+    TASK(1),
+    TARGET(2),
 }
 
 /** Values of `xcs_map_orientation` (core/api/xcsoar_core.h). */

@@ -27,18 +27,28 @@ class DataStatusTest {
         assertEquals(c, DataFile.entries.associate { "XCS_DATA_${it.name}" to it.code })
     }
 
+    /* options, orientations and modes share the "XCS_MAP_" prefix */
+    private fun mapConstants() = CoreHeader.constants("XCS_MAP_")
+        .filterKeys { !it.startsWith("XCS_MAP_MODE_") }
+
     @Test
     fun mapOptionsMatchHeader() {
-        val c = CoreHeader.constants("XCS_MAP_")
+        val c = mapConstants()
             .filterKeys { MapOrientation.entries.none { o -> it == "XCS_MAP_${o.name}" } }
         assertEquals(c, MapOption.entries.associate { "XCS_MAP_${it.name}" to it.code })
     }
 
     @Test
     fun mapOrientationsMatchHeader() {
-        val c = CoreHeader.constants("XCS_MAP_")
+        val c = mapConstants()
             .filterKeys { MapOption.entries.none { o -> it == "XCS_MAP_${o.name}" } }
         assertEquals(c, MapOrientation.entries.associate { "XCS_MAP_${it.name}" to it.code })
+    }
+
+    @Test
+    fun mapModesMatchHeader() {
+        assertEquals(CoreHeader.constants("XCS_MAP_MODE_"),
+                     MapMode.entries.associate { "XCS_MAP_MODE_${it.name}" to it.code })
     }
 }
 

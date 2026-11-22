@@ -278,7 +278,7 @@ TestTask(xcs_core *core)
   const auto ids = WaypointIds(core, 3);
   ok1(ids.size() == 3);
   if (ids.size() != 3) {
-    skip(36 + 23, 0, "no waypoints");
+    skip(36 + 24, 0, "no waypoints");
     return;
   }
 
@@ -436,6 +436,18 @@ TestTask(xcs_core *core)
         == XCS_OK &&
         Has(TaskJson(core, XCS_TASK_ACTIVE), "\"locked\":true"));
   }
+
+  /* built on the map: an area task first, then the points, back to
+     the start; "Done" makes the last one the finish */
+  xcs_task_edit(core, XCS_TASK_BEGIN, 0, 0);
+  xcs_task_edit(core, XCS_TASK_CLEAR, 0, 0);
+  xcs_task_edit(core, XCS_TASK_SET_TYPE, 0, 5 /* AAT */);
+  for (const unsigned id : {ids[0], ids[1], ids[2], ids[0]})
+    xcs_task_edit(core, XCS_TASK_APPEND, 0, id);
+  xcs_task_edit(core, XCS_TASK_SET_RADIUS, 1, 3500);
+  xcs_task_edit(core, XCS_TASK_SET_RADIUS, 2, 3500);
+  ok1(xcs_task_edit(core, XCS_TASK_COMMIT, 0, 0) == XCS_OK &&
+      Has(TaskJson(core, XCS_TASK_ACTIVE), "\"kind\":\"finish\""));
 
   /* an empty task is no task */
   xcs_task_edit(core, XCS_TASK_BEGIN, 0, 0);
@@ -1692,7 +1704,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 23 + 2 + 2);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2);
 
   Recorder recorder;
   TestCreateArguments(recorder);

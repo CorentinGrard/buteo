@@ -1171,14 +1171,19 @@ xcs_task_edit(xcs_core *core, uint32_t op, uint32_t index, double value)
     switch (op) {
     case XCS_TASK_BEGIN:
       CoreTask::BeginEdit();
-      return XCS_OK;
+      ok = true;
+      break;
 
     case XCS_TASK_CANCEL:
       CoreTask::CancelEdit();
-      return XCS_OK;
+      ok = true;
+      break;
 
     case XCS_TASK_COMMIT:
-      return CoreTask::Commit() ? XCS_OK : XCS_ERROR_FAILED;
+      if (!CoreTask::Commit())
+        return XCS_ERROR_FAILED;
+      ok = true;
+      break;
 
     case XCS_TASK_APPEND:
       ok = integer && CoreTask::Append(unsigned(value));
@@ -1218,7 +1223,8 @@ xcs_task_edit(xcs_core *core, uint32_t op, uint32_t index, double value)
 
     case XCS_TASK_RESTART:
       CoreTask::Restart();
-      return XCS_OK;
+      ok = true;
+      break;
 
     case XCS_TASK_SET_INNER_RADIUS:
       ok = CoreTask::SetInnerRadius(index, value);
@@ -1261,6 +1267,12 @@ xcs_task_edit(xcs_core *core, uint32_t op, uint32_t index, double value)
       ok = false;
     }
 
+#ifdef ANDROID
+    /* the map shows the edited task (XCS_MAP_MODE_TASK) or the active
+       one's targets */
+    if (ok)
+      CoreMap::OnTaskChanged();
+#endif
     return ok ? XCS_OK : XCS_ERROR_INVALID_ARGUMENT;
   });
 }
@@ -1275,8 +1287,12 @@ xcs_task_set_target_location(xcs_core *core, uint32_t index,
 
   return RunOnMain(*core, [index, latitude, longitude]{
     const GeoPoint location{Angle::Degrees(longitude), Angle::Degrees(latitude)};
-    return CoreTask::SetTargetLocation(index, location)
-      ? XCS_OK : XCS_ERROR_INVALID_ARGUMENT;
+    if (!CoreTask::SetTargetLocation(index, location))
+      return XCS_ERROR_INVALID_ARGUMENT;
+#ifdef ANDROID
+    CoreMap::OnTaskChanged();
+#endif
+    return XCS_OK;
   });
 }
 
@@ -2133,6 +2149,48 @@ xcs_map_get_orientation(xcs_core *core, uint32_t *orientation_r)
     return XCS_OK;
   });
 #else
+  return XCS_ERROR_FAILED;
+#endif
+}
+
+xcs_status
+xcs_map_set_mode(xcs_core *core, uint32_t mode, uint32_t index)
+{
+  if (core == nullptr || mode > XCS_MAP_MODE_TARGET)
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+#ifdef ANDROID
+  return RunOnMain(*core, [mode, index]{
+    if (!CoreMap::IsAttached() && mode != XCS_MAP_MODE_FLIGHT)
+      return XCS_ERROR_FAILED;
+    return CoreMap::SetMode(mode, index) || mode == XCS_MAP_MODE_FLIGHT
+      ? XCS_OK : XCS_ERROR_INVALID_ARGUMENT;
+  });
+#else
+  (void)index;
+  return XCS_ERROR_FAILED;
+#endif
+}
+
+xcs_status
+xcs_map_location_at(xcs_core *core, int32_t x, int32_t y,
+                    double *latitude_r, double *longitude_r)
+{
+  if (core == nullptr || latitude_r == nullptr || longitude_r == nullptr)
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+#ifdef ANDROID
+  return RunOnMain(*core, [=]{
+    const GeoPoint location = CoreMap::LocationAt(x, y);
+    if (!location.IsValid())
+      return XCS_ERROR_FAILED;
+    *latitude_r = location.latitude.Degrees();
+    *longitude_r = location.longitude.Degrees();
+    return XCS_OK;
+  });
+#else
+  (void)x;
+  (void)y;
   return XCS_ERROR_FAILED;
 #endif
 }

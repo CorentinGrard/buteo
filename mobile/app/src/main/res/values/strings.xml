@@ -706,6 +706,24 @@
     <string name="task_add_start">Add another start</string>
     <string name="task_or_starts">or %1$s</string>
     <string name="task_target_outside">The target must be inside its area</string>
+    <string name="task_on_map">On the map</string>
+    <string name="task_list">List</string>
+    <string name="task_map_hint_start">Tap a waypoint on the map to add it, the start first</string>
+    <string name="task_map_hint">Tap a waypoint to add it</string>
+    <string name="task_map_no_waypoint">No waypoint there</string>
+    <string name="task_targets">Targets</string>
+    <string name="task_target_of">Target · %1$s</string>
+    <string name="task_previous_area">Previous area</string>
+    <string name="task_next_area">Next area</string>
+    <string name="task_target_hint">Tap in the area to put the target there</string>
+    <string name="task_target_range">Distance</string>
+    <string name="task_target_radial">Radial</string>
+    <string name="task_target_optimised">Optimized</string>
+    <string name="task_target_optimised_detail">XCSoar moves it to finish at the minimum time</string>
+    <string name="task_area_time">Task time</string>
+    <string name="task_area_delta">Delta T</string>
+    <string name="task_speed_remaining">Speed remaining</string>
+    <string name="task_speed_achieved">Speed achieved</string>
 
     <!-- the flight log -->
     <string name="flights_cannot_delete">Could not delete %1$s</string>

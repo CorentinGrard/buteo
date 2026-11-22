@@ -56,9 +56,13 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
 
     private var job: Job? = null
 
+    /* the screens showing the task: the panel under the map and the
+       task page overlap while one replaces the other */
+    private var openCount = 0
+
     /** Shown: read the task, and the active one again while flying it. */
     fun open() {
-        job?.cancel()
+        if (openCount++ > 0) return
         job = viewModelScope.launch {
             while (isActive) {
                 refresh()
@@ -68,12 +72,16 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     }
 
     fun close() {
+        if (openCount == 0 || --openCount > 0) return
         job?.cancel()
+        job = null
     }
 
     private suspend fun refresh() {
         val task = try {
             core.task(editing) ?: if (editing) core.task(false) else null
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             null
         }
@@ -178,8 +186,20 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
         val radius = stateFlow.value.task?.points?.getOrNull(index)?.radius ?: return
         val step = radiusStep(if (direction > 0) radius else radius - 1)
         val value = (radius + direction * step).coerceAtLeast(MIN_RADIUS)
+        showPoint(index) { it.copy(radius = value, zone = it.zone.copy(radius = value)) }
         edit(TaskOp.SET_RADIUS, index, value)
     }
+
+    /**
+     * Show a stepper's new value at once: taps come faster than the
+     * core's answer, and each must step from the one before.
+     */
+    private fun showPoint(index: Int, change: (TaskPointInfo) -> TaskPointInfo) =
+        stateFlow.update { state ->
+            state.copy(task = state.task?.let { task ->
+                task.copy(points = task.points.mapIndexed { i, p -> if (i == index) change(p) else p })
+            })
+        }
 
     private fun point(index: Int): TaskPointInfo? = stateFlow.value.task?.points?.getOrNull(index)
 
@@ -187,23 +207,29 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     fun changeInnerRadius(index: Int, direction: Int) {
         val radius = point(index)?.zone?.innerRadius ?: return
         val step = radiusStep(if (direction > 0) radius else radius - 1)
-        edit(TaskOp.SET_INNER_RADIUS, index,
-             (radius + direction * step).coerceAtLeast(MIN_RADIUS))
+        val value = (radius + direction * step).coerceAtLeast(MIN_RADIUS)
+        showPoint(index) { it.copy(zone = it.zone.copy(innerRadius = value)) }
+        edit(TaskOp.SET_INNER_RADIUS, index, value)
     }
 
     /** A sector's start (or [end]) radial, ± [ANGLE_STEP] degrees. */
     fun changeRadial(index: Int, end: Boolean, direction: Int) {
         val zone = point(index)?.zone ?: return
         val radial = (if (end) zone.endRadial else zone.startRadial) ?: return
-        edit(if (end) TaskOp.SET_END_RADIAL else TaskOp.SET_START_RADIAL, index,
-             ((radial + direction * ANGLE_STEP) % 360 + 360) % 360)
+        val value = ((radial + direction * ANGLE_STEP) % 360 + 360) % 360
+        showPoint(index) {
+            it.copy(zone = if (end) it.zone.copy(endRadial = value)
+                           else it.zone.copy(startRadial = value))
+        }
+        edit(if (end) TaskOp.SET_END_RADIAL else TaskOp.SET_START_RADIAL, index, value)
     }
 
     /** A symmetric sector's or keyhole's angle, ± [ANGLE_STEP] degrees. */
     fun changeAngle(index: Int, direction: Int) {
         val angle = point(index)?.zone?.angle ?: return
-        edit(TaskOp.SET_SECTOR_ANGLE, index,
-             (angle + direction * ANGLE_STEP).coerceIn(ANGLE_STEP, 360.0))
+        val value = (angle + direction * ANGLE_STEP).coerceIn(ANGLE_STEP, 360.0)
+        showPoint(index) { it.copy(zone = it.zone.copy(angle = value)) }
+        edit(TaskOp.SET_SECTOR_ANGLE, index, value)
     }
 
     /** One of the task's rules, in the core's units ([TaskRule]). */
@@ -219,8 +245,10 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     /** ± [TARGET_RANGE_STEP], from the nearest (-1) to the farthest (1) point. */
     fun changeTargetRange(index: Int, direction: Int) {
         val target = point(index)?.target ?: return
-        edit(TaskOp.SET_TARGET_RANGE, index,
-             (target.range + direction * TARGET_RANGE_STEP).coerceIn(-1.0, 1.0))
+        val value = (target.range + direction * TARGET_RANGE_STEP).coerceIn(-1.0, 1.0)
+        // moved by the pilot: locked, as the core does
+        showPoint(index) { it.copy(target = target.copy(range = value, locked = true)) }
+        edit(TaskOp.SET_TARGET_RANGE, index, value)
     }
 
     /** ± [TARGET_RADIAL_STEP] degrees from the leg, -180..180. */
@@ -229,12 +257,54 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
         var radial = target.radial + direction * TARGET_RADIAL_STEP
         if (radial > 180) radial -= 360
         if (radial < -180) radial += 360
+        showPoint(index) { it.copy(target = target.copy(radial = radial, locked = true)) }
         edit(TaskOp.SET_TARGET_RADIAL, index, radial)
     }
 
     /** Locked, or moved by XCSoar's optimiser. */
     fun setTargetLocked(index: Int, locked: Boolean) =
         edit(TaskOp.LOCK_TARGET, index, if (locked) 1.0 else 0.0)
+
+    /**
+     * A tap on the map while building the task there: the waypoint
+     * under the finger is added; else why not.
+     */
+    fun addAt(x: Int, y: Int) {
+        viewModelScope.launch {
+            val waypoint = try {
+                core.mapItemsAt(x, y).firstOrNull { it.type == "waypoint" && it.id != null }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            val message = if (waypoint == null) text(R.string.task_map_no_waypoint)
+            else try {
+                core.editTask(TaskOp.APPEND, value = waypoint.id!!.toDouble())
+                null
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                text(R.string.task_full)
+            }
+            stateFlow.update { it.copy(message = message) }
+            refresh()
+        }
+    }
+
+    /** A tap on the map while moving area [index]'s target. */
+    fun targetAt(index: Int, x: Int, y: Int) {
+        viewModelScope.launch {
+            val place = try {
+                core.mapLocationAt(x, y)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            } ?: return@launch
+            moveTarget(index, place.latitude, place.longitude)
+        }
+    }
 
     /** The target there, if inside its area. */
     fun moveTarget(index: Int, latitude: Double, longitude: Double) =
@@ -246,8 +316,9 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     /** ± [AAT_TIME_STEP] seconds. */
     fun changeMinTime(direction: Int) {
         val time = stateFlow.value.task?.aatMinTime ?: return
-        edit(TaskOp.SET_AAT_MIN_TIME,
-             value = (time + direction * AAT_TIME_STEP).coerceIn(0.0, MAX_AAT_TIME))
+        val value = (time + direction * AAT_TIME_STEP).coerceIn(0.0, MAX_AAT_TIME)
+        stateFlow.update { it.copy(task = it.task?.copy(aatMinTime = value)) }
+        edit(TaskOp.SET_AAT_MIN_TIME, value = value)
     }
 
     /* files */

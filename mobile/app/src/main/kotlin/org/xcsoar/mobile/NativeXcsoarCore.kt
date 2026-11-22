@@ -63,6 +63,8 @@ import org.xcsoar.mobile.core.WindSource
 import org.xcsoar.mobile.core.RepositoryFile
 import org.xcsoar.mobile.core.WaypointFilter
 import org.xcsoar.mobile.core.WaypointInfo
+import org.xcsoar.mobile.core.GeoPosition
+import org.xcsoar.mobile.core.MapMode
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.core.SnapshotDecoder
 import org.xcsoar.mobile.core.SoundOption
@@ -216,6 +218,15 @@ class NativeXcsoarCore(
 
     override suspend fun followMap() =
         command { NativeCore.nativeMapFollow(it) }
+
+    override suspend fun setMapMode(mode: MapMode, index: Int) =
+        command { NativeCore.nativeMapSetMode(it, mode.code, index) }
+
+    override suspend fun mapLocationAt(x: Int, y: Int): GeoPosition? = lock.withLock {
+        if (handle == 0L) return@withLock null
+        withContext(Dispatchers.IO) { NativeCore.nativeMapLocationAt(handle, x, y) }
+            ?.let { GeoPosition(it[0], it[1]) }
+    }
 
     override suspend fun mapOrientation(): MapOrientation? = lock.withLock {
         if (handle == 0L) return@withLock null

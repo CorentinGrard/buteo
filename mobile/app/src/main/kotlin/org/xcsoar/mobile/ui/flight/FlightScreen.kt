@@ -7,6 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -113,6 +114,12 @@ fun FlightScreen(
     onMenuOpen: (Boolean) -> Unit = {},
     /** a page lies over the flight screen */
     covered: Boolean = false,
+    /**
+     * The task on the map: this panel instead of the tiles, and a tap on
+     * the map goes to [onMapTap] (pixels) instead of a hold's card.
+     */
+    taskPanel: (@Composable () -> Unit)? = null,
+    onMapTap: (x: Int, y: Int) -> Unit = { _, _ -> },
 ) {
     val state by viewModel.flightState.collectAsStateWithLifecycle()
     // read where it is shown, so only the vario bar recomposes with it
@@ -205,7 +212,9 @@ fun FlightScreen(
             onGoto = viewModel::gotoWaypoint,
             thermalAssistant = thermalAssistant,
             liveState = viewModel.liveState,
+            onTap = if (taskPanel != null) onMapTap else null,
         ) else null,
+        taskPanel = taskPanel,
     )
 }
 
@@ -249,6 +258,8 @@ class MapSlot(
     val onGoto: (waypointId: Int) -> Unit = {},
     val thermalAssistant: TileGraphic? = null,
     val liveState: StateFlow<FlightState?>? = null,
+    /** A tap on the map (pixels), instead of the hold's card; null: holds. */
+    val onTap: ((x: Int, y: Int) -> Unit)? = null,
 )
 
 /**
@@ -287,6 +298,8 @@ fun FlightContent(
     macCready: Double? = state?.macCready,
     /** The replay's controls, shown while [state] is a replay. */
     replay: ReplayControls? = null,
+    /** The task on the map: this instead of the tiles and the map's cards. */
+    taskPanel: (@Composable () -> Unit)? = null,
 ) {
     val colors = XcsTheme.colors
     // the MacCready stepper, from its tile: each use counts, and it
@@ -307,8 +320,11 @@ fun FlightContent(
         onClose = { stepper = 0 }) else null
     BoxWithConstraints(Modifier.fillMaxSize().background(colors.background)) {
         val instruments = @Composable {
-            Instruments(state, circling, tiles, onEditTile, onTapTile,
-                        onMacCready = { stepper = if (stepper > 0) 0 else 1 })
+            if (taskPanel != null)
+                taskPanel()
+            else
+                Instruments(state, circling, tiles, onEditTile, onTapTile,
+                            onMacCready = { stepper = if (stepper > 0) 0 else 1 })
         }
         val mapArea = @Composable { showNext: Boolean, modifier: Modifier,
                                     insets: WindowInsets ->
@@ -316,7 +332,7 @@ fun FlightContent(
                     onAcknowledge, onNextWaypoint, onWind, onNoPolar,
                     onSetMacCready, showNext,
                     vario, replay, modifier, insets, onMenu = { onMenuOpen(true) },
-                    stepper = macCreadyStepper)
+                    stepper = macCreadyStepper, taskOnMap = taskPanel != null)
         }
 
         if (maxWidth > maxHeight && maxWidth >= 600.dp) {
@@ -341,9 +357,10 @@ fun FlightContent(
                             .padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        NextWaypointCard(state?.next, Modifier.fillMaxWidth(),
-                                         state?.nextTimeRemaining, onClick = onNextWaypoint,
-                                         elevated = false)
+                        if (taskPanel == null)
+                            NextWaypointCard(state?.next, Modifier.fillMaxWidth(),
+                                             state?.nextTimeRemaining, onClick = onNextWaypoint,
+                                             elevated = false)
                         instruments()
                     }
                 }
@@ -400,6 +417,8 @@ private fun MapArea(
     onMenu: () -> Unit,
     /** open over the map buttons; null when closed */
     stepper: MacCreadyStepper?,
+    /** the task on the map: only the airspace warnings and the zoom stay */
+    taskOnMap: Boolean = false,
 ) {
     val colors = XcsTheme.colors
     // the glider goes in the middle of the map area the cards leave free
@@ -426,6 +445,7 @@ private fun MapArea(
             val onGesture by rememberUpdatedState(map.onGesture)
             val onHold by rememberUpdatedState(map.onHold)
             var holdPoint by remember { mutableStateOf<Offset?>(null) }
+            val onTap = map.onTap
             Box(Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) {
@@ -433,14 +453,18 @@ private fun MapArea(
                         onGesture(pan.x, pan.y, zoom)
                     }
                 }
-                .pointerInput(Unit) {
+                .then(if (onTap != null) Modifier.pointerInput(onTap) {
+                    // the task on the map: a tap adds a waypoint or moves a
+                    // target, on lift-off; a pan is never a tap
+                    detectTapGestures(onTap = { onTap(it.x.toInt(), it.y.toInt()) })
+                } else Modifier.pointerInput(Unit) {
                     detectHoldRelease(
                         onArmed = { holdPoint = it },
                         onRelease = { p, commit ->
                             holdPoint = null
                             if (commit) onHold(p.x.toInt(), p.y.toInt())
                         })
-                })
+                }))
             holdPoint?.let { HoldMarker(it) }
         } else
             MapPlaceholder(state?.track, cardsBottom, Modifier.fillMaxSize())
@@ -476,10 +500,10 @@ private fun MapArea(
             if (state?.replay == true && replay != null)
                 ReplayBar(state.timeUtc, replay.speed, replay.onPause, replay.onSpeed,
                           replay.onSkip, replay.onStop)
-            if (showNext)
+            if (showNext && !taskOnMap)
                 NextWaypointCard(state?.next, Modifier.fillMaxWidth(), state?.nextTimeRemaining,
                                  onClick = onNextWaypoint)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp),
+            if (!taskOnMap) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 when {
                     state == null -> StatusChip(stringResource(R.string.flight_starting),
@@ -518,6 +542,13 @@ private fun MapArea(
                                                  WindowInsetsSides.Bottom))
                 .padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
         ) {
+            // the task on the map: the zoom only, the panel does the rest
+            if (taskOnMap) {
+                if (map != null)
+                    ZoomButtons(map.onZoom, Modifier.align(Alignment.BottomEnd))
+                return@BoxWithConstraints
+            }
+
             // what is left above the map buttons
             val barSpace = maxHeight - 56.dp - 12.dp
             // the vario stays, smaller, on short screens (EdgeBars.kt)

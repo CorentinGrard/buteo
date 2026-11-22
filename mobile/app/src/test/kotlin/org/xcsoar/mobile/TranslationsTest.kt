@@ -89,6 +89,6 @@ class TranslationsTest {
             "sound_tone_vario", "sound_volume", "sound_volume_name", "task_list_scores",
             "task_nominal", "track_cloud", "track_test", "units_altitude", "units_distance",
             // ICAO abbreviations; XCSoar's "Angle"
-            "task_agl", "task_msl", "task_sector_angle")
+            "task_agl", "task_msl", "task_sector_angle", "task_target_range")
     }
 }

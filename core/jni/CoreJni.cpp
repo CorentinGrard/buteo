@@ -397,6 +397,31 @@ Java_org_xcsoar_mobile_NativeCore_nativeMapFollow(JNIEnv *, jclass, jlong core)
 }
 
 JNIEXPORT jint JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeMapSetMode(JNIEnv *, jclass,
+                                                   jlong core, jint mode,
+                                                   jint index)
+{
+  return xcs_map_set_mode(ToCore(core), mode, index);
+}
+
+/** @return {latitude, longitude}, or null without a map */
+JNIEXPORT jdoubleArray JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeMapLocationAt(JNIEnv *env, jclass,
+                                                      jlong core, jint x,
+                                                      jint y)
+{
+  double location[2];
+  if (xcs_map_location_at(ToCore(core), x, y, &location[0],
+                          &location[1]) != XCS_OK)
+    return nullptr;
+
+  jdoubleArray array = env->NewDoubleArray(2);
+  if (array != nullptr)
+    env->SetDoubleArrayRegion(array, 0, 2, location);
+  return array;
+}
+
+JNIEXPORT jint JNICALL
 Java_org_xcsoar_mobile_NativeCore_nativeMapSetOrientation(JNIEnv *, jclass,
                                                           jlong core,
                                                           jint orientation)

@@ -36,6 +36,14 @@
 #include "Topography/TopographyGlue.hpp"
 #include "Computer/GlideComputer.hpp"
 #include "Task/ProtectedTaskManager.hpp"
+#include "Engine/Task/TaskManager.hpp"
+#include "Engine/Task/Ordered/OrderedTask.hpp"
+#include "Engine/Task/Ordered/Points/OrderedTaskPoint.hpp"
+#include "Engine/Task/Ordered/Points/AATPoint.hpp"
+#include "Engine/Task/Factory/AbstractTaskFactory.hpp"
+#include "Engine/Task/ObservationZones/Boundary.hpp"
+#include "Geo/GeoBounds.hpp"
+#include "CoreTask.hpp"
 #include "Terrain/RasterTerrain.hpp"
 #include "UISettings.hpp"
 #include "MapSettings.hpp"
@@ -97,6 +105,12 @@ public:
 
   MapWindowProjection &Projection() noexcept {
     return visible_projection;
+  }
+
+  /** Not following the glider: upstream then draws every area's
+      target, not only the next one's (GlueMapWindow pans likewise). */
+  void SetFollowing(bool following) noexcept {
+    follow_mode = following ? FOLLOW_SELF : FOLLOW_PAN;
   }
 
   using MapWindowBlackboard::ReadUIState;
@@ -205,6 +219,28 @@ ApplyButeoLook(MapLook &look) noexcept
   task.isoline_pen.Create(Pen::DASH2, Layout::ScalePenWidth(1), task_color);
 }
 
+/**
+ * The edited task as the map draws it (XCS_MAP_MODE_TASK): in a task
+ * manager of its own, so the active task keeps guiding the glider.
+ */
+struct TaskPreview {
+  TaskManager manager;
+  ProtectedTaskManager protected_manager;
+
+  TaskPreview(const TaskBehaviour &behaviour, const Waypoints &waypoints) noexcept
+    :manager(behaviour, waypoints), protected_manager(manager, behaviour) {}
+
+  /** A copy of the edited task, its last point a finish as on "Done"
+      (else a half-built task is not valid and nothing is drawn). */
+  void Update(const OrderedTask &edited) noexcept {
+    auto copy = edited.Clone(CommonInterface::GetComputerSettings().task);
+    copy->GetFactory().CheckAddFinish();
+    copy->UpdateStatsGeometry();
+    ProtectedTaskManager::ExclusiveLease lease{protected_manager};
+    lease->Commit(*copy);
+  }
+};
+
 /** Created on the first Attach(), kept until the process exits. */
 struct Graphics {
   UI::Display display{EGL_DEFAULT_DISPLAY};
@@ -220,6 +256,10 @@ struct Graphics {
   MapLook map_look;
   TrafficLook traffic_look;
   std::unique_ptr<CoreMapWindow> map;
+
+  /* xcs_map_mode, and the edited task in XCS_MAP_MODE_TASK */
+  unsigned mode = XCS_MAP_MODE_FLIGHT;
+  std::unique_ptr<TaskPreview> task_preview;
 
   Graphics(PixelSize size) {
     ScreenInitialized();
@@ -244,6 +284,7 @@ struct Graphics {
 
   ~Graphics() noexcept {
     map.reset();
+    task_preview.reset();
     Fonts::Deinitialize();
     ScreenDeinitialized();
   }
@@ -259,7 +300,9 @@ struct Graphics {
     }
 
     map->SetWaypoints(data.waypoints.get());
-    map->SetTask(backend.protected_task_manager.get());
+    map->SetTask(mode == XCS_MAP_MODE_TASK && task_preview
+                 ? &task_preview->protected_manager
+                 : backend.protected_task_manager.get());
     map->SetRoutePlanner(&backend.glide_computer->GetProtectedRoutePlanner());
     map->SetGlideComputer(backend.glide_computer.get());
     map->SetAirspaces(data.airspaces.get());
@@ -299,6 +342,14 @@ PixelPoint aircraft_position;
 
 /* the map follows the aircraft until the pilot pans it */
 bool follow = true;
+
+/* what Frame() shows, again when the free part of the map changes
+   (the task panel replaces the tiles), until the pilot moves the map */
+struct Framed {
+  GeoPoint center;
+  double radius;
+};
+std::optional<Framed> framed;
 
 /** A zoom button's step in progress: map scales, logarithmic. */
 struct ZoomAnimation {
@@ -426,6 +477,63 @@ ZoomFrame() noexcept
   CoreMap::Render();
 }
 
+/**
+ * Show a circle around @p center in the part of the map the cards
+ * leave free (its middle is aircraft_position), north up; the map
+ * stops following the glider.
+ */
+void
+Frame(GeoPoint center, double radius) noexcept
+{
+  auto &projection = graphics->map->Projection();
+  const int free_height = 2 * (int(size.height) - aircraft_position.y);
+  const int side = std::max(std::min(int(size.width), free_height), 1);
+  zoom.reset();
+  projection.SetScale(side / (2.2 * std::max(radius, 1000.)));
+  projection.SetGeoLocation(center);
+  follow = false;
+  framed = Framed{center, radius};
+}
+
+/** Frame() again for a new size or glider position. */
+void
+Reframe() noexcept
+{
+  if (framed && graphics != nullptr && graphics->mode != XCS_MAP_MODE_FLIGHT)
+    Frame(framed->center, framed->radius);
+}
+
+/** The circle around a task point and its zone. */
+double
+ZoneRadius(const OrderedTaskPoint &tp) noexcept
+{
+  double radius = 0;
+  for (const GeoPoint &p : tp.GetBoundary())
+    radius = std::max(radius, tp.GetLocation().Distance(p));
+  return radius;
+}
+
+/** Frame the whole task with its zones; false if it has no point. */
+bool
+FrameTask(const OrderedTask &task) noexcept
+{
+  if (task.TaskSize() == 0)
+    return false;
+
+  GeoBounds bounds{task.GetPoint(0).GetLocation()};
+  for (unsigned i = 0; i < task.TaskSize(); ++i) {
+    const auto &tp = task.GetPoint(i);
+    bounds.Extend(tp.GetLocation());
+    for (const GeoPoint &p : tp.GetBoundary())
+      bounds.Extend(p);
+  }
+
+  const GeoPoint center = bounds.GetCenter();
+  Frame(center, std::max(center.Distance(bounds.GetNorthWest()),
+                         center.Distance(bounds.GetSouthEast())));
+  return true;
+}
+
 } // namespace
 
 bool
@@ -449,6 +557,7 @@ try {
   OpenGL::SetupViewport({width, height});
 
   graphics->map->Resize(size);
+  Reframe();
   swap_failed = false;
   LogFormat("Map attached %ux%u", width, height);
   Render();
@@ -480,6 +589,7 @@ CoreMap::Deinitialise() noexcept
   graphics = nullptr;
   aircraft_position = {};
   follow = true;
+  framed.reset();
   zoom.reset();
   was_circling = false;
 }
@@ -494,6 +604,7 @@ void
 CoreMap::SetAircraftPosition(int x, int y) noexcept
 {
   aircraft_position = {x, y};
+  Reframe();
   Render();
 }
 
@@ -511,6 +622,7 @@ CoreMap::Zoom(int steps) noexcept
   if (!(current > 0) || !(target > 0))
     return;
 
+  framed.reset();
   zoom = ZoomAnimation{current, target, std::chrono::steady_clock::now()};
   graphics->zoom_timer.Schedule(Graphics::ZOOM_FRAME);
   ZoomFrame();
@@ -531,6 +643,7 @@ CoreMap::Pan(double dx, double dy) noexcept
   projection.SetGeoLocation(
     projection.ScreenToGeo({origin.x - int(dx), origin.y - int(dy)}));
   follow = false;
+  framed.reset();
   Render();
 }
 
@@ -542,6 +655,7 @@ CoreMap::Scale(double factor) noexcept
 
   /* the fingers take over from a zoom button */
   zoom.reset();
+  framed.reset();
   auto &projection = graphics->map->Projection();
   projection.SetFreeMapScale(projection.GetMapScale() / factor);
   Render();
@@ -551,6 +665,7 @@ void
 CoreMap::Follow() noexcept
 {
   follow = true;
+  framed.reset();
   /* without a fix there is no aircraft to follow: back to where the
      map started */
   if (graphics != nullptr && !CommonInterface::Basic().location_available)
@@ -790,10 +905,99 @@ CoreMap::GetOption(unsigned option, int &value) noexcept
   return false;
 }
 
+bool
+CoreMap::SetMode(unsigned mode, unsigned index) noexcept
+{
+  if (graphics == nullptr || backend_components == nullptr)
+    return false;
+
+  auto &map = *graphics->map;
+  auto &active = *backend_components->protected_task_manager;
+
+  switch (mode) {
+  case XCS_MAP_MODE_FLIGHT:
+    map.SetTask(&active);
+    graphics->task_preview.reset();
+    follow = true;
+    framed.reset();
+    break;
+
+  case XCS_MAP_MODE_TASK: {
+    const OrderedTask *edited = CoreTask::GetEdited();
+    if (edited == nullptr)
+      return false;
+
+    auto &preview = graphics->task_preview;
+    if (!preview)
+      preview = std::make_unique<TaskPreview>(
+        CommonInterface::GetComputerSettings().task,
+        *data_components->waypoints);
+    preview->Update(*edited);
+    map.SetTask(&preview->protected_manager);
+    /* an empty task: where the map is, for the first points */
+    if (!FrameTask(*edited))
+      follow = false;
+    break;
+  }
+
+  case XCS_MAP_MODE_TARGET: {
+    GeoPoint location;
+    double radius;
+    {
+      const ProtectedTaskManager::Lease lease{active};
+      const OrderedTask &task = lease->GetOrderedTask();
+      if (task.GetAATTaskPoint(index) == nullptr)
+        return false;
+
+      const OrderedTaskPoint &tp = task.GetPoint(index);
+      location = tp.GetLocation();
+      radius = ZoneRadius(tp);
+    }
+
+    map.SetTask(&active);
+    graphics->task_preview.reset();
+    Frame(location, radius);
+    break;
+  }
+
+  default:
+    return false;
+  }
+
+  graphics->mode = mode;
+  Render();
+  return true;
+}
+
+GeoPoint
+CoreMap::LocationAt(int x, int y) noexcept
+{
+  if (graphics == nullptr || !graphics->map->Projection().IsValid())
+    return GeoPoint::Invalid();
+
+  return graphics->map->Projection().ScreenToGeo({x, y});
+}
+
+void
+CoreMap::OnTaskChanged() noexcept
+{
+  if (graphics == nullptr)
+    return;
+
+  if (graphics->mode == XCS_MAP_MODE_TASK && graphics->task_preview)
+    if (const OrderedTask *edited = CoreTask::GetEdited())
+      graphics->task_preview->Update(*edited);
+
+  Render();
+}
+
 /** The map's rotation for this data, as Render() sets it. */
 static Angle
 CurrentScreenAngle() noexcept
 {
+  if (graphics != nullptr && graphics->mode != XCS_MAP_MODE_FLIGHT)
+    return Angle::Zero();
+
   const auto &calculated = CommonInterface::Calculated();
   const auto &settings = CommonInterface::GetMapSettings();
   return ScreenAngle(calculated.circling
@@ -866,7 +1070,10 @@ CoreMap::Render() noexcept
       SwitchZoomClimb(projection, was_circling);
   }
 
-  const auto orientation = was_circling
+  /* a task or an area is laid out north up, as upstream's target map */
+  const auto orientation = graphics->mode != XCS_MAP_MODE_FLIGHT
+    ? MapOrientation::NORTH_UP
+    : was_circling
     ? settings.circling_orientation
     : settings.cruise_orientation;
   projection.SetScreenAngle(ScreenAngle(orientation, basic, calculated));
@@ -884,6 +1091,7 @@ CoreMap::Render() noexcept
       free_height * settings.glider_screen_position / 100;
   }
   projection.SetScreenOrigin(origin);
+  map.SetFollowing(follow);
   if (follow && basic.location_available)
     projection.SetGeoLocation(basic.location);
   map.UpdateScreenBounds();

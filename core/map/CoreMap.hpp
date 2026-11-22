@@ -6,6 +6,7 @@
 #include <string>
 
 struct ANativeWindow;
+struct GeoPoint;
 
 /**
  * XCSoar's moving map (src/MapWindow), drawn by the core with OpenGL
@@ -86,6 +87,26 @@ SetOption(unsigned option, int value) noexcept;
 
 bool
 GetOption(unsigned option, int &value) noexcept;
+
+/**
+ * What the map shows and does (xcs_map_mode): the flight (following
+ * the glider), the edited task (CoreTask), or point @p index of the
+ * active task with its area's target.  The last two frame what they
+ * show and stop following; back to the flight, the map follows again.
+ *
+ * @return false for an unknown mode, no edited task or no such area
+ */
+bool
+SetMode(unsigned mode, unsigned index) noexcept;
+
+/** The place under pixel (x, y); invalid without a map. */
+[[gnu::pure]]
+GeoPoint
+LocationAt(int x, int y) noexcept;
+
+/** The task changed (edited or active): draw it again. */
+void
+OnTaskChanged() noexcept;
 
 /** Redraw soon (at most a few times per second); for new data. */
 void

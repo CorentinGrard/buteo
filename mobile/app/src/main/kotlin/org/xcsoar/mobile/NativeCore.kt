@@ -55,6 +55,9 @@ internal object NativeCore {
     @JvmStatic external fun nativeMapZoom(core: Long, steps: Int): Int
     @JvmStatic external fun nativeMapPan(core: Long, dx: Float, dy: Float): Int
     @JvmStatic external fun nativeMapScale(core: Long, factor: Float): Int
+    @JvmStatic external fun nativeMapSetMode(core: Long, mode: Int, index: Int): Int
+    /** @return {latitude, longitude}, or null without a map */
+    @JvmStatic external fun nativeMapLocationAt(core: Long, x: Int, y: Int): DoubleArray?
     @JvmStatic external fun nativeMapFollow(core: Long): Int
     @JvmStatic external fun nativeMapSetOrientation(core: Long, orientation: Int): Int
     /** @return an xcs_map_orientation, or -1 on error */

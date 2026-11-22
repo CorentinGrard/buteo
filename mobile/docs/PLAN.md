@@ -378,8 +378,15 @@ Run: `./output/MACOS_CORE/bin/CoreSmoke DATA_DIR [FLIGHT.igc]`
       lock, a place in the area; `xcs_task_set_target_location`).
       TestCoreApi (25 checks); checked on the Pixel 7 in French: an
       annular sector's radial and inner radius, a 13:35 start gate,
-      1500 m MSL, another start.  Next: editing on the map, the targets
-      on the map
+      1500 m MSL, another start.  On the map (D30, 2026-11-23): Task →
+      Edit → "On the map" shows the edited task on the flight screen's
+      map (framed, north up) with a panel instead of the tiles; a tap
+      adds the waypoint under the finger, a point's chip sizes or
+      removes its zone, "Done" makes it the active task.  An active
+      area task's "Targets" frame each area: a tap inside puts the
+      target there, steppers for upstream's distance and radial, the
+      optimiser switch, the task time against the minimum and the
+      speeds.  `xcs_map_set_mode`, `xcs_map_location_at`
 - [~] Airspace warnings: banner above the cards (red inside, orange
       ahead or crossing the task, time and distance to it), "Ack" until it
       changes and "Day" (`xcs_get_airspace_warnings`,
@@ -899,7 +906,8 @@ caution).  From a fresh install tested on a Redmi 5 and the Pixel 7.
 **On the ground**
 
 - The task editor on the map: tap waypoints to add them, drag a zone's
-  size (the design rework's missing piece).
+  size (the design rework's missing piece).  **Done** (2026-11-23,
+  D30), the zone's size with a stepper rather than a drag.
 - A briefing page for the day: METAR / TAF, RASP strength along the
   task, NOTAMs for it, sunset; data age (airspace, NOTAMs) with an
   update button before take-off.

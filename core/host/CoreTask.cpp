@@ -383,6 +383,12 @@ CoreTask::Describe(bool edited) noexcept
   return Serialize(o);
 }
 
+const OrderedTask *
+CoreTask::GetEdited() noexcept
+{
+  return edit_task.get();
+}
+
 void
 CoreTask::BeginEdit() noexcept
 {

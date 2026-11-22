@@ -61,6 +61,39 @@ class TaskTest {
     }
 
     @Test
+    fun rulesMatchHeader() {
+        assertEquals(CoreHeader.constants("XCS_TASK_RULE_"),
+                     TaskRule.entries.associate { "XCS_TASK_RULE_${it.name}" to it.code })
+    }
+
+    /** What xcs_task_get() says of zones, rules, other starts and targets. */
+    @Test
+    fun parsesZonesRulesAndTargets() {
+        val task = TaskInfo.parse(
+            """{"type":5,"type_name":"AAT","valid":true,"active":1,""" +
+                """"points":[{"waypoint_id":1,"name":"A","kind":"start","type":2,""" +
+                """"type_name":"Start cylinder","zone":{"shape":"cylinder","radius":1E3}},""" +
+                """{"waypoint_id":2,"name":"B","kind":"turn","type":16,"type_name":"x",""" +
+                """"zone":{"shape":"annular_sector","radius":2E4,"inner_radius":5E3,""" +
+                """"start_radial":3E2,"end_radial":6E1},""" +
+                """"target":{"range":3.5E-1,"radial":-2E1,"locked":true,"movable":true,""" +
+                """"latitude":4.5E1,"longitude":5.5E0}}],""" +
+                """"optional_starts":[{"waypoint_id":7,"name":"C"}],""" +
+                """"rules":{"start_open":755,"start_close":-1,"start_max_height":1500,""" +
+                """"start_height_ref":"msl","fai_allowed":false},""" +
+                """"area":{"estimated_time":1.152E4,"time_delta":7.2E2}}""")
+        val area = task.points[1]
+        assertEquals(ZoneInfo("annular_sector", 20_000.0, 5000.0, 300.0, 60.0), area.zone)
+        assertEquals(TargetInfo(0.35, -20.0, true, true, 45.0, 5.5), area.target)
+        assertEquals(null, task.points[0].target)
+        assertEquals(listOf(OptionalStart(7, "C")), task.optionalStarts)
+        assertEquals(755, task.rules.startOpen)
+        assertEquals(1500.0, task.rules.startMaxHeight, 0.0)
+        assertEquals("msl", task.rules.startHeightRef)
+        assertEquals(720.0, task.area?.timeDelta)
+    }
+
+    @Test
     fun soundOptionsMatchHeader() {
         val c = CoreHeader.constants("XCS_SOUND_")
         assertEquals(c, SoundOption.entries.associate { "XCS_SOUND_${it.name}" to it.code })

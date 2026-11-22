@@ -49,6 +49,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import org.xcsoar.AppPermissionManager
+import org.xcsoar.mobile.core.MapMode
 import org.xcsoar.mobile.core.DataFile
 import org.xcsoar.mobile.core.REPOSITORY_URI
 import org.xcsoar.mobile.ui.data.DataFilesScreen
@@ -105,9 +106,11 @@ import org.xcsoar.mobile.ui.weather.WeatherScreen
 import org.xcsoar.mobile.ui.weather.WeatherViewModel
 import org.xcsoar.mobile.ui.setup.FlightSetupScreen
 import org.xcsoar.mobile.ui.task.TaskFilesScreen
+import org.xcsoar.mobile.ui.task.TaskEditPanel
 import org.xcsoar.mobile.ui.task.TaskRulesScreen
 import org.xcsoar.mobile.ui.task.TaskScreen
 import org.xcsoar.mobile.ui.task.TaskViewModel
+import org.xcsoar.mobile.ui.task.TargetPanel
 import org.xcsoar.mobile.ui.units.UnitsScreen
 import org.xcsoar.mobile.ui.units.UnitsViewModel
 import org.xcsoar.mobile.ui.summary.SummaryScreen
@@ -130,6 +133,13 @@ private enum class Screen { FLIGHT, DATA_FILES, DOWNLOAD, MAP_SETTINGS, WAYPOINT
                             AIRSPACE_ALERTS, SAFETY, WIND, STATUS, SOUND, TRACKING, WEATHER,
                             NOTAMS, FLIGHT_LOG, PROFILES, TEAM_CODE, TEAM_REFERENCE, RADIO,
                             ATC, ATC_REFERENCE, AIRSPACE_DETAILS, WELCOME, SUMMARY }
+
+/** The task on the map: building the edited task, or moving a target. */
+private sealed interface TaskOnMap {
+    data object Edit : TaskOnMap
+    /** area [index] of the active task */
+    data class Target(val index: Int) : TaskOnMap
+}
 
 /** How deep a page is: pages further in slide in from the right. */
 private val Screen.depth: Int
@@ -419,6 +429,20 @@ class MainActivity : ComponentActivity() {
                 /* the flight menu; it stays open under the pages it opens,
                    so their Back comes back to it */
                 var menuOpen by rememberSaveable { mutableStateOf(false) }
+                // not saved: the map's mode does not outlive the activity
+                var taskOnMap by remember { mutableStateOf<TaskOnMap?>(null) }
+                fun showTaskOnMap(mode: TaskOnMap?, next: Screen) {
+                    taskOnMap = mode
+                    // the menu stays open under the pages it opens: not
+                    // over the task on the map
+                    if (mode != null) menuOpen = false
+                    when (mode) {
+                        null -> flightViewModel.setMapMode(MapMode.FLIGHT)
+                        TaskOnMap.Edit -> flightViewModel.setMapMode(MapMode.TASK)
+                        is TaskOnMap.Target -> flightViewModel.setMapMode(MapMode.TARGET, mode.index)
+                    }
+                    screen = next
+                }
                 val crewDone = {
                     app.crewChosen = true
                     screen = Screen.FLIGHT
@@ -534,6 +558,30 @@ class MainActivity : ComponentActivity() {
                         menuOpen = menuOpen,
                         onMenuOpen = { menuOpen = it },
                         covered = screen != Screen.FLIGHT,
+                        taskPanel = when (val mode = taskOnMap) {
+                            null -> null
+                            TaskOnMap.Edit -> ({
+                                TaskEditPanel(
+                                    taskViewModel,
+                                    onList = { showTaskOnMap(null, Screen.TASK) },
+                                    onClose = { showTaskOnMap(null, Screen.FLIGHT) })
+                            })
+                            is TaskOnMap.Target -> ({
+                                TargetPanel(
+                                    taskViewModel, mode.index,
+                                    onShowTarget = {
+                                        showTaskOnMap(TaskOnMap.Target(it), Screen.FLIGHT)
+                                    },
+                                    onClose = { showTaskOnMap(null, Screen.FLIGHT) })
+                            })
+                        },
+                        onMapTap = { x, y ->
+                            when (val mode = taskOnMap) {
+                                TaskOnMap.Edit -> taskViewModel.addAt(x, y)
+                                is TaskOnMap.Target -> taskViewModel.targetAt(mode.index, x, y)
+                                null -> {}
+                            }
+                        },
                     )
                 }
 
@@ -696,6 +744,10 @@ class MainActivity : ComponentActivity() {
                                 onAddStart = { screen = Screen.TASK_ADD_START },
                                 onOpenRules = { screen = Screen.TASK_RULES },
                                 onOpenFiles = { screen = Screen.TASK_FILES },
+                                onOpenMap = { showTaskOnMap(TaskOnMap.Edit, Screen.FLIGHT) },
+                                onOpenTargets = {
+                                    showTaskOnMap(TaskOnMap.Target(it), Screen.FLIGHT)
+                                },
                                 onBack = { screen = Screen.FLIGHT })
                             Screen.TASK_RULES -> TaskRulesScreen(
                                 taskViewModel, onBack = { screen = Screen.TASK })

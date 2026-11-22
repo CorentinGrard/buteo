@@ -565,3 +565,27 @@ when not; the task in magenta (the app's `task` colour).
   XCSoar's own drawing: `AirspaceLook` has the fill alpha and optional
   warning colours (OpenGL), `WaypointLook` the landables' outline pen;
   their defaults are what XCSoar drew before.
+
+## D30 — The task on the map: modes of the one map
+**Status:** Accepted (2026-11-23)
+
+Building a task and moving AAT targets want a map: upstream has a task
+list and a separate target map window.  The app has one map, the core's
+(D17), and it keeps running under the pages.
+
+- The map has modes (`xcs_map_set_mode`): the flight, the edited task,
+  or an area of the active task.  The task and target modes frame what
+  they show in the part of the map the panel leaves free, north up, and
+  stop following the glider; the flight mode follows it again.  The
+  edited task is drawn from a task manager of its own (a copy, its last
+  point a finish as on "Done"), so the active task keeps guiding.
+- The flight screen keeps the map and the airspace warnings and swaps
+  its tiles for a panel: the points (to size a zone or remove one) and
+  "Done", or the area's target (upstream's distance and radial, the
+  optimiser switch, the task time against the minimum).  A tap on the
+  map, on lift-off, adds the waypoint under the finger
+  (`xcs_map_items_at`) or puts the target there
+  (`xcs_map_location_at`, inside the area only); holds and their "Go
+  to" card are off meanwhile.
+- A zone's size stays a stepper, not a drag on the map: it is precise
+  with a glove in turbulence, and a drag would fight the pan.

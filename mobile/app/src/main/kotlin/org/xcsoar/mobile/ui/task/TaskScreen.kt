@@ -79,6 +79,10 @@ class TaskActions(
     val addOptionalStart: () -> Unit = {},
     val removeOptionalStart: (Int) -> Unit = {},
     val openRules: () -> Unit = {},
+    /** build the edited task on the map */
+    val openMap: () -> Unit = {},
+    /** move the targets of the active area task, from this area */
+    val openTargets: (Int) -> Unit = {},
     val save: (String) -> Unit = {},
     val openFiles: () -> Unit = {},
     val dismissMessage: () -> Unit = {},
@@ -86,7 +90,8 @@ class TaskActions(
 
 @Composable
 fun TaskScreen(viewModel: TaskViewModel, onAddPoint: () -> Unit, onAddStart: () -> Unit,
-               onOpenRules: () -> Unit, onOpenFiles: () -> Unit, onBack: () -> Unit) {
+               onOpenRules: () -> Unit, onOpenFiles: () -> Unit, onOpenMap: () -> Unit,
+               onOpenTargets: (Int) -> Unit, onBack: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     DisposableEffect(Unit) {
         viewModel.open()
@@ -103,7 +108,7 @@ fun TaskScreen(viewModel: TaskViewModel, onAddPoint: () -> Unit, onAddStart: () 
         changeRadial = viewModel::changeRadial, changeAngle = viewModel::changeAngle,
         changeMinTime = viewModel::changeMinTime,
         addOptionalStart = onAddStart, removeOptionalStart = viewModel::removeOptionalStart,
-        openRules = onOpenRules,
+        openRules = onOpenRules, openMap = onOpenMap, openTargets = onOpenTargets,
         save = viewModel::save, openFiles = onOpenFiles,
         dismissMessage = viewModel::dismissMessage,
     ))
@@ -172,17 +177,27 @@ fun TaskContent(state: TaskState, onBack: () -> Unit, actions: TaskActions = Tas
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TaskButton(stringResource(R.string.waypoints_add_point), primary = true, modifier = Modifier.weight(1f),
                            onClick = actions.addPoint)
-                TaskButton(stringResource(R.string.task_save_dots), enabled = task.points.isNotEmpty(),
-                           outlined = true, modifier = Modifier.weight(1f)) { saving = true }
+                // tap the waypoints on the map instead
+                TaskButton(stringResource(R.string.task_on_map), outlined = true,
+                           modifier = Modifier.weight(1f), onClick = actions.openMap)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TaskButton(stringResource(R.string.task_save_dots), enabled = task.points.isNotEmpty(),
+                           outlined = true, modifier = Modifier.weight(1f)) { saving = true }
                 TaskButton(stringResource(R.string.task_load_dots), outlined = true,
                            modifier = Modifier.weight(1f),
                            onClick = actions.openFiles)
-                TaskButton(stringResource(R.string.wind_clear), enabled = task.points.isNotEmpty(), outlined = true,
-                           modifier = Modifier.weight(1f), onClick = actions.clear)
             }
+            TaskButton(stringResource(R.string.wind_clear), enabled = task.points.isNotEmpty(), outlined = true,
+                       modifier = Modifier.fillMaxWidth(), onClick = actions.clear)
         } else {
+            // an area task: its targets, from the area flown to
+            val areas = movableTargets(task)
+            if (areas.isNotEmpty())
+                TaskButton(stringResource(R.string.task_targets), outlined = true,
+                           modifier = Modifier.fillMaxWidth()) {
+                    actions.openTargets(areas.firstOrNull { it >= (task.active ?: 0) } ?: areas[0])
+                }
             if (task.points.isNotEmpty())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TaskButton(stringResource(R.string.task_previous), outlined = true, enabled = (task.active ?: 0) > 0,
@@ -487,6 +502,8 @@ internal fun TaskButton(
     primary: Boolean = false,
     outlined: Boolean = false,
     enabled: Boolean = true,
+    /** what a screen reader says, when [label] is a symbol */
+    description: String = label,
     onClick: () -> Unit,
 ) {
     val colors = XcsTheme.colors
@@ -502,7 +519,7 @@ internal fun TaskButton(
             }, shape)
             .then(if (outlined) Modifier.border(1.dp, colors.panelBorder, shape) else Modifier)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = label }
+            .semantics { contentDescription = description }
             .padding(horizontal = 14.dp),
         contentAlignment = Alignment.Center) {
         Text(label, color = if (primary) colors.onSelected else colors.text,

@@ -1525,6 +1525,35 @@ xcs_map_set_option(xcs_core *core, uint32_t option, int32_t value);
 XCS_EXPORT xcs_status
 xcs_map_get_option(xcs_core *core, uint32_t option, int32_t *value_r);
 
+/** What the map shows and does (xcs_map_set_mode()). */
+typedef enum xcs_map_mode {
+  /** The flight: the active task, following the glider. */
+  XCS_MAP_MODE_FLIGHT = 0,
+  /** The edited task (XCS_TASK_BEGIN), north up, framed; for building
+      it on the map. */
+  XCS_MAP_MODE_TASK = 1,
+  /** Area `index` of the active task and its target, north up,
+      framed; for moving the target. */
+  XCS_MAP_MODE_TARGET = 2,
+} xcs_map_mode;
+
+/**
+ * Switch what the map shows.  The task and target modes frame what
+ * they show in the part of the map the cards leave free (around
+ * xcs_map_set_aircraft_position()) and stop following the glider;
+ * back to XCS_MAP_MODE_FLIGHT, the map follows it again.
+ * XCS_ERROR_INVALID_ARGUMENT for an unknown mode, no edit in progress
+ * (task) or no area at `index` (target); XCS_ERROR_FAILED without a map.
+ */
+XCS_EXPORT xcs_status
+xcs_map_set_mode(xcs_core *core, uint32_t mode, uint32_t index);
+
+/** The place under pixel (x, y) of the map; XCS_ERROR_FAILED without
+    a map. */
+XCS_EXPORT xcs_status
+xcs_map_location_at(xcs_core *core, int32_t x, int32_t y,
+                    double *latitude_r, double *longitude_r);
+
 /**
  * What is on the map around pixel (x, y) (XCSoar's map item list), as a
  * JSON array, nearest first (UTF-8, null-terminated):

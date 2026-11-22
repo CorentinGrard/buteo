@@ -1854,6 +1854,54 @@ msgstr ""
 msgid "The target must be inside its area"
 msgstr ""
 
+#. task_on_map
+msgid "On the map"
+msgstr ""
+
+#. task_map_hint_start
+msgid "Tap a waypoint on the map to add it, the start first"
+msgstr ""
+
+#. task_map_hint
+msgid "Tap a waypoint to add it"
+msgstr ""
+
+#. task_map_no_waypoint
+msgid "No waypoint there"
+msgstr ""
+
+#. task_targets
+msgid "Targets"
+msgstr ""
+
+#. task_target_of
+msgid "Target · %1$s"
+msgstr ""
+
+#. task_previous_area
+msgid "Previous area"
+msgstr ""
+
+#. task_next_area
+msgid "Next area"
+msgstr ""
+
+#. task_target_hint
+msgid "Tap in the area to put the target there"
+msgstr ""
+
+#. task_target_optimised_detail
+msgid "XCSoar moves it to finish at the minimum time"
+msgstr ""
+
+#. task_area_time
+msgid "Task time"
+msgstr ""
+
+#. task_speed_achieved
+msgid "Speed achieved"
+msgstr ""
+
 #. flights_cannot_delete
 msgid "Could not delete %1$s"
 msgstr ""

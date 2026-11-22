@@ -3,6 +3,11 @@
 
 package org.xcsoar.mobile.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,6 +23,8 @@ import org.xcsoar.mobile.core.SafetyOption
 import org.xcsoar.mobile.core.TaskInfo
 import org.xcsoar.mobile.core.TaskPointInfo
 import org.xcsoar.mobile.core.TaskRules
+import org.xcsoar.mobile.core.TargetInfo
+import org.xcsoar.mobile.core.AreaStats
 import org.xcsoar.mobile.core.WeGlideTask
 import org.xcsoar.mobile.core.WeGlideTaskList
 import org.xcsoar.mobile.core.WindInfo
@@ -33,6 +40,7 @@ import org.xcsoar.mobile.ui.setup.FlightSetupContent
 import org.xcsoar.mobile.ui.task.TaskContent
 import org.xcsoar.mobile.ui.task.TaskFilesContent
 import org.xcsoar.mobile.ui.task.TaskRulesContent
+import org.xcsoar.mobile.ui.task.TargetPanelContent
 import org.xcsoar.mobile.ui.task.TaskState
 import org.xcsoar.mobile.ui.task.WeGlideTasks
 import org.xcsoar.mobile.ui.theme.XcsTheme
@@ -155,6 +163,25 @@ class FrenchPagesScreenshotTest {
             TaskRulesContent(TaskRules(startOpen = 12 * 60 + 35, startMaxHeight = 1500.0,
                                        startHeightRef = "msl", finishMinHeight = 300.0,
                                        faiAllowed = true), {})
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "fr-w320dp-h760dp-xxhdpi")
+    fun targetNarrow() = capture("task_map_target_320") {
+        XcsTheme(dark = false) {
+            Box(Modifier.background(XcsTheme.colors.sheet).padding(12.dp)) {
+                TargetPanelContent(TaskState(TaskInfo(
+                    5, "AAT", valid = true, aatMinTime = 10_800.0, active = 1,
+                    points = listOf(
+                        TaskPointInfo(1, "Grenoble Le Versoud", "start", 1, "Ligne de départ"),
+                        TaskPointInfo(2, "Dent de Crolles", "turn", 10, "Cylindre de zone",
+                                      target = TargetInfo(range = -0.4, radial = 35.0,
+                                                          movable = true)),
+                        TaskPointInfo(1, "Grenoble Le Versoud", "finish", 14, "Cylindre")),
+                    area = AreaStats(estimatedTime = 9_960.0, timeDelta = -840.0,
+                                     speedRemaining = 21.0))), 1)
+            }
         }
     }
 
