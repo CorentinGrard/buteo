@@ -1692,7 +1692,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 23 + 2);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 23 + 2 + 2);
 
   Recorder recorder;
   TestCreateArguments(recorder);
@@ -1736,6 +1736,18 @@ main()
   TestReplayControls(core);
   TestReplayToEnd(core, recorder);
   TestProfiles(core);
+
+  /* the task is kept: saved as Default.tsk, loaded at the next start */
+  {
+    const auto map = std::filesystem::absolute(MAP).string();
+    xcs_set_data_file(core, XCS_DATA_MAP, map.c_str());
+    xcs_task_edit(core, XCS_TASK_BEGIN, 0, 0);
+    xcs_task_edit(core, XCS_TASK_CLEAR, 0, 0);
+    for (const unsigned id : WaypointIds(core, 3))
+      xcs_task_edit(core, XCS_TASK_APPEND, 0, id);
+    ok1(xcs_task_edit(core, XCS_TASK_COMMIT, 0, 0) == XCS_OK &&
+        Count(TaskJson(core, XCS_TASK_ACTIVE), "\"waypoint_id\"") == 3);
+  }
   ok1(xcs_stop(core) == XCS_OK);
 
   /* the same core can be started again; a profile saved before
@@ -1763,6 +1775,10 @@ main()
         Contains(layouts, "],[21,10,117,94,1,25," +
                           std::to_string(e_Thermal_30s) + ","));
   }
+  ok1(Count(TaskJson(core, XCS_TASK_ACTIVE), "\"waypoint_id\"") == 3);
+  xcs_task_edit(core, XCS_TASK_BEGIN, 0, 0);
+  xcs_task_edit(core, XCS_TASK_CLEAR, 0, 0);
+  xcs_task_edit(core, XCS_TASK_COMMIT, 0, 0);
   ok1(xcs_stop(core) == XCS_OK);
   xcs_destroy(core);
 

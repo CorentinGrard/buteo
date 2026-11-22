@@ -48,6 +48,7 @@
 #include "Task/TaskManager.hpp"
 #include "Task/ProtectedTaskManager.hpp"
 #include "Task/DefaultTask.hpp"
+#include "Engine/Waypoint/Waypoints.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Computer/GlideComputer.hpp"
 #include "Computer/GlideComputerInterface.hpp"
@@ -333,6 +334,21 @@ CoreStartup(OperationEnvironment &operation, bool open_devices)
 
   /* like AfterStartup(): needs the threads (it suspends them) */
   CoreNotam::LoadCached();
+
+  /* AfterStartup(): the task of the last session (saved on every
+     change and at shutdown); it goes before a restored Go to, as in
+     XCSoar */
+  if (const auto task = LoadDefaultTask(CommonInterface::GetComputerSettings().task,
+                                        data_components->waypoints.get())) {
+    {
+      const ScopeSuspendAllThreads suspend;
+      task->CheckDuplicateWaypoints(*data_components->waypoints);
+      data_components->waypoints->Optimise();
+    }
+    backend_components->protected_task_manager->TaskCommit(*task);
+  }
+  /* false: no task and no Go to, nothing to resume */
+  [[maybe_unused]] const bool resumed = task_manager->Resume();
 
   /* opens the devices, among other things (like ProcessTimer()) */
   CoreStartTimer(open_devices);
