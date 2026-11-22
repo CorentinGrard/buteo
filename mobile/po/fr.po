@@ -445,3 +445,1831 @@ msgstr "Téléchargé et chargé"
 #. welcome_where
 msgid "Where do you fly?"
 msgstr "Où volez-vous ?"
+
+#. no_data_yet
+msgid "No data yet"
+msgstr "Pas encore de données"
+
+#. flights_none
+msgid "No flights yet. Buteo records an IGC file from takeoff to landing."
+msgstr "Aucun vol pour l'instant. Buteo enregistre un fichier IGC du décollage à l'atterrissage."
+
+#. flights_on_weglide
+msgid "on WeGlide"
+msgstr "sur WeGlide"
+
+#. status_share
+msgid "Share position"
+msgstr "Partager la position"
+
+#. status_reading
+msgid "Reading…"
+msgstr "Lecture…"
+
+#. tile_title_circling
+msgid "Tile %1$d · circling"
+msgstr "Tuile %1$d · spirale"
+
+#. tile_title_cruise
+msgid "Tile %1$d · cruise"
+msgstr "Tuile %1$d · transition"
+
+#. tile_show
+msgid "Show %1$s"
+msgstr "Afficher %1$s"
+
+#. tile_shown
+msgid "%1$s · shown"
+msgstr "%1$s · affiché"
+
+#. units_speed
+msgid "Aircraft and wind speed"
+msgstr "Vitesse avion et vent"
+
+#. units_task_speed
+msgid "Task speed"
+msgstr "Vitesse du circuit"
+
+#. map_terrain_detail
+msgid "Shaded relief from the map file"
+msgstr "Relief ombré, tiré du fichier de carte"
+
+#. map_topography
+msgid "Topography"
+msgstr "Topographie"
+
+#. map_topography_detail
+msgid "Roads, rivers, lakes and towns"
+msgstr "Routes, rivières, lacs et villes"
+
+#. map_zoom
+msgid "Zoom of its own"
+msgstr "Zoom propre"
+
+#. map_zoom_detail
+msgid "Closer in a climb, back to the cruise's after"
+msgstr "Plus près en ascendance, puis retour à celui de la transition"
+
+#. map_thermal_assistant_detail
+msgid "The lift around the circle, on the glider"
+msgstr "Le vario autour du cercle, sur le planeur"
+
+#. map_terrain_colours
+msgid "Terrain colours"
+msgstr "Couleurs du relief"
+
+#. ramp_french_sia
+msgid "French SIA VFR chart"
+msgstr "Carte VFR SIA française"
+
+#. ramp_german_dfs
+msgid "German DFS VFR chart"
+msgstr "Carte VFR DFS allemande"
+
+#. ramp_high_contrast
+msgid "High contrast"
+msgstr "Contraste élevé"
+
+#. download_damaged
+msgid "Download of %1$s is damaged (checksum)"
+msgstr "Le téléchargement de %1$s est endommagé (somme de contrôle)"
+
+#. download_cannot_write
+msgid "Cannot write %1$s"
+msgstr "Impossible d'écrire %1$s"
+
+#. download_no_location
+msgid "Redirect without location from %1$s"
+msgstr "Redirection sans destination depuis %1$s"
+
+#. download_http
+msgid "HTTP %1$d for %2$s"
+msgstr "HTTP %1$d pour %2$s"
+
+#. download_redirects
+msgid "Too many redirects for %1$s"
+msgstr "Trop de redirections pour %1$s"
+
+#. data_map_formats
+msgid "XCSoar map (.xcm): terrain, roads, rivers, towns"
+msgstr "Carte XCSoar (.xcm) : relief, routes, rivières, villes"
+
+#. data_terrain_loaded
+msgid "Terrain loaded"
+msgstr "Relief chargé"
+
+#. data_airspace_formats
+msgid "OpenAir (.txt, .air) or Tim Newport-Peace (.sua)"
+msgstr "OpenAir (.txt, .air) ou Tim Newport-Peace (.sua)"
+
+#. data_airspaces_loaded
+msgid "Airspaces loaded: %1$d"
+msgstr "Espaces aériens chargés : %1$d"
+
+#. data_waypoints_formats
+msgid "SeeYou (.cup), WinPilot (.dat) and other XCSoar formats"
+msgstr "SeeYou (.cup), WinPilot (.dat) et autres formats XCSoar"
+
+#. data_waypoints_loaded
+msgid "Waypoints loaded: %1$d"
+msgstr "Waypoints chargés : %1$d"
+
+#. data_rasp
+msgid "RASP forecast"
+msgstr "Prévision RASP"
+
+#. data_rasp_formats
+msgid "Soaring forecast for the map (-rasp.dat), new every day"
+msgstr "Prévision de vol à voile pour la carte (-rasp.dat), nouvelle chaque jour"
+
+#. data_rasp_loaded
+msgid "Fields loaded: %1$d"
+msgstr "Champs chargés : %1$d"
+
+#. data_footer
+msgid "Airspace and waypoints inside the map file are counted too. Load errors are shown on the flight screen."
+msgstr "Les espaces aériens et waypoints du fichier de carte sont comptés aussi. Les erreurs de chargement s'affichent sur l'écran de vol."
+
+#. data_no_file
+msgid "No file"
+msgstr "Aucun fichier"
+
+#. loading
+msgid "Loading…"
+msgstr "Chargement…"
+
+#. data_choose_file
+msgid "Choose file"
+msgstr "Choisir un fichier"
+
+#. data_replace
+msgid "Replace"
+msgstr "Remplacer"
+
+#. download_maps
+msgid "Download maps"
+msgstr "Télécharger des cartes"
+
+#. download_airspace
+msgid "Download airspace"
+msgstr "Télécharger des espaces aériens"
+
+#. download_waypoints
+msgid "Download waypoints"
+msgstr "Télécharger des waypoints"
+
+#. download_rasp
+msgid "Download RASP forecasts"
+msgstr "Télécharger des prévisions RASP"
+
+#. download_search
+msgid "Search name or country code (fr, de…)"
+msgstr "Nom ou code pays (fr, de…)"
+
+#. download_loading
+msgid "Loading XCSoar's file list…"
+msgstr "Chargement de la liste de fichiers de XCSoar…"
+
+#. download_file
+msgid "Download %1$s"
+msgstr "Télécharger %1$s"
+
+#. download_needs_core
+msgid "Downloads need the native core"
+msgstr "Les téléchargements demandent le cœur natif"
+
+#. add
+msgid "Add"
+msgstr "Ajouter"
+
+#. waypoints_go
+msgid "Go"
+msgstr "Aller"
+
+#. waypoints_airports
+msgid "Airports"
+msgstr "Aérodromes"
+
+#. waypoints_none
+msgid "No waypoint found. Load a map or waypoint file (%1$s)."
+msgstr "Aucun waypoint trouvé. Chargez une carte ou un fichier de waypoints (%1$s)."
+
+#. waypoints_elevation
+msgid "elev %1$s"
+msgstr "alt. %1$s"
+
+#. waypoints_landable_only
+msgid "%1$s: go to only to landable waypoints (profile setting)"
+msgstr "%1$s : aller seulement vers les terrains vachables (réglage du profil)"
+
+#. waypoints_set
+msgid "Set"
+msgstr "Définir"
+
+#. waypoints_add_point
+msgid "Add point"
+msgstr "Ajouter un point"
+
+#. crew_fly
+msgid "Fly %1$s"
+msgstr "Voler sur %1$s"
+
+#. crew_fly_with
+msgid "Fly %1$s with %2$s"
+msgstr "Voler sur %1$s avec %2$s"
+
+#. crew_not_now
+msgid "Not now"
+msgstr "Pas maintenant"
+
+#. crew_aircraft
+msgid "Aircraft"
+msgstr "Aéronef"
+
+#. crew_add_hint
+msgid "Add the aircraft you fly: its registration, its polar and its WeGlide type."
+msgstr "Ajoutez l'aéronef que vous pilotez : son immatriculation, sa polaire et son type WeGlide."
+
+#. crew_add_aircraft
+msgid "Add aircraft"
+msgstr "Ajouter un aéronef"
+
+#. crew_set_name
+msgid "Set your name"
+msgstr "Indiquer votre nom"
+
+#. crew_name_detail
+msgid "Name in the IGC file, WeGlide account"
+msgstr "Nom dans le fichier IGC, compte WeGlide"
+
+#. crew_two_seats
+msgid "two seats"
+msgstr "deux places"
+
+#. crew_last_flown
+msgid "last flown"
+msgstr "dernier vol"
+
+#. crew_copilot
+msgid "Co-pilot"
+msgstr "Copilote"
+
+#. crew_solo
+msgid "Solo"
+msgstr "Solo"
+
+#. crew_new_copilot
+msgid "New co-pilot"
+msgstr "Nouveau copilote"
+
+#. crew_could_not_save
+msgid "Could not save"
+msgstr "Enregistrement impossible"
+
+#. pilot_title
+msgid "Pilot & WeGlide"
+msgstr "Pilote et WeGlide"
+
+#. pilot_igc_name
+msgid "Name in the IGC file"
+msgstr "Nom dans le fichier IGC"
+
+#. pilot_upload
+msgid "Upload flights to WeGlide"
+msgstr "Envoyer les vols à WeGlide"
+
+#. pilot_weglide_id
+msgid "WeGlide pilot ID"
+msgstr "Identifiant pilote WeGlide"
+
+#. pilot_id_hint
+msgid "The number in your profile's address: weglide.org/user/1234."
+msgstr "Le numéro dans l'adresse de votre profil : weglide.org/user/1234."
+
+#. pilot_birthdate
+msgid "Date of birth"
+msgstr "Date de naissance"
+
+#. pilot_birthdate_hint
+msgid "WeGlide checks your ID and date of birth instead of a password."
+msgstr "WeGlide vérifie votre identifiant et votre date de naissance au lieu d'un mot de passe."
+
+#. plane_new
+msgid "New aircraft"
+msgstr "Nouvel aéronef"
+
+#. plane_model
+msgid "Model"
+msgstr "Modèle"
+
+#. plane_choose_model
+msgid "Choose the model"
+msgstr "Choisir le modèle"
+
+#. plane_no_polar_choose
+msgid "No polar for this model: choose one"
+msgstr "Pas de polaire pour ce modèle : en choisir une"
+
+#. plane_import_polar
+msgid "Import a polar file (.plr)"
+msgstr "Importer un fichier de polaire (.plr)"
+
+#. plane_weglide
+msgid "WeGlide: %1$s"
+msgstr "WeGlide : %1$s"
+
+#. plane_weglide_type
+msgid "type %1$d"
+msgstr "type %1$d"
+
+#. plane_no_weglide
+msgid "Not a WeGlide type: flights upload without one"
+msgstr "Pas un type WeGlide : les vols sont envoyés sans type"
+
+#. plane_two_seats
+msgid "Two seats"
+msgstr "Deux places"
+
+#. plane_two_seats_detail
+msgid "Asks for the co-pilot before each flight"
+msgstr "Demande le copilote avant chaque vol"
+
+#. plane_delete
+msgid "Delete aircraft"
+msgstr "Supprimer l'aéronef"
+
+#. plane_polar_points
+msgid "Polar points"
+msgstr "Points de la polaire"
+
+#. plane_speed_n
+msgid "Speed %1$d · %2$s"
+msgstr "Vitesse %1$d · %2$s"
+
+#. plane_sink_n
+msgid "Sink %1$d · %2$s"
+msgstr "Chute %1$d · %2$s"
+
+#. plane_polar_points_hint
+msgid "Three points of the sink rate over speed, slowest first."
+msgstr "Trois points de la vitesse de chute selon la vitesse, du plus lent au plus rapide."
+
+#. plane_masses
+msgid "Masses and limits"
+msgstr "Masses et limites"
+
+#. plane_empty_mass_name
+msgid "empty mass"
+msgstr "masse à vide"
+
+#. plane_empty_mass
+msgid "Empty mass"
+msgstr "Masse à vide"
+
+#. plane_empty_mass_hint
+msgid "The rigged glider without pilots and water."
+msgstr "Le planeur monté, sans pilotes ni eau."
+
+#. plane_reference_mass_name
+msgid "reference mass"
+msgstr "masse de référence"
+
+#. plane_reference_mass
+msgid "Polar reference mass"
+msgstr "Masse de référence de la polaire"
+
+#. plane_reference_mass_hint
+msgid "The mass the polar was measured at."
+msgstr "La masse à laquelle la polaire a été mesurée."
+
+#. plane_ballast_name
+msgid "water ballast"
+msgstr "lest d'eau"
+
+#. plane_ballast
+msgid "Water ballast"
+msgstr "Lest d'eau"
+
+#. plane_spoken_litres
+msgid "%1$s litres"
+msgstr "%1$s litres"
+
+#. plane_dump_name
+msgid "dump time"
+msgstr "temps de vidange"
+
+#. plane_dump
+msgid "Dump time"
+msgstr "Temps de vidange"
+
+#. plane_spoken_seconds
+msgid "%1$s seconds"
+msgstr "%1$s secondes"
+
+#. plane_dump_hint
+msgid "The time to dump full ballast."
+msgstr "Le temps de vidange du lest plein."
+
+#. plane_speed_limit_name
+msgid "speed limit"
+msgstr "vitesse limite"
+
+#. plane_speed_limit
+msgid "Speed limit"
+msgstr "Vitesse limite"
+
+#. plane_speed_limit_hint
+msgid "Speed to fly stays below it (VNE or VNO); none: no limit."
+msgstr "La vitesse à voler reste en dessous (VNE ou VNO) ; aucune : pas de limite."
+
+#. plane_wing_area_name
+msgid "wing area"
+msgstr "surface alaire"
+
+#. plane_wing_area
+msgid "Wing area"
+msgstr "Surface alaire"
+
+#. plane_spoken_square_metres
+msgid "%1$s square metres"
+msgstr "%1$s mètres carrés"
+
+#. plane_wing_area_hint
+msgid "For the wing loading."
+msgstr "Pour la charge alaire."
+
+#. plane_handicap_name
+msgid "handicap"
+msgstr "handicap"
+
+#. plane_spoken_percent
+msgid "%1$s percent"
+msgstr "%1$s pour cent"
+
+#. plane_handicap_hint
+msgid "The contest handicap, for the scores Buteo computes."
+msgstr "Le handicap de compétition, pour les scores calculés par Buteo."
+
+#. plane_mtow
+msgid "Maximum take-off mass · %1$s"
+msgstr "Masse maximale au décollage · %1$s"
+
+#. plane_mtow_hint
+msgid "Above it, Flight setup shows the wing loading in red. Empty if not known."
+msgstr "Au-dessus, le réglage du vol affiche la charge alaire en rouge. Vide si inconnue."
+
+#. plane_has_polar
+msgid "polar"
+msgstr "polaire"
+
+#. plane_has_no_polar
+msgid "no polar"
+msgstr "pas de polaire"
+
+#. plane_download_hint
+msgid "Download WeGlide's list once (internet needed) for every model, its WeGlide type and its seats."
+msgstr "Téléchargez une fois la liste de WeGlide (internet requis) pour avoir chaque modèle, son type WeGlide et ses places."
+
+#. plane_update_list
+msgid "Update WeGlide's list"
+msgstr "Mettre à jour la liste de WeGlide"
+
+#. plane_download_list
+msgid "Download WeGlide's list"
+msgstr "Télécharger la liste de WeGlide"
+
+#. plane_no_polar_in
+msgid "%1$s: no polar in it"
+msgstr "%1$s : pas de polaire dedans"
+
+#. plane_seats_unknown
+msgid "Seats unknown: %1$s"
+msgstr "Places inconnues : %1$s"
+
+#. plane_not_saved_polar
+msgid "Not saved: the three points make no polar (the sink grows with speed, slowest point first)"
+msgstr "Non enregistré : les trois points ne font pas une polaire (la chute croît avec la vitesse, du point le plus lent au plus rapide)"
+
+#. plane_not_saved
+msgid "Could not save the aircraft"
+msgstr "Enregistrement de l'aéronef impossible"
+
+#. plane_delete_last
+msgid "Choose another aircraft before deleting this one"
+msgstr "Choisissez un autre aéronef avant de supprimer celui-ci"
+
+#. sound_callouts
+msgid "Voice callouts"
+msgstr "Annonces vocales"
+
+#. sound_no_output
+msgid "This device has no sound output for the vario."
+msgstr "Cet appareil n'a pas de sortie son pour le vario."
+
+#. sound_vario_detail
+msgid "A tone that rises with lift; also in the menu's Quick settings"
+msgstr "Un son qui monte avec l'ascendance ; aussi dans les réglages rapides du menu"
+
+#. sound_volume_name
+msgid "volume"
+msgstr "volume"
+
+#. sound_volume_hint
+msgid "The phone's media volume applies on top."
+msgstr "Le volume multimédia du téléphone s'applique en plus."
+
+#. sound_tone
+msgid "Tone"
+msgstr "Tonalité"
+
+#. sound_tone_hint
+msgid "Auto plays speed to fly in cruise. It needs an airspeed sensor; without one, it stays on the vario."
+msgstr "Auto joue la vitesse à voler en transition. Il faut un capteur de vitesse air ; sans lui, le son reste celui du vario."
+
+#. sound_quiet
+msgid "Quiet around zero"
+msgstr "Silence autour de zéro"
+
+#. sound_dead_band
+msgid "Dead band"
+msgstr "Zone morte"
+
+#. sound_dead_band_detail
+msgid "Silent while the lift is between the two values below"
+msgstr "Silencieux tant que la montée est entre les deux valeurs ci-dessous"
+
+#. sound_lower_name
+msgid "lower edge"
+msgstr "limite basse"
+
+#. sound_from
+msgid "From"
+msgstr "De"
+
+#. sound_upper_name
+msgid "upper edge"
+msgstr "limite haute"
+
+#. sound_to
+msgid "To"
+msgstr "À"
+
+#. voice_intro
+msgid "Short callouts in flight through the phone's voice, so your eyes stay outside; the screen may be off."
+msgstr "Courtes annonces en vol par la voix du téléphone, pour garder les yeux dehors ; l'écran peut être éteint."
+
+#. voice_none
+msgid "This phone has no text-to-speech voice: Android's settings install one (Text-to-speech output)."
+msgstr "Ce téléphone n'a pas de voix de synthèse vocale : les réglages d'Android permettent d'en installer une (Sortie de synthèse vocale)."
+
+#. voice_airspace
+msgid "Ahead and inside: “Airspace ahead: Grenoble CTR, in 40 seconds”"
+msgstr "Devant et dedans : « Airspace ahead: Grenoble CTR, in 40 seconds » (annoncé en anglais)"
+
+#. voice_final_glide
+msgid "Above it, and dropped below: “Above final glide by 120 metres”"
+msgstr "Au-dessus, et passé en dessous : « Above final glide by 120 metres » (annoncé en anglais)"
+
+#. voice_task_points_title
+msgid "Task points"
+msgstr "Points du circuit"
+
+#. voice_task_points
+msgid "Start, each turn point and the finish, with the next point"
+msgstr "Le départ, chaque point de virage et l'arrivée, avec le point suivant"
+
+#. voice_climbs_title
+msgid "Climbs"
+msgstr "Ascendances"
+
+#. voice_climbs
+msgid "Leaving a climb, its average and the height gained: “Climb 2.1, gained 450”"
+msgstr "En quittant une ascendance, sa moyenne et la hauteur gagnée : « Climb 2.1, gained 450 » (annoncé en anglais)"
+
+#. voice_say
+msgid "Say a callout"
+msgstr "Dire une annonce"
+
+#. safety_margins
+msgid "Margins"
+msgstr "Marges"
+
+#. safety_arrival_name
+msgid "arrival height"
+msgstr "hauteur d'arrivée"
+
+#. safety_arrival_hint
+msgid "Above the field when you land there: arrival heights and reach use it."
+msgstr "Au-dessus du terrain quand vous y atterrissez : les hauteurs d'arrivée et la portée l'utilisent."
+
+#. safety_terrain_name
+msgid "terrain clearance"
+msgstr "marge sur le relief"
+
+#. safety_terrain
+msgid "Terrain clearance"
+msgstr "Marge sur le relief"
+
+#. safety_terrain_hint
+msgid "Kept between the glide path and the terrain on final glide."
+msgstr "Gardée entre la trajectoire et le relief en finale."
+
+#. safety_computer
+msgid "Glide computer"
+msgstr "Calculateur de plané"
+
+#. safety_mc_name
+msgid "safety MacCready"
+msgstr "MacCready de sécurité"
+
+#. safety_mc
+msgid "Safety MacCready"
+msgstr "MacCready de sécurité"
+
+#. safety_mc_hint
+msgid "The MacCready of the reach and of the arrival heights at fields."
+msgstr "Le MacCready de la portée et des hauteurs d'arrivée sur les terrains."
+
+#. safety_start_mc_name
+msgid "MacCready at start"
+msgstr "MacCready au démarrage"
+
+#. safety_start_mc_hint
+msgid "The MacCready for speed to fly when the app starts; changing it sets the MacCready now too."
+msgstr "Le MacCready de la vitesse à voler au démarrage de l'application ; le changer règle aussi le MacCready actuel."
+
+#. safety_risk_name
+msgid "risk factor"
+msgstr "facteur de risque"
+
+#. safety_risk
+msgid "Speed to fly risk factor"
+msgstr "Facteur de risque de la vitesse à voler"
+
+#. safety_risk_hint
+msgid "Lowers MacCready for speed to fly as you get low: 0 off, 0.3 is common."
+msgstr "Baisse le MacCready de la vitesse à voler quand vous descendez : 0 désactivé, 0,3 est courant."
+
+#. safety_nearest
+msgid "Nearest"
+msgstr "Plus proche"
+
+#. safety_along_task
+msgid "Along task"
+msgstr "Circuit"
+
+#. safety_toward_home
+msgid "Toward home"
+msgstr "Vers la maison"
+
+#. safety_alternates_hint
+msgid "How the alternates, the fields in reach, are sorted."
+msgstr "Comment sont triés les dégagements, les terrains à portée."
+
+#. safety_turn_back
+msgid "Turn back marker"
+msgstr "Marqueur de demi-tour"
+
+#. safety_turn_back_detail
+msgid "A green triangle on your track: the last point from which the target is still in reach"
+msgstr "Un triangle vert sur votre trace : le dernier point d'où la cible reste à portée"
+
+#. wind_manual
+msgid "Set by hand"
+msgstr "À la main"
+
+#. wind_direction_name
+msgid "wind direction"
+msgstr "direction du vent"
+
+#. wind_spoken_direction
+msgid "from %1$s degrees"
+msgstr "de %1$s degrés"
+
+#. wind_speed_name
+msgid "wind speed"
+msgstr "vitesse du vent"
+
+#. wind_manual_hint
+msgid "Used at once, until a newer estimate replaces it."
+msgstr "Utilisé aussitôt, jusqu'à ce qu'une estimation plus récente le remplace."
+
+#. wind_estimates
+msgid "Estimates"
+msgstr "Estimations"
+
+#. wind_circling_detail
+msgid "Estimate the wind while circling. Needs only a GPS."
+msgstr "Estime le vent en spirale. Un GPS suffit."
+
+#. wind_zigzag_detail
+msgid "Estimate the wind in glides. Needs an airspeed sensor."
+msgstr "Estime le vent en transition. Il faut un capteur de vitesse air."
+
+#. wind_external_detail
+msgid "Take the wind of other instruments."
+msgstr "Reprend le vent d'autres instruments."
+
+#. wind_drift_detail
+msgid "Drift the snail trail with the wind while circling, at close map scales."
+msgstr "Fait dériver la trace avec le vent en spirale, aux petites échelles de carte."
+
+#. wind_spoken
+msgid "Wind from %1$s degrees, %2$s %3$s, %4$s"
+msgstr "Vent de %1$s degrés, %2$s %3$s, %4$s"
+
+#. wind_spoken_none
+msgid "No wind, %1$s"
+msgstr "Pas de vent, %1$s"
+
+#. wind_in_use
+msgid "Wind in use"
+msgstr "Vent utilisé"
+
+#. wind_source_none
+msgid "None yet: circle to estimate it, or set it by hand"
+msgstr "Aucun pour l'instant : spiralez pour l'estimer, ou réglez-le à la main"
+
+#. wind_source_circling
+msgid "Circling estimate"
+msgstr "Estimation en spirale"
+
+#. wind_source_zigzag
+msgid "ZigZag estimate"
+msgstr "Estimation ZigZag"
+
+#. wind_source_external
+msgid "External instrument"
+msgstr "Instrument externe"
+
+#. airalerts_warnings
+msgid "Airspace warnings"
+msgstr "Alertes d'espace aérien"
+
+#. airalerts_warnings_detail
+msgid "Airspace ahead, inside, or crossing the task"
+msgstr "Espace aérien devant, dedans, ou traversé par le circuit"
+
+#. airalerts_off
+msgid "Off: nothing warns of airspace ahead or inside in flight."
+msgstr "Désactivé : rien ne prévient d'un espace aérien devant ou dedans en vol."
+
+#. airalerts_when
+msgid "When"
+msgstr "Quand"
+
+#. airalerts_warn_name
+msgid "warning time"
+msgstr "délai d'alerte"
+
+#. airalerts_warn
+msgid "Warn ahead"
+msgstr "Prévenir à l'avance"
+
+#. airalerts_ack_name
+msgid "acknowledgement time"
+msgstr "délai après acquittement"
+
+#. airalerts_ack
+msgid "Quiet after Ack"
+msgstr "Silence après acquittement"
+
+#. airalerts_how
+msgid "How"
+msgstr "Comment"
+
+#. airalerts_sound_detail
+msgid "A tone for a new warning, and when it gets worse"
+msgstr "Un son pour une nouvelle alerte, et quand elle s'aggrave"
+
+#. airalerts_vibration
+msgid "Vibration"
+msgstr "Vibration"
+
+#. airalerts_vibration_detail
+msgid "Vibrate for a new warning, and when it gets worse"
+msgstr "Vibre pour une nouvelle alerte, et quand elle s'aggrave"
+
+#. airalerts_hide
+msgid "Hide after %1$d s"
+msgstr "Masquer après %1$d s"
+
+#. airalerts_hide_detail
+msgid "The banner counts down, then goes; it comes back if the warning gets worse"
+msgstr "Le bandeau décompte puis disparaît ; il revient si l'alerte s'aggrave"
+
+#. airalerts_notams_detail
+msgid "Download, filters, list"
+msgstr "Téléchargement, filtres, liste"
+
+#. airalerts_classes
+msgid "Airspace classes"
+msgstr "Classes d'espace aérien"
+
+#. airalerts_no_file
+msgid "No airspace file is loaded (%1$s)."
+msgstr "Aucun fichier d'espace aérien n'est chargé (%1$s)."
+
+#. airalerts_hide_others
+msgid "Hide other classes"
+msgstr "Masquer les autres classes"
+
+#. airalerts_others
+msgid "Other classes (%1$d)"
+msgstr "Autres classes (%1$d)"
+
+#. airalerts_in_files
+msgid "%1$d in the files"
+msgstr "%1$d dans les fichiers"
+
+#. notam_needs_fix
+msgid "Needs a GPS fix: NOTAMs are downloaded around the glider"
+msgstr "Il faut un fix GPS : les NOTAM sont téléchargés autour du planeur"
+
+#. notam_detail
+msgid "From XCSoar's NOTAM server, shown as airspace and in the warnings"
+msgstr "Depuis le serveur NOTAM de XCSoar, affichés comme espaces aériens et dans les alertes"
+
+#. notam_radius_name
+msgid "download radius"
+msgstr "rayon de téléchargement"
+
+#. notam_radius
+msgid "Around the glider · km"
+msgstr "Autour du planeur · km"
+
+#. notam_interval_name
+msgid "refresh interval"
+msgstr "intervalle de mise à jour"
+
+#. notam_when_asked
+msgid "When asked"
+msgstr "Sur demande"
+
+#. notam_effective
+msgid "Only in force now"
+msgstr "Seulement en vigueur"
+
+#. notam_effective_detail
+msgid "Hide NOTAMs that start later"
+msgstr "Masque les NOTAM qui commencent plus tard"
+
+#. notam_ifr
+msgid "IFR only NOTAMs"
+msgstr "NOTAM IFR seulement"
+
+#. notam_ifr_detail
+msgid "Usually of no use to a glider pilot"
+msgstr "Généralement inutiles pour un pilote de planeur"
+
+#. notam_qcodes
+msgid "Hidden Q-codes"
+msgstr "Codes Q masqués"
+
+#. notam_qcodes_hint
+msgid "NOTAMs whose Q-code starts with one of these are hidden (QA: aerodromes, QN: navaids, QOL: obstacle lights…)."
+msgstr "Les NOTAM dont le code Q commence par l'un d'eux sont masqués (QA : aérodromes, QN : aides à la navigation, QOL : feux d'obstacle…)."
+
+#. notam_shown
+msgid "%1$d shown of %2$d"
+msgstr "%1$d affichés sur %2$d"
+
+#. notam_updated
+msgid "Updated %1$s"
+msgstr "Mis à jour %1$s"
+
+#. notam_not_downloaded
+msgid "Not downloaded yet"
+msgstr "Pas encore téléchargés"
+
+#. notam_from
+msgid "from %1$s"
+msgstr "à partir de %1$s"
+
+#. notam_permanent
+msgid "permanent"
+msgstr "permanent"
+
+#. notam_until
+msgid "until %1$s"
+msgstr "jusqu'à %1$s"
+
+#. track_share
+msgid "Share my position"
+msgstr "Partager ma position"
+
+#. track_share_detail
+msgid "With XCSoar's server, which shows you the gliders near you"
+msgstr "Avec le serveur de XCSoar, qui vous montre les planeurs près de vous"
+
+#. track_traffic_detail
+msgid "Gliders near you on the map, also from OGN"
+msgstr "Les planeurs près de vous sur la carte, aussi via OGN"
+
+#. track_thermals
+msgid "Thermals"
+msgstr "Thermiques"
+
+#. track_thermals_detail
+msgid "Thermals other pilots found"
+msgstr "Les thermiques trouvés par d'autres pilotes"
+
+#. track_roaming
+msgid "When roaming"
+msgstr "En itinérance"
+
+#. track_roaming_detail
+msgid "Also on mobile data abroad"
+msgstr "Aussi en données mobiles à l'étranger"
+
+#. track_skylines
+msgid "Track on SkyLines"
+msgstr "Suivi sur SkyLines"
+
+#. track_skylines_detail
+msgid "skylines.aero: others follow your flight live"
+msgstr "skylines.aero : les autres suivent votre vol en direct"
+
+#. track_key
+msgid "Tracking key"
+msgstr "Clé de suivi"
+
+#. track_key_error
+msgid "Up to 16 characters, 0-9 and A-F"
+msgstr "Jusqu'à 16 caractères, 0-9 et A-F"
+
+#. track_key_hint
+msgid "On skylines.aero: Settings → Tracking key."
+msgstr "Sur skylines.aero : Settings → Tracking key."
+
+#. track_skylines_interval
+msgid "SkyLines interval"
+msgstr "Intervalle SkyLines"
+
+#. track_friends
+msgid "Friends"
+msgstr "Amis"
+
+#. track_friends_detail
+msgid "Your SkyLines friends on the map"
+msgstr "Vos amis SkyLines sur la carte"
+
+#. track_nearby
+msgid "Nearby pilots"
+msgstr "Pilotes proches"
+
+#. track_nearby_detail
+msgid "SkyLines users near you on the map"
+msgstr "Les utilisateurs SkyLines près de vous sur la carte"
+
+#. track_livetrack
+msgid "Track on LiveTrack24"
+msgstr "Suivi sur LiveTrack24"
+
+#. track_livetrack_detail
+msgid "Or a server using its protocol, like DHV's"
+msgstr "Ou un serveur utilisant son protocole, comme celui du DHV"
+
+#. track_test
+msgid "Test"
+msgstr "Test"
+
+#. track_server
+msgid "Server: %1$s"
+msgstr "Serveur : %1$s"
+
+#. track_at_most
+msgid "At most %1$d characters"
+msgstr "%1$d caractères au plus"
+
+#. track_livetrack_interval
+msgid "LiveTrack24 interval"
+msgstr "Intervalle LiveTrack24"
+
+#. track_footer
+msgid "Positions are sent over mobile data while Buteo runs."
+msgstr "Les positions sont envoyées en données mobiles tant que Buteo tourne."
+
+#. track_every
+msgid "Send every"
+msgstr "Envoyer toutes les"
+
+#. team_mate
+msgid "Team mate"
+msgstr "Équipier"
+
+#. team_invalid
+msgid "Letters and digits, up to 7"
+msgstr "Lettres et chiffres, jusqu'à 7"
+
+#. team_reference
+msgid "Reference waypoint"
+msgstr "Waypoint de référence"
+
+#. team_same_reference
+msgid "Every glider of the team needs the same one."
+msgstr "Tous les planeurs de l'équipe doivent avoir le même."
+
+#. team_set_reference_first
+msgid "Set a reference waypoint first"
+msgstr "Choisissez d'abord un waypoint de référence"
+
+#. team_needs_fix
+msgid "Needs a GPS fix"
+msgstr "Il faut un fix GPS"
+
+#. team_from
+msgid "From %1$s"
+msgstr "Depuis %1$s"
+
+#. team_spoken_own
+msgid "Own code %1$s, %2$s"
+msgstr "Votre code %1$s, %2$s"
+
+#. team_spoken_none
+msgid "No own code, %1$s"
+msgstr "Pas de code, %1$s"
+
+#. radio_active
+msgid "Active frequency"
+msgstr "Fréquence active"
+
+#. radio_standby
+msgid "Standby frequency"
+msgstr "Fréquence de veille"
+
+#. radio_invalid
+msgid "No channel: 118.000 to 136.990 MHz"
+msgstr "Pas un canal : 118,000 à 136,990 MHz"
+
+#. radio_frequency
+msgid "Frequency · MHz"
+msgstr "Fréquence · MHz"
+
+#. radio_set_active
+msgid "Set active"
+msgstr "Définir active"
+
+#. radio_set_standby
+msgid "Set standby"
+msgstr "Définir veille"
+
+#. radio_sent
+msgid "Sent to a connected radio."
+msgstr "Envoyé à une radio connectée."
+
+#. radio_none_set
+msgid "None: set one below"
+msgstr "Aucune : réglez-en une ci-dessous"
+
+#. radio_none
+msgid "none"
+msgstr "aucune"
+
+#. radio_megahertz
+msgid "%1$s megahertz"
+msgstr "%1$s mégahertz"
+
+#. atc_hint
+msgid "The ATC radial tile shows your magnetic radial and distance from this point, as controllers ask for them."
+msgstr "La tuile radiale ATC montre votre radiale magnétique et votre distance à ce point, comme les contrôleurs les demandent."
+
+#. atc_setup
+msgid "Setup"
+msgstr "Réglage"
+
+#. atc_declination_name
+msgid "magnetic declination"
+msgstr "déclinaison magnétique"
+
+#. atc_spoken_west
+msgid "magnetic declination %1$d degrees west"
+msgstr "déclinaison magnétique %1$d degrés ouest"
+
+#. atc_spoken_east
+msgid "magnetic declination %1$d degrees east"
+msgstr "déclinaison magnétique %1$d degrés est"
+
+#. atc_declination_hint
+msgid "Turns true bearings into magnetic ones, as the controller uses."
+msgstr "Transforme les relèvements vrais en magnétiques, comme le contrôleur les utilise."
+
+#. atc_east
+msgid "%1$d° E"
+msgstr "%1$d° E"
+
+#. atc_west
+msgid "%1$d° W"
+msgstr "%1$d° O"
+
+#. airdetails_none
+msgid "No airspace nearby."
+msgstr "Aucun espace aérien à proximité."
+
+#. airdetails_now_active
+msgid "%1$s MHz is now the active frequency."
+msgstr "%1$s MHz est maintenant la fréquence active."
+
+#. airdetails_now_standby
+msgid "%1$s MHz is now the standby frequency."
+msgstr "%1$s MHz est maintenant la fréquence de veille."
+
+#. airdetails_sends
+msgid "Sends %1$s MHz to the radio."
+msgstr "Envoie %1$s MHz à la radio."
+
+#. airdetails_acked
+msgid "No warnings for it until tomorrow."
+msgstr "Plus d'alerte pour lui jusqu'à demain."
+
+#. airdetails_ack_hint
+msgid "Ack Day: no warnings for it until tomorrow."
+msgstr "Acquitter pour le jour : plus d'alerte pour lui jusqu'à demain."
+
+#. setup_crew_mass_name
+msgid "crew mass"
+msgstr "masse de l'équipage"
+
+#. setup_crew_mass
+msgid "Crew mass"
+msgstr "Masse de l'équipage"
+
+#. setup_crew_hint
+msgid "Pilots, parachutes and baggage: all on board but the glider and the water."
+msgstr "Pilotes, parachutes et bagages : tout ce qui est à bord sauf le planeur et l'eau."
+
+#. setup_no_ballast
+msgid "This plane carries no water ballast."
+msgstr "Cet aéronef n'emporte pas de lest d'eau."
+
+#. setup_ballast_name
+msgid "ballast"
+msgstr "lest"
+
+#. setup_empty
+msgid "Empty"
+msgstr "Vide"
+
+#. setup_bugs_name
+msgid "bugs"
+msgstr "moucherons"
+
+#. setup_bugs_lost
+msgid "Performance lost"
+msgstr "Performance perdue"
+
+#. setup_bugs_hint
+msgid "%1$d %% is a clean glider; %2$d %% doubles the sink rate."
+msgstr "%1$d %% : planeur propre ; %2$d %% : la chute double."
+
+#. setup_over_mtow
+msgid "Above the glider's maximum take-off mass."
+msgstr "Au-dessus de la masse maximale au décollage du planeur."
+
+#. setup_altimeter
+msgid "Altimeter"
+msgstr "Altimètre"
+
+#. setup_no_baro
+msgid "No barometer: Buteo uses the GPS altitude. QNH still converts flight levels for airspace."
+msgstr "Pas de baromètre : Buteo utilise l'altitude GPS. Le QNH sert encore à convertir les niveaux de vol des espaces aériens."
+
+#. setup_qnh_unset
+msgid "Not set yet: Buteo sets it after a while on the ground at an airfield, or set it here. Until then it uses the GPS altitude."
+msgstr "Pas encore réglé : Buteo le règle après un moment au sol sur un terrain, ou réglez-le ici. D'ici là il utilise l'altitude GPS."
+
+#. setup_wind_detail
+msgid "Set by hand, estimates"
+msgstr "À la main, estimations"
+
+#. setup_auto_mc
+msgid "Auto MacCready"
+msgstr "MacCready automatique"
+
+#. setup_auto_mc_detail
+msgid "Buteo sets it as you fly; changing it by hand turns this off."
+msgstr "Buteo le règle en vol ; le changer à la main désactive ceci."
+
+#. setup_mode_final_glide_hint
+msgid "On final glide: the highest MacCready that still gets you home."
+msgstr "En finale : le MacCready le plus élevé qui vous ramène encore."
+
+#. setup_mode_climbs_hint
+msgid "The average climb of your recent thermals."
+msgstr "La moyenne des ascendances récentes."
+
+#. setup_mode_both_hint
+msgid "The average climb, then on final glide the highest MacCready that still gets you home."
+msgstr "La moyenne des ascendances, puis en finale le MacCready le plus élevé qui vous ramène encore."
+
+#. task_not_possible
+msgid "Not possible for this task type"
+msgstr "Impossible pour ce type de circuit"
+
+#. task_cannot_edit
+msgid "Cannot edit the task"
+msgstr "Impossible de modifier le circuit"
+
+#. task_no_next
+msgid "No next point"
+msgstr "Pas de point suivant"
+
+#. task_no_previous
+msgid "No previous point"
+msgstr "Pas de point précédent"
+
+#. task_invalid
+msgid "The task is not valid"
+msgstr "Le circuit n'est pas valide"
+
+#. task_full
+msgid "The task is full"
+msgstr "Le circuit est plein"
+
+#. task_weglide_silent
+msgid "WeGlide did not answer"
+msgstr "WeGlide n'a pas répondu"
+
+#. task_weglide_not_loaded
+msgid "%1$s: not loaded"
+msgstr "%1$s : non chargée"
+
+#. task_cannot_load
+msgid "%1$s: cannot load the task"
+msgstr "%1$s : impossible de charger le circuit"
+
+#. task_not_file_name
+msgid "Not a file name: %1$s"
+msgstr "Pas un nom de fichier : %1$s"
+
+#. task_cannot_save
+msgid "Cannot save %1$s"
+msgstr "Impossible d'enregistrer %1$s"
+
+#. task_saved
+msgid "Saved as %1$s"
+msgstr "Enregistré sous %1$s"
+
+#. task_edit_title
+msgid "Edit task"
+msgstr "Modifier le circuit"
+
+#. task_empty_editing
+msgid "Add the start, the turn points and the finish, in order."
+msgstr "Ajoutez le départ, les points de virage et l'arrivée, dans l'ordre."
+
+#. task_empty
+msgid "No task. Edit to build one from waypoints, or load a task file."
+msgstr "Pas de circuit. Modifiez pour en construire un à partir de waypoints, ou chargez un fichier de circuit."
+
+#. task_save_dots
+msgid "Save…"
+msgstr "Enregistrer…"
+
+#. task_load_dots
+msgid "Load…"
+msgstr "Charger…"
+
+#. task_previous
+msgid "Previous"
+msgstr "Précédent"
+
+#. task_nominal
+msgid "%1$s nominal"
+msgstr "%1$s nominal"
+
+#. task_min_time_name
+msgid "minimum time"
+msgstr "temps minimum"
+
+#. task_min_time
+msgid "Minimum time"
+msgstr "Temps minimum"
+
+#. task_finish
+msgid "Finish"
+msgstr "Arrivée"
+
+#. task_tp
+msgid "TP %1$d"
+msgstr "PV %1$d"
+
+#. task_change_point
+msgid "Change %1$s"
+msgstr "Modifier %1$s"
+
+#. task_zone_size_name
+msgid "zone size"
+msgstr "taille de la zone"
+
+#. task_half_width
+msgid "Half width"
+msgstr "Demi-largeur"
+
+#. task_save_title
+msgid "Save task"
+msgstr "Enregistrer le circuit"
+
+#. task_save_hint
+msgid "In XCSoarData/tasks, as a .tsk file XCSoar reads too."
+msgstr "Dans XCSoarData/tasks, en fichier .tsk que XCSoar lit aussi."
+
+#. task_load_title
+msgid "Load task"
+msgstr "Charger un circuit"
+
+#. task_looking
+msgid "Looking for tasks…"
+msgstr "Recherche des circuits…"
+
+#. task_no_files
+msgid "No task files. Saved tasks go to XCSoarData/tasks; tasks in SeeYou .cup files there are found too."
+msgstr "Aucun fichier de circuit. Les circuits enregistrés vont dans XCSoarData/tasks ; les circuits des fichiers SeeYou .cup qui s'y trouvent sont trouvés aussi."
+
+#. task_load_name
+msgid "Load %1$s"
+msgstr "Charger %1$s"
+
+#. task_numbered
+msgid "Task %1$d"
+msgstr "Circuit %1$d"
+
+#. task_turnpoints
+msgid "%1$d TPs"
+msgstr "%1$d PV"
+
+#. task_list_mine
+msgid "Mine"
+msgstr "Perso"
+
+#. task_list_declared
+msgid "Declared"
+msgstr "Déclarés"
+
+#. task_list_today
+msgid "Today"
+msgstr "Du jour"
+
+#. task_list_scores
+msgid "Scores"
+msgstr "Scores"
+
+#. flights_cannot_delete
+msgid "Could not delete %1$s"
+msgstr "Suppression de %1$s impossible"
+
+#. summary_share
+msgid "Share"
+msgstr "Partager"
+
+#. summary_upload
+msgid "Upload"
+msgstr "Envoyer"
+
+#. summary_replay_finished
+msgid "Replay finished"
+msgstr "Rejeu terminé"
+
+#. summary_landed
+msgid "Landed"
+msgstr "Posé"
+
+#. summary_landed_at
+msgid "Landed at %1$s"
+msgstr "Posé à %1$s"
+
+#. summary_takeoff
+msgid "Take-off %1$s"
+msgstr "Décollage %1$s"
+
+#. summary_replay_hint
+msgid "A replay: nothing was recorded, nothing to share."
+msgstr "Un rejeu : rien n'a été enregistré, rien à partager."
+
+#. summary_waiting
+msgid "The flight log closes a little after the landing; Share and WeGlide follow."
+msgstr "Le carnet de vol se ferme un peu après l'atterrissage ; Partager et WeGlide suivent."
+
+#. summary_no_log
+msgid "No flight log found: %1$s has the recorded ones."
+msgstr "Aucun carnet de vol trouvé : %1$s a les vols enregistrés."
+
+#. summary_set_pilot_id
+msgid "To upload to WeGlide, set your pilot ID: %1$s."
+msgstr "Pour envoyer à WeGlide, indiquez votre identifiant pilote : %1$s."
+
+#. summary_on_weglide
+msgid "On WeGlide: flight %1$s · Open"
+msgstr "Sur WeGlide : vol %1$s · Ouvrir"
+
+#. summary_upload_failed
+msgid "Upload failed"
+msgstr "Échec de l'envoi"
+
+#. summary_best_climb
+msgid "Best climb"
+msgstr "Meilleure ascendance"
+
+#. summary_average_climb
+msgid "Average climb"
+msgstr "Ascendance moyenne"
+
+#. summary_climbs
+msgid "%1$d climbs"
+msgstr "%1$d ascendances"
+
+#. summary_highest
+msgid "Highest"
+msgstr "Point haut"
+
+#. flights_landing
+msgid "landing %1$s"
+msgstr "atterrissage %1$s"
+
+#. flights_reading
+msgid "Reading the flight…"
+msgstr "Lecture du vol…"
+
+#. flights_no_takeoff
+msgid "No take-off in this file."
+msgstr "Aucun décollage dans ce fichier."
+
+#. summary_uploading
+msgid "Uploading…"
+msgstr "Envoi…"
+
+#. flights_upload
+msgid "Upload to WeGlide"
+msgstr "Envoyer à WeGlide"
+
+#. flights_delete
+msgid "Delete"
+msgstr "Supprimer"
+
+#. flights_ground
+msgid "Replay and Delete: on the ground."
+msgstr "Rejouer et Supprimer : au sol."
+
+#. flights_delete_title
+msgid "Delete this flight?"
+msgstr "Supprimer ce vol ?"
+
+#. flights_delete_text
+msgid "%1$s goes from the phone for good. Copies shared or on WeGlide stay."
+msgstr "%1$s disparaît définitivement du téléphone. Les copies partagées ou sur WeGlide restent."
+
+#. profiles_cannot_switch
+msgid "Could not switch profiles"
+msgstr "Changement de profil impossible"
+
+#. profiles_not_created
+msgid "Not created: \"%1$s\" is taken or not a file name"
+msgstr "Non créé : « %1$s » est pris ou n'est pas un nom de fichier"
+
+#. profiles_not_imported
+msgid "Not imported"
+msgstr "Non importé"
+
+#. profiles_not_deleted
+msgid "%1$s not deleted"
+msgstr "%1$s non supprimé"
+
+#. error_with_cause
+msgid "%1$s: %2$s"
+msgstr "%1$s : %2$s"
+
+#. profiles_fly_with
+msgid "Fly with %1$s?"
+msgstr "Voler avec %1$s ?"
+
+#. profiles_switch_text
+msgid "Buteo saves %1$s and restarts with the settings of %2$s."
+msgstr "Buteo enregistre %1$s et redémarre avec les réglages de %2$s."
+
+#. profiles_this_profile
+msgid "this profile"
+msgstr "ce profil"
+
+#. profiles_delete_title
+msgid "Delete %1$s?"
+msgstr "Supprimer %1$s ?"
+
+#. profiles_delete_text
+msgid "Its settings are lost. Data files, planes and flights stay."
+msgstr "Ses réglages sont perdus. Les fichiers de données, aéronefs et vols restent."
+
+#. profiles_intro
+msgid "A profile holds Buteo's settings: units, map, airspace, safety heights, data files, tiles, the plane. Pilots sharing a phone, or a club, each keep their own. Buteo restarts to switch."
+msgstr "Un profil contient les réglages de Buteo : unités, carte, espaces aériens, hauteurs de sécurité, fichiers de données, tuiles, l'aéronef. Des pilotes qui partagent un téléphone, ou un club, gardent chacun le leur. Buteo redémarre pour changer."
+
+#. profiles_ground
+msgid "In flight: profiles switch on the ground only."
+msgstr "En vol : les profils ne changent qu'au sol."
+
+#. profiles_new
+msgid "New profile"
+msgstr "Nouveau profil"
+
+#. profiles_import
+msgid "Import a .prf file…"
+msgstr "Importer un fichier .prf…"
+
+#. profiles_in_use
+msgid "In use"
+msgstr "Utilisé"
+
+#. profiles_protected
+msgid "Password protected"
+msgstr "Protégé par mot de passe"
+
+#. profiles_wrong_password
+msgid "Wrong password"
+msgstr "Mot de passe erroné"
+
+#. profiles_copy
+msgid "Start from the settings of %1$s"
+msgstr "Partir des réglages de %1$s"
+
+#. profiles_create
+msgid "Create"
+msgstr "Créer"
+
+#. weather_cannot_add
+msgid "Could not add %1$s"
+msgstr "Ajout de %1$s impossible"
+
+#. weather_none_received
+msgid "No weather received: check the internet connection and the codes"
+msgstr "Aucune météo reçue : vérifiez la connexion internet et les codes"
+
+#. weather_updating
+msgid "Updating…"
+msgstr "Mise à jour…"
+
+#. weather_update
+msgid "Update METAR and TAF"
+msgstr "Mettre à jour METAR et TAF"
+
+#. weather_icao
+msgid "ICAO code, e.g. LFMT"
+msgstr "Code OACI, p. ex. LFMT"
+
+#. weather_add_hint
+msgid "Add the airports whose METAR and TAF you want. Buteo downloads them from NOAA (internet needed); the map shows the stations."
+msgstr "Ajoutez les aérodromes dont vous voulez le METAR et le TAF. Buteo les télécharge depuis NOAA (internet requis) ; la carte montre les stations."
+
+#. weather_calm
+msgid "Calm"
+msgstr "Calme"
+
+#. weather_rasp
+msgid "Forecast on the map (RASP)"
+msgstr "Prévision sur la carte (RASP)"
+
+#. weather_rasp_hint
+msgid "Thermals, wind and clouds forecast over the map, from thermalmap.info for many countries. New every day."
+msgstr "Prévision des thermiques, du vent et des nuages sur la carte, depuis thermalmap.info pour de nombreux pays. Nouvelle chaque jour."
+
+#. weather_rasp_download
+msgid "Download a forecast"
+msgstr "Télécharger une prévision"
+
+#. weather_rasp_old
+msgid "From %1$s: today's comes on Wi-Fi"
+msgstr "Du %1$s : celle du jour arrive en Wi-Fi"
+
+#. weather_rasp_today
+msgid "Today's forecast"
+msgstr "Prévision du jour"
+
+#. weather_rasp_todays
+msgid "Today's"
+msgstr "Du jour"
+
+#. weather_rasp_empty
+msgid "The file has no forecast: download today's."
+msgstr "Le fichier n'a pas de prévision : téléchargez celle du jour."
+
+#. weather_time_name
+msgid "forecast time"
+msgstr "heure de prévision"
+
+#. weather_time
+msgid "Forecast time · local"
+msgstr "Heure de prévision · locale"
+
+#. ana_thermal_band
+msgid "Thermal band"
+msgstr "Bande thermique"
+
+#. ana_barograph_title
+msgid "Barograph: altitude over the flight"
+msgstr "Barographe : l'altitude au cours du vol"
+
+#. ana_barograph_hint
+msgid "Dashed: climb tops in blue, climb bases in grey."
+msgstr "Tirets : plafonds des ascendances en bleu, bases en gris."
+
+#. ana_barograph_hint_terrain
+msgid "Dashed: climb tops in blue, climb bases in grey. Shaded: terrain."
+msgstr "Tirets : plafonds des ascendances en bleu, bases en gris. Grisé : le relief."
+
+#. ana_climb_title
+msgid "Climb history: the average of each climb"
+msgstr "Historique : la moyenne de chaque ascendance"
+
+#. ana_climb_hint
+msgid "Each bar is one climb, as wide as it lasted. Dashed: MacCready %1$s and the climb trend."
+msgstr "Chaque barre est une ascendance, aussi large qu'elle a duré. Tirets : MacCready %1$s et la tendance des ascendances."
+
+#. ana_speed_title
+msgid "Task speed over the flight"
+msgstr "Vitesse du circuit au cours du vol"
+
+#. ana_speed_needs_task
+msgid "Needs a task: the chart starts once the task has started."
+msgstr "Il faut un circuit : le graphique commence une fois le circuit démarré."
+
+#. ana_speed_hint
+msgid "Dashed: the trend in blue, and the speed the polar gives at the current MacCready (Vest) in grey."
+msgstr "Tirets : la tendance en bleu, et en gris la vitesse que donne la polaire au MacCready actuel (Vest)."
+
+#. ana_avg_task_speed
+msgid "Average task speed"
+msgstr "Vitesse moyenne du circuit"
+
+#. ana_estimated
+msgid "Estimated (Vest)"
+msgstr "Estimée (Vest)"
+
+#. ana_no_contest
+msgid "No contest result yet."
+msgstr "Pas encore de résultat de concours."
+
+#. ana_contest_description
+msgid "Contest: the flight and the scored path"
+msgstr "Concours : le vol et le parcours compté"
+
+#. ana_band_title
+msgid "Thermal band: climb rate by height"
+msgstr "Bande thermique : taux de montée selon la hauteur"
+
+#. ana_band_hint
+msgid "Grey: the climbs so far by height; blue: this climb. The dot is your height at your MacCready; dashed red, the MacCready the risk factor allows; grey lines, the working band."
+msgstr "Gris : les ascendances jusqu'ici selon la hauteur ; bleu : cette ascendance. Le point est votre hauteur à votre MacCready ; tirets rouges, le MacCready que permet le facteur de risque ; traits gris, la bande de travail."
+
+#. ana_band_none
+msgid "No climb recorded yet."
+msgstr "Aucune ascendance enregistrée pour l'instant."
+
+#. ana_histogram_title
+msgid "Vario histogram: how often each climb rate was flown"
+msgstr "Histogramme du vario : la fréquence de chaque taux de montée"
+
+#. ana_histogram_hint_sink
+msgid "Blue: circling; grey: cruise. Dashed: your MacCready, and the sink at the best glide speed."
+msgstr "Bleu : spirale ; gris : transition. Tirets : votre MacCready, et la chute à la vitesse de meilleure finesse."
+
+#. ana_histogram_hint
+msgid "Blue: circling; grey: cruise. Dashed: your MacCready."
+msgstr "Bleu : spirale ; gris : transition. Tirets : votre MacCready."
+
+#. ana_wind_title
+msgid "Wind by height"
+msgstr "Vent selon la hauteur"
+
+#. ana_wind_hint
+msgid "The line: wind speed by height. Arrows: where it blows, north up."
+msgstr "La courbe : la vitesse du vent selon la hauteur. Flèches : d'où il souffle, nord en haut."
+
+#. ana_wind_needs_climbs
+msgid "Needs climbs: Buteo measures the wind while circling."
+msgstr "Il faut des ascendances : Buteo mesure le vent en spirale."
+
+#. ana_polar_title
+msgid "Polar: sink rate by airspeed"
+msgstr "Polaire : vitesse de chute selon la vitesse"
+
+#. ana_best_glide
+msgid "Best glide"
+msgstr "Meilleure finesse"
+
+#. ana_no_polar
+msgid "No polar: choose the plane in %1$s."
+msgstr "Pas de polaire : choisissez l'aéronef dans %1$s."
+
+#. ana_polar_hint
+msgid "Dashed red: the speed to fly in sink and lift at MacCready %1$s; blue: the climb rates flown."
+msgstr "Tirets rouges : la vitesse à voler dans la descendance et l'ascendance au MacCready %1$s ; bleu : les taux de montée volés."
+
+#. ana_best_ld
+msgid "Best L/D"
+msgstr "Meilleure finesse"
+
+#. ana_at
+msgid "at %1$s"
+msgstr "à %1$s"
+
+#. ana_mc_title
+msgid "Speeds by MacCready"
+msgstr "Vitesses selon le MacCready"
+
+#. ana_mc_hint
+msgid "Vopt: the speed to fly between climbs; Vave: the average cross-country speed. Dashed red: your MacCready."
+msgstr "Vopt : la vitesse à voler entre les ascendances ; Vave : la vitesse moyenne en campagne. Tirets rouges : votre MacCready."
+
+#. ana_temp_title
+msgid "Temperature trace by height"
+msgstr "Courbe de température selon la hauteur"
+
+#. ana_temp_needs
+msgid "Needs an outside air temperature from a device (a vario or a probe); the phone has none."
+msgstr "Il faut une température extérieure fournie par un appareil (un vario ou une sonde) ; le téléphone n'en a pas."
+
+#. ana_temp_hint
+msgid "Black: air temperature; dashed red: the dry adiabat; dashed blue: dew point."
+msgstr "Noir : température de l'air ; tirets rouges : l'adiabatique sèche ; tirets bleus : point de rosée."
+
+#. ana_task_description
+msgid "Task: its points and the flight"
+msgstr "Circuit : ses points et le vol"
+
+#. ana_make_task
+msgid "Load or make a task in %1$s."
+msgstr "Chargez ou créez un circuit dans %1$s."
+
+#. ana_xs_not_moving
+msgid "Not moving: the cross-section follows the track."
+msgstr "À l'arrêt : la coupe suit la route."
+
+#. ana_xs_title
+msgid "Airspace and terrain ahead along the track"
+msgstr "Espace aérien et relief devant, le long de la route"
+
+#. ana_xs_none
+msgid "No airspace on the next %1$s along the track."
+msgstr "Aucun espace aérien sur les %1$s à venir le long de la route."
+
+#. ana_ground
+msgid "GND"
+msgstr "SOL"
+
+#. ana_xs_hint
+msgid "Blue: the glide at MacCready; brown: the terrain."
+msgstr "Bleu : le plané au MacCready ; marron : le relief."
+
+#. event_core_failed
+msgid "Core failed to start: %1$s"
+msgstr "Le cœur n'a pas démarré : %1$s"
+
+#. event_replay_failed
+msgid "Replay failed: %1$s"
+msgstr "Échec du rejeu : %1$s"
+
+#. event_replay_not_stopped
+msgid "Replay not stopped: %1$s"
+msgstr "Rejeu non arrêté : %1$s"
+
+#. event_map_failed
+msgid "Map failed: %1$s"
+msgstr "Échec de la carte : %1$s"
+
+#. event_map_items
+msgid "Map items: %1$s"
+msgstr "Éléments de la carte : %1$s"
+
+#. event_goto_landable
+msgid "Go to: only landable waypoints (profile setting)"
+msgstr "Aller vers : seulement des terrains vachables (réglage du profil)"
+
+#. event_mc_not_set
+msgid "MacCready not set: %1$s"
+msgstr "MacCready non réglé : %1$s"
+
+#. event_takeoff
+msgid "Take-off"
+msgstr "Décollage"
+
+#. event_task_started
+msgid "Task started"
+msgstr "Circuit démarré"
+
+#. event_next_turnpoint
+msgid "Next turnpoint"
+msgstr "Point de virage suivant"
+
+#. event_no_landable
+msgid "No landable in reach"
+msgstr "Aucun terrain vachable à portée"
+
+#. profiles_exists
+msgid "A profile named %1$s exists already"
+msgstr "Un profil nommé %1$s existe déjà"
+
+#. download_unknown_kind
+msgid "%1$s: unknown kind of file"
+msgstr "%1$s : type de fichier inconnu"
+
+#. download_gone
+msgid "%1$s is no longer in XCSoar's repository"
+msgstr "%1$s n'est plus dans le dépôt de XCSoar"

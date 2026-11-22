@@ -11,10 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.ui.LinkRow
 import org.xcsoar.mobile.ui.PageLayout
 import org.xcsoar.mobile.ui.ScreenHeader
@@ -47,11 +49,12 @@ fun FlightsContent(
     uploads: Map<String, Upload> = emptyMap(),
 ) {
     val colors = XcsTheme.colors
+    val onWeGlide = stringResource(R.string.flights_on_weglide)
     PageLayout {
-        ScreenHeader("Flights", onBack)
+        ScreenHeader(stringResource(R.string.menu_flights), onBack)
 
         if (flights != null && flights.isEmpty())
-            Text("No flights yet. Buteo records an IGC file from takeoff to landing.",
+            Text(stringResource(R.string.flights_none),
                  color = colors.textSecondary, fontSize = 16.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
 
@@ -65,7 +68,7 @@ fun FlightsContent(
                                           color = colors.panelBorder)
                     LinkRow(format.format(Date(flight.modified)),
                             listOfNotNull(flight.name, kilobytes(flight.size),
-                                          "on WeGlide".takeIf {
+                                          onWeGlide.takeIf {
                                               uploads[flight.path] is Upload.Done
                                           }).joinToString(" · ")) {
                         onOpen(flight)

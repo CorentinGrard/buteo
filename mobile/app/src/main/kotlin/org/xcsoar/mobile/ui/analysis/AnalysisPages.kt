@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -27,6 +28,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.AirspaceCrossSection
 import org.xcsoar.mobile.core.Analysis
 import org.xcsoar.mobile.core.ChartPoint
@@ -59,7 +61,7 @@ internal fun ThermalBandPage(a: Analysis) {
     val xMax = max(max(0.5, b.macCready), all.maxOfOrNull { it.x } ?: 0.0) * 1.1
     val xMin = min(0.0, all.minOfOrNull { it.x } ?: 0.0)
 
-    XYChart("Thermal band: climb rate by height", hasData = range != null,
+    XYChart(stringResource(R.string.ana_band_title), hasData = range != null,
             xMin = xMin, xMax = xMax, yMin = range?.get(0) ?: 0.0, yMax = range?.get(1) ?: 0.0,
             xUnit = Format.unit(UnitGroup.VERTICAL_SPEED),
             yUnit = Format.unit(UnitGroup.ALTITUDE),
@@ -78,12 +80,10 @@ internal fun ThermalBandPage(a: Analysis) {
         }
     }
     if (range != null)
-        Hint("Grey: the climbs so far by height; blue: this climb.  The dot is your " +
-             "height at your MacCready; dashed red, the MacCready the risk factor allows; " +
-             "grey lines, the working band.")
+        Hint(stringResource(R.string.ana_band_hint))
     else
-        Hint("No climb recorded yet.")
-    a.climb.average?.let { ValueRow("Average climb", Format.macCready(it)) }
+        Hint(stringResource(R.string.ana_band_none))
+    a.climb.average?.let { ValueRow(stringResource(R.string.summary_average_climb), Format.macCready(it)) }
 }
 
 /** VarioHistogramRenderer: how often each climb rate was flown. */
@@ -98,7 +98,7 @@ internal fun VarioHistogramPage(a: Analysis) {
     // the climb rate goes up the chart: x is how often
     fun List<XY>.sideways() = map { ChartPoint(it.y, it.x) }.sortedBy { it.y }
 
-    XYChart("Vario histogram: how often each climb rate was flown",
+    XYChart(stringResource(R.string.ana_histogram_title),
             hasData = all.isNotEmpty(), xMin = 0.0, xMax = xMax, yMin = yMin, yMax = yMax,
             xUnit = null, yUnit = Format.unit(UnitGroup.VERTICAL_SPEED),
             xName = "", yName = axisName("w", UnitGroup.VERTICAL_SPEED),
@@ -110,11 +110,8 @@ internal fun VarioHistogramPage(a: Analysis) {
         h.cruiseSink?.let { level(m, it, colors.updraft) }
     }
     if (all.isNotEmpty())
-        Hint(if (h.cruiseSink != null)
-                 "Blue: circling; grey: cruise.  Dashed: your MacCready, and the sink at " +
-                 "the best glide speed."
-             else
-                 "Blue: circling; grey: cruise.  Dashed: your MacCready.")
+        Hint(stringResource(if (h.cruiseSink != null) R.string.ana_histogram_hint_sink
+                            else R.string.ana_histogram_hint))
 }
 
 /** RenderWindChart(): the wind from the lowest climb base to the highest top. */
@@ -126,7 +123,7 @@ internal fun WindPage(a: Analysis) {
     val labelStyle = TextStyle(color = colors.text, fontSize = 12.sp)
     val xMax = max(levels.maxOfOrNull { it.speed } ?: 0.0, 10.0) * 1.1
 
-    XYChart("Wind by height", hasData = levels.size >= 2, xMin = 0.0, xMax = xMax,
+    XYChart(stringResource(R.string.ana_wind_title), hasData = levels.size >= 2, xMin = 0.0, xMax = xMax,
             yMin = levels.minOfOrNull { it.height } ?: 0.0,
             yMax = levels.maxOfOrNull { it.height } ?: 0.0,
             xUnit = Format.unit(UnitGroup.WIND_SPEED), yUnit = Format.unit(UnitGroup.ALTITUDE),
@@ -151,9 +148,9 @@ internal fun WindPage(a: Analysis) {
         }
     }
     if (levels.size >= 2)
-        Hint("The line: wind speed by height.  Arrows: where it blows, north up.")
+        Hint(stringResource(R.string.ana_wind_hint))
     else
-        Hint("Needs climbs: Buteo measures the wind while circling.")
+        Hint(stringResource(R.string.ana_wind_needs_climbs))
 }
 
 /** RenderGlidePolar() and its caption. */
@@ -164,6 +161,8 @@ internal fun PolarPage(a: Analysis) {
     val all = p.polar + p.dolphin + p.climbs
     val yMin = min(all.minOfOrNull { it.y } ?: 0.0, -0.5)
     val yMax = max(all.maxOfOrNull { it.y } ?: 0.0, p.macCready) + 0.2
+    val polarLabel = stringResource(R.string.plane_polar)
+    val bestGlideLabel = stringResource(R.string.ana_best_glide)
     // labels where upstream puts them: a fraction of the speed range along
     val label = { points: List<XY>, f: Double ->
         val x = p.vMin + f * (p.vMax - p.vMin)
@@ -172,14 +171,14 @@ internal fun PolarPage(a: Analysis) {
         }
     }
 
-    XYChart("Polar: sink rate by airspeed", hasData = p.isValid,
+    XYChart(stringResource(R.string.ana_polar_title), hasData = p.isValid,
             xMin = p.vMin, xMax = p.vMax, yMin = yMin, yMax = yMax,
             xUnit = Format.unit(UnitGroup.HORIZONTAL_SPEED),
             yUnit = Format.unit(UnitGroup.VERTICAL_SPEED),
             xName = axisName("V", UnitGroup.HORIZONTAL_SPEED),
             yName = axisName("w", UnitGroup.VERTICAL_SPEED),
-            labels = listOfNotNull(label(p.polar, 0.9)?.let { "Polar" to it },
-                                   label(p.bestGlide, 0.8)?.let { "Best glide" to it },
+            labels = listOfNotNull(label(p.polar, 0.9)?.let { polarLabel to it },
+                                   label(p.bestGlide, 0.8)?.let { bestGlideLabel to it },
                                    p.dolphin.getOrNull(p.dolphin.size * 4 / 5)?.let {
                                        "Dolphin" to ChartPoint(it.x, it.y)
                                    })) { m ->
@@ -190,24 +189,24 @@ internal fun PolarPage(a: Analysis) {
         line(m, p.polar.points(), colors.text)
     }
     if (!p.isValid) {
-        Hint("No polar: choose the plane in Aircraft & crew.")
+        Hint(stringResource(R.string.ana_no_polar,
+                    stringResource(R.string.menu_crew)))
         return
     }
-    Hint("Dashed red: the speed to fly in sink and lift at MacCready " +
-         "${Format.macCready(p.macCready).text}; blue: the climb rates flown.")
+    Hint(stringResource(R.string.ana_polar_hint, Format.macCready(p.macCready).text))
     val speed = { v: Double -> Format.speed(v).let { "${it.text} ${it.unit}" } }
-    ValueRow("Best L/D", Format.Value(Format.glideRatio(p.bestLd).text,
-                                      "at ${speed(p.vBestLd)}"))
-    ValueRow("Min. sink", Format.macCready(p.minSink).let {
-        Format.Value(it.text, "${it.unit} at ${speed(p.vMinSink)}")
-    })
+    ValueRow(stringResource(R.string.ana_best_ld), Format.Value(
+        Format.glideRatio(p.bestLd).text, stringResource(R.string.ana_at, speed(p.vBestLd))))
+    val minSink = Format.macCready(p.minSink)
+    ValueRow(stringResource(R.string.ana_min_sink), Format.Value(
+        minSink.text, "${minSink.unit} ${stringResource(R.string.ana_at, speed(p.vMinSink))}"))
     MassRows(p.mass, p.wingLoading)
 }
 
 @Composable
 private fun MassRows(mass: Double, wingLoading: Double?) {
-    ValueRow("Mass", Format.mass(mass))
-    wingLoading?.let { ValueRow("Wing loading", Format.wingLoading(it)) }
+    ValueRow(stringResource(R.string.units_mass), Format.mass(mass))
+    wingLoading?.let { ValueRow(stringResource(R.string.units_wing_loading), Format.wingLoading(it)) }
 }
 
 /** RenderMacCready() and its caption. */
@@ -218,7 +217,7 @@ internal fun MacCreadyPage(a: Analysis) {
     val speeds = mc.speeds
     val near = speeds.getOrNull((speeds.size * 0.9).toInt())
 
-    XYChart("Speeds by MacCready", hasData = mc.isValid,
+    XYChart(stringResource(R.string.ana_mc_title), hasData = mc.isValid,
             xMin = 0.0, xMax = speeds.lastOrNull()?.macCready ?: 0.0,
             yMin = 0.0, yMax = mc.vMax,
             xUnit = Format.unit(UnitGroup.VERTICAL_SPEED),
@@ -235,11 +234,11 @@ internal fun MacCreadyPage(a: Analysis) {
         vertical(m, mc.macCready, colors.warning)
     }
     if (!mc.isValid) {
-        Hint("No polar: choose the plane in Aircraft & crew.")
+        Hint(stringResource(R.string.ana_no_polar,
+                    stringResource(R.string.menu_crew)))
         return
     }
-    Hint("Vopt: the speed to fly between climbs; Vave: the average cross-country " +
-         "speed.  Dashed red: your MacCready.")
+    Hint(stringResource(R.string.ana_mc_hint))
     ValueRow("Vopt", Format.speed(mc.vOpt))
     ValueRow("Vave", Format.taskSpeed(mc.vAverage))
     MassRows(mc.mass, mc.wingLoading)
@@ -253,7 +252,7 @@ internal fun TemperaturePage(a: Analysis) {
     val levels = t.levels
     val all = levels.flatMap { listOfNotNull(it.dry, it.air, it.dewPoint) }
 
-    XYChart("Temperature trace by height", hasData = levels.size >= 2,
+    XYChart(stringResource(R.string.ana_temp_title), hasData = levels.size >= 2,
             xMin = (all.minOrNull() ?: 0.0) - 1, xMax = (all.maxOrNull() ?: 0.0) + 1,
             yMin = 0.0, yMax = levels.maxOfOrNull { it.height } ?: 0.0,
             xUnit = Format.unit(UnitGroup.TEMPERATURE), yUnit = Format.unit(UnitGroup.ALTITUDE),
@@ -265,13 +264,12 @@ internal fun TemperaturePage(a: Analysis) {
              colors.updraft, dashed = true)
     }
     if (levels.size < 2) {
-        Hint("Needs an outside air temperature from a device (a vario or a probe); " +
-             "the phone has none.")
+        Hint(stringResource(R.string.ana_temp_needs))
         return
     }
-    Hint("Black: air temperature; dashed red: the dry adiabat; dashed blue: dew point.")
-    t.thermalHeight?.let { ValueRow("Thermal height", Format.altitude(it)) }
-    t.cloudBase?.let { ValueRow("Cloud base", Format.altitude(it)) }
+    Hint(stringResource(R.string.ana_temp_hint))
+    t.thermalHeight?.let { ValueRow(stringResource(R.string.ana_thermal_height), Format.altitude(it)) }
+    t.cloudBase?.let { ValueRow(stringResource(R.string.ana_cloud_base), Format.altitude(it)) }
 }
 
 /** FlightStatisticsRenderer::RenderTask() with the zones, and CaptionTask(). */
@@ -283,15 +281,16 @@ internal fun TaskPage(a: Analysis) {
     val trace = a.contest.trace
     val measurer = rememberTextMeasurer()
     val nameStyle = TextStyle(color = colors.text, fontSize = 12.sp)
+    val description = stringResource(R.string.ana_task_description)
 
     Box(Modifier
             .fillMaxWidth()
             .aspectRatio(1.2f)
             .background(colors.panel, RoundedCornerShape(12.dp))
-            .semantics { contentDescription = "Task: its points and the flight" },
+            .semantics { contentDescription = description },
         contentAlignment = Alignment.Center) {
         if (points.size < 2) {
-            Text("No task", color = colors.textSecondary, fontSize = 15.sp)
+            Text(stringResource(R.string.ana_no_task), color = colors.textSecondary, fontSize = 15.sp)
             return@Box
         }
         Canvas(Modifier.matchParentSize().padding(24.dp)) {
@@ -314,13 +313,13 @@ internal fun TaskPage(a: Analysis) {
         }
     }
     if (points.size < 2) {
-        Hint("Load or make a task in Task.")
+        Hint(stringResource(R.string.ana_make_task, stringResource(R.string.menu_task)))
         return
     }
-    task.taskToGo?.let { ValueRow("Task to go", Format.duration(it)) }
-    task.aatToGo?.let { ValueRow("AAT to go", Format.duration(it)) }
-    task.distanceToGo?.let { ValueRow("Distance to go", Format.distance(it)) }
-    task.targetSpeed?.let { ValueRow("Target speed", Format.taskSpeed(it)) }
+    task.taskToGo?.let { ValueRow(stringResource(R.string.ana_task_to_go), Format.duration(it)) }
+    task.aatToGo?.let { ValueRow(stringResource(R.string.ana_aat_to_go), Format.duration(it)) }
+    task.distanceToGo?.let { ValueRow(stringResource(R.string.ana_distance_to_go), Format.distance(it)) }
+    task.targetSpeed?.let { ValueRow(stringResource(R.string.ana_target_speed), Format.taskSpeed(it)) }
 }
 
 /**
@@ -363,14 +362,14 @@ private fun hexColor(text: String, fallback: Color): Color =
 internal fun AirspacePage(xs: AirspaceCrossSection?) {
     val colors = XcsTheme.colors
     if (xs == null || xs.heights.size != 2) {
-        Hint("Not moving: the cross-section follows the track.")
+        Hint(stringResource(R.string.ana_xs_not_moving))
         return
     }
     val ground = Color(0xFFA1887F)
     val terrain = xs.terrain.withIndex()
         .mapNotNull { (i, h) -> h?.let { ChartPoint(xs.range * i / (xs.terrain.size - 1), it) } }
 
-    XYChart("Airspace and terrain ahead along the track", hasData = true,
+    XYChart(stringResource(R.string.ana_xs_title), hasData = true,
             xMin = 0.0, xMax = xs.range, yMin = xs.heights[0], yMax = xs.heights[1],
             xUnit = Format.unit(UnitGroup.DISTANCE), yUnit = Format.unit(UnitGroup.ALTITUDE),
             xName = axisName("D", UnitGroup.DISTANCE), yName = axisName("h", UnitGroup.ALTITUDE),
@@ -399,14 +398,14 @@ internal fun AirspacePage(xs: AirspaceCrossSection?) {
         }
     }
     if (xs.airspaces.isEmpty())
-        Hint("No airspace on the next ${Format.distance(xs.range).let { "${it.text} ${it.unit}" }} " +
-             "along the track.")
+        Hint(stringResource(R.string.ana_xs_none,
+                            Format.distance(xs.range).let { "${it.text} ${it.unit}" }))
     else for (a in xs.airspaces) {
-        val base = if (a.base <= 0) "GND" else Format.altitude(a.base).let { "${it.text} ${it.unit}" }
+        val base = if (a.base <= 0) stringResource(R.string.ana_ground) else Format.altitude(a.base).let { "${it.text} ${it.unit}" }
         val top = Format.altitude(a.top).let { "${it.text} ${it.unit}" }
         val from = Format.distance(a.spans.firstOrNull()?.firstOrNull() ?: 0.0)
         ValueRow(a.name, Format.Value("${a.airspaceClass} · $base–$top · ${from.text}",
                                       from.unit))
     }
-    Hint("Blue: the glide at MacCready; brown: the terrain.")
+    Hint(stringResource(R.string.ana_xs_hint))
 }

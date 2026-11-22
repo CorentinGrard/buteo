@@ -118,7 +118,7 @@ class TouchTargetsTest {
 
     @Test
     fun flightScreen() = check {
-        FlightContent(FakeXcsoarCore.syntheticState(120).copy(replay = true), "Cruise",
+        FlightContent(FakeXcsoarCore.syntheticState(120).copy(replay = true), "Cruise".asText(),
                       circling = false, {}, tiles = tiles,
                       warnings = listOf(AirspaceWarningInfo(
                           "1", "near", "LF-R 46 N", "Restricted", "FL95", "SFC",

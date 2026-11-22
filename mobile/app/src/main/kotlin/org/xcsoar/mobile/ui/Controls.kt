@@ -56,6 +56,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
 /**
@@ -101,13 +102,18 @@ fun ActionButton(
     }
 }
 
+/** "Menu → Map & units → Units", in the phone's language. */
+@Composable
+fun menuPath(@StringRes vararg ids: Int): String =
+    ids.map { stringResource(it) }.joinToString(" → ")
+
 /** "Back" and the screen's title. */
 @Composable
 fun ScreenHeader(title: String, onBack: (() -> Unit)?) {
     Row(verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (onBack != null)
-            ActionButton("Back", onClick = onBack)
+            ActionButton(stringResource(R.string.back), onClick = onBack)
         else
             Box(Modifier.padding(start = 4.dp))
         Text(title, color = XcsTheme.colors.text, fontSize = 24.sp,
@@ -153,6 +159,7 @@ fun InputField(
 @Composable
 fun ValueList(rows: List<Pair<String, String>>, modifier: Modifier = Modifier) {
     val colors = XcsTheme.colors
+    val unknown = stringResource(R.string.unknown)
     Column(modifier
                .fillMaxWidth()
                .background(colors.panel, RoundedCornerShape(14.dp))
@@ -166,7 +173,7 @@ fun ValueList(rows: List<Pair<String, String>>, modifier: Modifier = Modifier) {
                     .heightIn(min = 48.dp)
                     .padding(horizontal = 14.dp, vertical = 8.dp)
                     .clearAndSetSemantics {
-                        contentDescription = "$label: ${value.ifEmpty { "unknown" }}"
+                        contentDescription = "$label: ${value.ifEmpty { unknown }}"
                     },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {

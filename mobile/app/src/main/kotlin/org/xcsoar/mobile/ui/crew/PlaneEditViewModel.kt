@@ -10,11 +10,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.PlaneDetails
 import org.xcsoar.mobile.core.PlaneEdit
 import org.xcsoar.mobile.core.PlaneInfo
 import org.xcsoar.mobile.core.PolarPoint
 import org.xcsoar.mobile.core.XcsoarCore
+import org.xcsoar.mobile.ui.UiText
+import org.xcsoar.mobile.ui.asText
+import org.xcsoar.mobile.ui.text
 
 /** A plane being created or changed. */
 data class PlaneEditState(
@@ -48,7 +52,7 @@ data class PlaneEditState(
     /** WeGlide's list has been downloaded (its types are models). */
     val weGlideListLoaded: Boolean = false,
     val busy: Boolean = false,
-    val error: String? = null,
+    val error: UiText? = null,
 ) {
     val isNew get() = path.isEmpty()
     /** A plane needs a polar: the model's, or one the pilot chose. */
@@ -155,7 +159,7 @@ class PlaneEditViewModel(private val core: XcsoarCore) : ViewModel() {
             }
             stateFlow.update { s ->
                 if (imported == null || imported.polar.isEmpty())
-                    return@update s.copy(error = "$fileName: no polar in it")
+                    return@update s.copy(error = text(R.string.plane_no_polar_in, fileName))
                 val old = s.details
                 val name = fileName.substringBeforeLast('.').ifBlank { "Imported" }
                 s.copy(points = imported.polar, customPolar = true, polar = -1,
@@ -190,7 +194,7 @@ class PlaneEditViewModel(private val core: XcsoarCore) : ViewModel() {
                             modelResults = models.search(query), busy = false)
                 }
             } catch (e: Exception) {
-                stateFlow.update { it.copy(busy = false, error = e.message) }
+                stateFlow.update { it.copy(busy = false, error = e.message?.asText()) }
             }
         }
     }
@@ -217,7 +221,7 @@ class PlaneEditViewModel(private val core: XcsoarCore) : ViewModel() {
             } catch (e: Exception) {
                 // the pilot can still say how many seats it has
                 stateFlow.update {
-                    it.copy(busy = false, error = "Seats unknown: ${e.message}")
+                    it.copy(busy = false, error = text(R.string.plane_seats_unknown, e.message.orEmpty()))
                 }
             }
         }
@@ -242,10 +246,8 @@ class PlaneEditViewModel(private val core: XcsoarCore) : ViewModel() {
             } catch (e: Exception) {
                 stateFlow.update {
                     it.copy(busy = false,
-                            error = if (s.customPolar)
-                                "Not saved: the three points make no polar (the sink " +
-                                    "grows with speed, slowest point first)"
-                            else "Could not save the aircraft")
+                            error = text(if (s.customPolar) R.string.plane_not_saved_polar
+                                         else R.string.plane_not_saved))
                 }
             }
         }
@@ -260,7 +262,7 @@ class PlaneEditViewModel(private val core: XcsoarCore) : ViewModel() {
                 onDeleted()
             } catch (_: Exception) {
                 stateFlow.update {
-                    it.copy(error = "Choose another aircraft before deleting this one")
+                    it.copy(error = text(R.string.plane_delete_last))
                 }
             }
         }

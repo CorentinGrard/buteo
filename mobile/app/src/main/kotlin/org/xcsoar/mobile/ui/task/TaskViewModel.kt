@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.TaskFileInfo
 import org.xcsoar.mobile.core.TaskInfo
 import org.xcsoar.mobile.core.TaskOp
@@ -21,6 +22,9 @@ import org.xcsoar.mobile.core.WaypointInfo
 import org.xcsoar.mobile.core.WeGlideTask
 import org.xcsoar.mobile.core.WeGlideTaskList
 import org.xcsoar.mobile.core.XcsoarCore
+import org.xcsoar.mobile.ui.UiText
+import org.xcsoar.mobile.ui.asText
+import org.xcsoar.mobile.ui.text
 
 data class TaskState(
     /** The active task, or the edited copy while [TaskInfo.editing]. */
@@ -32,9 +36,9 @@ data class TaskState(
     /** The WeGlide list shown, its tasks once downloaded, or why not. */
     val weGlideList: WeGlideTaskList = WeGlideTaskList.MINE,
     val weGlideTasks: List<WeGlideTask>? = null,
-    val weGlideError: String? = null,
+    val weGlideError: UiText? = null,
     /** Something the pilot asked for did not work. */
-    val message: String? = null,
+    val message: UiText? = null,
 )
 
 /**
@@ -78,7 +82,7 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
      * Run one change, then show the result: [op]'s message (null for
      * none), or [refused] if it failed.
      */
-    private fun run(refused: String, op: suspend () -> String?) {
+    private fun run(refused: UiText?, op: suspend () -> UiText?) {
         viewModelScope.launch {
             val message = try {
                 op()
@@ -91,26 +95,26 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     }
 
     private fun edit(op: TaskOp, index: Int = 0, value: Double = 0.0,
-                     refused: String = "Not possible for this task type") =
+                     refused: UiText = text(R.string.task_not_possible)) =
         run(refused) { core.editTask(op, index, value); null }
 
     fun dismissMessage() = stateFlow.update { it.copy(message = null) }
 
     /* the active task */
 
-    fun beginEdit() = run("Cannot edit the task") {
+    fun beginEdit() = run(text(R.string.task_cannot_edit)) {
         core.editTask(TaskOp.BEGIN)
         stateFlow.update { it.copy(task = core.task(true), selected = null) }
         null
     }
 
-    fun next() = edit(TaskOp.ADVANCE, value = 1.0, refused = "No next point")
-    fun previous() = edit(TaskOp.ADVANCE, value = -1.0, refused = "No previous point")
+    fun next() = edit(TaskOp.ADVANCE, value = 1.0, refused = text(R.string.task_no_next))
+    fun previous() = edit(TaskOp.ADVANCE, value = -1.0, refused = text(R.string.task_no_previous))
     fun restart() = edit(TaskOp.RESTART)
 
     /* editing */
 
-    fun cancel() = run("") {
+    fun cancel() = run(null) {
         core.editTask(TaskOp.CANCEL)
         stateFlow.update { it.copy(task = core.task(false), selected = null) }
         null
@@ -126,7 +130,8 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
             } catch (_: Exception) {
                 val errors = core.task(true)?.errors?.trim().orEmpty()
                 stateFlow.update {
-                    it.copy(message = errors.ifEmpty { "The task is not valid" })
+                    it.copy(message = errors.takeIf { e -> e.isNotEmpty() }?.asText()
+                        ?: text(R.string.task_invalid))
                 }
                 refresh()
             }
@@ -134,7 +139,7 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     }
 
     fun add(waypoint: WaypointInfo) =
-        edit(TaskOp.APPEND, value = waypoint.id.toDouble(), refused = "The task is full")
+        edit(TaskOp.APPEND, value = waypoint.id.toDouble(), refused = text(R.string.task_full))
 
     fun select(index: Int?) = stateFlow.update {
         it.copy(selected = if (it.selected == index) null else index)
@@ -209,7 +214,8 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
                 stateFlow.update {
                     if (it.weGlideList != list) it
                     else it.copy(weGlideTasks = emptyList(),
-                                 weGlideError = e.message ?: "WeGlide did not answer")
+                                 weGlideError = e.message?.asText()
+                                     ?: text(R.string.task_weglide_silent))
                 }
             }
         }
@@ -225,14 +231,16 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                "${task.name.ifEmpty { "WeGlide task" }}: ${e.message ?: "not loaded"}"
+                val name = task.name.ifEmpty { "WeGlide" }
+                e.message?.let { "$name: $it".asText() }
+                    ?: text(R.string.task_weglide_not_loaded, name)
             }
             stateFlow.update { it.copy(message = message) }
             refresh()
         }
     }
 
-    fun load(file: TaskFileInfo) = run("${file.name}: cannot load the task") {
+    fun load(file: TaskFileInfo) = run(text(R.string.task_cannot_load, file.name)) {
         core.loadTask(file)
         stateFlow.update { it.copy(task = core.task(true), selected = null) }
         null
@@ -242,12 +250,12 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     fun save(name: String) {
         val clean = name.trim()
         if (clean.isEmpty() || clean.any { it == '/' || it == '\\' }) {
-            stateFlow.update { it.copy(message = "Not a file name: $name") }
+            stateFlow.update { it.copy(message = text(R.string.task_not_file_name, name)) }
             return
         }
-        run("Cannot save $clean") {
+        run(text(R.string.task_cannot_save, clean)) {
             core.saveTask(clean)
-            "Saved as $clean"
+            text(R.string.task_saved, clean)
         }
     }
 

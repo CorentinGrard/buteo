@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,6 +40,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.TileLayout
 import org.xcsoar.mobile.core.TileType
 import org.xcsoar.mobile.core.XcsoarCore
@@ -110,9 +112,10 @@ fun TilePickerContent(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        val where = if (state.layout == TileLayout.CIRCLING) "circling" else "cruise"
-        ScreenHeader("Tile ${state.tile + 1} · $where", onBack)
-        InputField(query, { query = it }, "Search")
+        ScreenHeader(stringResource(if (state.layout == TileLayout.CIRCLING)
+                                        R.string.tile_title_circling
+                                    else R.string.tile_title_cruise, state.tile + 1), onBack)
+        InputField(query, { query = it }, stringResource(R.string.search))
         LazyColumn(Modifier
             .fillMaxWidth()
             .background(colors.panel, RoundedCornerShape(14.dp))) {
@@ -140,11 +143,11 @@ private fun TypeRow(type: TileType, selected: Boolean, onClick: () -> Unit) {
                .fillMaxWidth()
                .heightIn(min = 64.dp)
                .background(if (selected) colors.selected else colors.panel)
-               .clickable(role = Role.Button, onClickLabel = "Show ${type.name}",
+               .clickable(role = Role.Button, onClickLabel = stringResource(R.string.tile_show, type.name),
                           onClick = onClick)
                .padding(horizontal = 14.dp, vertical = 10.dp),
            verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(if (selected) "${type.name} · shown" else type.name,
+        Text(if (selected) stringResource(R.string.tile_shown, type.name) else type.name,
              color = if (selected) colors.onSelected else colors.text,
              fontSize = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
              overflow = TextOverflow.Ellipsis)

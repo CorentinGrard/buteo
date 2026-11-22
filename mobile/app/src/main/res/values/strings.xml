@@ -172,4 +172,672 @@
     <string name="welcome_file_waypoints">Waypoints: airfields and landables</string>
     <string name="welcome_downloaded">Downloaded and loaded</string>
     <string name="welcome_where">Where do you fly?</string>
+
+    <!-- shared -->
+    <string name="unknown">Unknown</string>
+
+    <!-- charts -->
+    <string name="no_data_yet">No data yet</string>
+
+    <!-- the flights list -->
+    <string name="flights_none">No flights yet. Buteo records an IGC file from takeoff to landing.</string>
+    <string name="flights_on_weglide">on WeGlide</string>
+
+    <!-- the status page -->
+    <string name="status_title">Status</string>
+    <string name="status_share">Share position</string>
+    <string name="status_reading">Reading…</string>
+
+    <!-- the tile picker -->
+    <string name="tile_title_circling">Tile %1$d · circling</string>
+    <string name="tile_title_cruise">Tile %1$d · cruise</string>
+    <string name="tile_show">Show %1$s</string>
+    <string name="tile_shown">%1$s · shown</string>
+
+    <!-- the units page -->
+    <string name="units_speed">Aircraft and wind speed</string>
+    <string name="units_distance">Distance</string>
+    <string name="units_lift">Lift</string>
+    <string name="units_altitude">Altitude</string>
+    <string name="units_task_speed">Task speed</string>
+    <string name="units_wing_loading">Wing loading</string>
+    <string name="units_mass">Mass</string>
+    <string name="units_pressure">Pressure</string>
+    <string name="units_temperature">Temperature</string>
+    <string name="units_preset">Preset</string>
+
+    <!-- the map settings page -->
+    <string name="map_terrain_detail">Shaded relief from the map file</string>
+    <string name="map_topography">Topography</string>
+    <string name="map_topography_detail">Roads, rivers, lakes and towns</string>
+    <string name="map_zoom">Zoom of its own</string>
+    <string name="map_zoom_detail">Closer in a climb, back to the cruise\'s after</string>
+    <string name="map_thermal_assistant">Thermal assistant</string>
+    <string name="map_thermal_assistant_detail">The lift around the circle, on the glider</string>
+    <string name="map_terrain_colours">Terrain colours</string>
+    <string name="map_trail">Trail</string>
+    <string name="map_trail_short">Short</string>
+    <string name="map_trail_long">Long</string>
+    <string name="map_trail_full">Full</string>
+    <string name="ramp_pastel">Pastel</string>
+    <string name="ramp_low_lands">Low lands</string>
+    <string name="ramp_mountainous">Mountainous</string>
+    <string name="ramp_imhof">Imhof Atlas</string>
+    <string name="ramp_icao">ICAO</string>
+    <string name="ramp_french_sia">French SIA VFR chart</string>
+    <string name="ramp_german_dfs">German DFS VFR chart</string>
+    <string name="ramp_sandstone">Sandstone</string>
+    <string name="ramp_grey">Grey</string>
+    <string name="ramp_high_contrast">High contrast</string>
+
+    <!-- downloads -->
+    <string name="download_damaged">Download of %1$s is damaged (checksum)</string>
+    <string name="download_cannot_write">Cannot write %1$s</string>
+    <string name="download_no_location">Redirect without location from %1$s</string>
+    <string name="download_http">HTTP %1$d for %2$s</string>
+    <string name="download_redirects">Too many redirects for %1$s</string>
+
+    <!-- the data files page -->
+    <string name="data_map">Map</string>
+    <string name="data_map_formats">XCSoar map (.xcm): terrain, roads, rivers, towns</string>
+    <string name="data_terrain_loaded">Terrain loaded</string>
+    <string name="data_airspace_formats">OpenAir (.txt, .air) or Tim Newport-Peace (.sua)</string>
+    <string name="data_airspaces_loaded">Airspaces loaded: %1$d</string>
+    <string name="data_waypoints">Waypoints</string>
+    <string name="data_waypoints_formats">SeeYou (.cup), WinPilot (.dat) and other XCSoar formats</string>
+    <string name="data_waypoints_loaded">Waypoints loaded: %1$d</string>
+    <string name="data_rasp">RASP forecast</string>
+    <string name="data_rasp_formats">Soaring forecast for the map (-rasp.dat), new every day</string>
+    <string name="data_rasp_loaded">Fields loaded: %1$d</string>
+    <string name="data_footer">Airspace and waypoints inside the map file are counted too. Load errors are shown on the flight screen.</string>
+    <string name="data_no_file">No file</string>
+    <string name="loading">Loading…</string>
+    <string name="data_choose_file">Choose file</string>
+    <string name="data_replace">Replace</string>
+    <string name="data_remove">Remove</string>
+
+    <!-- the download page -->
+    <string name="download_maps">Download maps</string>
+    <string name="download_airspace">Download airspace</string>
+    <string name="download_waypoints">Download waypoints</string>
+    <string name="download_rasp">Download RASP forecasts</string>
+    <string name="download_search">Search name or country code (fr, de…)</string>
+    <string name="download_loading">Loading XCSoar\'s file list…</string>
+    <string name="download_file">Download %1$s</string>
+    <string name="download_needs_core">Downloads need the native core</string>
+
+    <!-- the waypoints page -->
+    <string name="add">Add</string>
+    <string name="waypoints_go">Go</string>
+    <string name="waypoints_airports">Airports</string>
+    <string name="waypoints_all">All</string>
+    <string name="waypoints_name">Name</string>
+    <string name="waypoints_none">No waypoint found. Load a map or waypoint file (%1$s).</string>
+    <string name="waypoints_airport">Airport</string>
+    <string name="waypoints_elevation">elev %1$s</string>
+
+    <!-- waypoint messages -->
+    <string name="waypoints_landable_only">%1$s: go to only to landable waypoints (profile setting)</string>
+
+    <!-- waypoint picking -->
+    <string name="waypoints_reference">Reference</string>
+    <string name="waypoints_set">Set</string>
+    <string name="waypoints_relocate">Relocate</string>
+    <string name="waypoints_add_point">Add point</string>
+
+    <!-- the aircraft and crew page -->
+    <string name="crew_fly">Fly %1$s</string>
+    <string name="crew_fly_with">Fly %1$s with %2$s</string>
+    <string name="crew_not_now">Not now</string>
+    <string name="crew_aircraft">Aircraft</string>
+    <string name="crew_add_hint">Add the aircraft you fly: its registration, its polar and its WeGlide type.</string>
+    <string name="crew_add_aircraft">Add aircraft</string>
+    <string name="crew_set_name">Set your name</string>
+    <string name="crew_name_detail">Name in the IGC file, WeGlide account</string>
+    <string name="crew_two_seats">two seats</string>
+    <string name="crew_last_flown">last flown</string>
+    <string name="edit">Edit</string>
+    <string name="crew_copilot">Co-pilot</string>
+    <string name="crew_solo">Solo</string>
+    <string name="crew_new_copilot">New co-pilot</string>
+    <string name="crew_could_not_save">Could not save</string>
+
+    <!-- the pilot page -->
+    <string name="save">Save</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="pilot_title">Pilot &amp; WeGlide</string>
+    <string name="pilot_igc_name">Name in the IGC file</string>
+    <string name="pilot_upload">Upload flights to WeGlide</string>
+    <string name="pilot_weglide_id">WeGlide pilot ID</string>
+    <string name="pilot_id_hint">The number in your profile\'s address: weglide.org/user/1234.</string>
+    <string name="pilot_birthdate">Date of birth</string>
+    <string name="pilot_birthdate_hint">WeGlide checks your ID and date of birth instead of a password.</string>
+
+    <!-- the aircraft page -->
+    <string name="plane_polar">Polar</string>
+    <string name="plane_new">New aircraft</string>
+    <string name="plane_registration">Registration</string>
+    <string name="plane_competition_id">Competition ID</string>
+    <string name="plane_model">Model</string>
+    <string name="plane_choose_model">Choose the model</string>
+    <string name="plane_no_polar_choose">No polar for this model: choose one</string>
+    <string name="plane_import_polar">Import a polar file (.plr)</string>
+    <string name="plane_weglide">WeGlide: %1$s</string>
+    <string name="plane_weglide_type">type %1$d</string>
+    <string name="plane_no_weglide">Not a WeGlide type: flights upload without one</string>
+    <string name="plane_two_seats">Two seats</string>
+    <string name="plane_two_seats_detail">Asks for the co-pilot before each flight</string>
+    <string name="plane_delete">Delete aircraft</string>
+    <string name="plane_polar_points">Polar points</string>
+    <string name="plane_speed_n">Speed %1$d · %2$s</string>
+    <string name="plane_sink_n">Sink %1$d · %2$s</string>
+    <string name="plane_polar_points_hint">Three points of the sink rate over speed, slowest first.</string>
+    <string name="plane_masses">Masses and limits</string>
+    <string name="plane_empty_mass_name">empty mass</string>
+    <string name="plane_empty_mass">Empty mass</string>
+    <string name="plane_empty_mass_hint">The rigged glider without pilots and water.</string>
+    <string name="plane_reference_mass_name">reference mass</string>
+    <string name="plane_reference_mass">Polar reference mass</string>
+    <string name="plane_reference_mass_hint">The mass the polar was measured at.</string>
+    <string name="plane_ballast_name">water ballast</string>
+    <string name="plane_ballast">Water ballast</string>
+    <string name="plane_spoken_litres">%1$s litres</string>
+    <string name="plane_dump_name">dump time</string>
+    <string name="plane_dump">Dump time</string>
+    <string name="plane_spoken_seconds">%1$s seconds</string>
+    <string name="plane_dump_hint">The time to dump full ballast.</string>
+    <string name="plane_speed_none">None</string>
+    <string name="plane_speed_limit_name">speed limit</string>
+    <string name="plane_speed_limit">Speed limit</string>
+    <string name="plane_speed_limit_hint">Speed to fly stays below it (VNE or VNO); none: no limit.</string>
+    <string name="plane_wing_area_name">wing area</string>
+    <string name="plane_wing_area">Wing area</string>
+    <string name="plane_spoken_square_metres">%1$s square metres</string>
+    <string name="plane_wing_area_hint">For the wing loading.</string>
+    <string name="plane_handicap_name">handicap</string>
+    <string name="plane_handicap">Handicap</string>
+    <string name="plane_spoken_percent">%1$s percent</string>
+    <string name="plane_handicap_hint">The contest handicap, for the scores Buteo computes.</string>
+    <string name="plane_mtow">Maximum take-off mass · %1$s</string>
+    <string name="plane_mtow_hint">Above it, Flight setup shows the wing loading in red. Empty if not known.</string>
+    <string name="plane_has_polar">polar</string>
+    <string name="plane_has_no_polar">no polar</string>
+    <string name="plane_download_hint">Download WeGlide\'s list once (internet needed) for every model, its WeGlide type and its seats.</string>
+    <string name="plane_update_list">Update WeGlide\'s list</string>
+    <string name="plane_download_list">Download WeGlide\'s list</string>
+
+    <!-- aircraft messages -->
+    <string name="plane_no_polar_in">%1$s: no polar in it</string>
+    <string name="plane_seats_unknown">Seats unknown: %1$s</string>
+    <string name="plane_not_saved_polar">Not saved: the three points make no polar (the sink grows with speed, slowest point first)</string>
+    <string name="plane_not_saved">Could not save the aircraft</string>
+    <string name="plane_delete_last">Choose another aircraft before deleting this one</string>
+
+    <!-- the sound page -->
+    <string name="sound_callouts">Voice callouts</string>
+    <string name="sound_no_output">This device has no sound output for the vario.</string>
+    <string name="sound_vario_detail">A tone that rises with lift; also in the menu\'s Quick settings</string>
+    <string name="sound_volume_name">volume</string>
+    <string name="sound_volume">Volume</string>
+    <string name="sound_volume_hint">The phone\'s media volume applies on top.</string>
+    <string name="sound_tone">Tone</string>
+    <string name="sound_tone_vario">Vario</string>
+    <string name="sound_tone_hint">Auto plays speed to fly in cruise. It needs an airspeed sensor; without one, it stays on the vario.</string>
+    <string name="sound_quiet">Quiet around zero</string>
+    <string name="sound_dead_band">Dead band</string>
+    <string name="sound_dead_band_detail">Silent while the lift is between the two values below</string>
+    <string name="sound_lower_name">lower edge</string>
+    <string name="sound_from">From</string>
+    <string name="sound_upper_name">upper edge</string>
+    <string name="sound_to">To</string>
+
+    <!-- the voice callouts settings -->
+    <string name="voice_intro">Short callouts in flight through the phone\'s voice, so your eyes stay outside; the screen may be off.</string>
+    <string name="voice_none">This phone has no text-to-speech voice: Android\'s settings install one (Text-to-speech output).</string>
+    <string name="voice_airspace">Ahead and inside: “Airspace ahead: Grenoble CTR, in 40 seconds”</string>
+    <string name="voice_final_glide_title">Final glide</string>
+    <string name="voice_final_glide">Above it, and dropped below: “Above final glide by 120 metres”</string>
+    <string name="voice_task_points_title">Task points</string>
+    <string name="voice_task_points">Start, each turn point and the finish, with the next point</string>
+    <string name="voice_climbs_title">Climbs</string>
+    <string name="voice_climbs">Leaving a climb, its average and the height gained: “Climb 2.1, gained 450”</string>
+    <string name="voice_say">Say a callout</string>
+
+    <!-- the safety heights page -->
+    <string name="safety_margins">Margins</string>
+    <string name="safety_arrival_name">arrival height</string>
+    <string name="safety_arrival">Arrival height</string>
+    <string name="safety_arrival_hint">Above the field when you land there: arrival heights and reach use it.</string>
+    <string name="safety_terrain_name">terrain clearance</string>
+    <string name="safety_terrain">Terrain clearance</string>
+    <string name="safety_terrain_hint">Kept between the glide path and the terrain on final glide.</string>
+    <string name="safety_computer">Glide computer</string>
+    <string name="safety_mc_name">safety MacCready</string>
+    <string name="safety_mc">Safety MacCready</string>
+    <string name="safety_mc_hint">The MacCready of the reach and of the arrival heights at fields.</string>
+    <string name="safety_start_mc_name">MacCready at start</string>
+    <string name="safety_start_mc">MacCready at start</string>
+    <string name="safety_start_mc_hint">The MacCready for speed to fly when the app starts; changing it sets the MacCready now too.</string>
+    <string name="safety_risk_name">risk factor</string>
+    <string name="safety_risk">Speed to fly risk factor</string>
+    <string name="safety_risk_hint">Lowers MacCready for speed to fly as you get low: 0 off, 0.3 is common.</string>
+    <string name="safety_alternates">Alternates</string>
+    <string name="safety_nearest">Nearest</string>
+    <string name="safety_along_task">Along task</string>
+    <string name="safety_toward_home">Toward home</string>
+    <string name="safety_alternates_hint">How the alternates, the fields in reach, are sorted.</string>
+    <string name="safety_turn_back">Turn back marker</string>
+    <string name="safety_turn_back_detail">A green triangle on your track: the last point from which the target is still in reach</string>
+
+    <!-- the wind page -->
+    <string name="wind_manual">Set by hand</string>
+    <string name="wind_direction_name">wind direction</string>
+    <string name="wind_spoken_direction">from %1$s degrees</string>
+    <string name="wind_speed_name">wind speed</string>
+    <string name="wind_speed">Speed</string>
+    <string name="wind_clear">Clear</string>
+    <string name="wind_manual_hint">Used at once, until a newer estimate replaces it.</string>
+    <string name="wind_estimates">Estimates</string>
+    <string name="wind_circling">Circling wind</string>
+    <string name="wind_circling_detail">Estimate the wind while circling. Needs only a GPS.</string>
+    <string name="wind_zigzag">ZigZag wind</string>
+    <string name="wind_zigzag_detail">Estimate the wind in glides. Needs an airspeed sensor.</string>
+    <string name="wind_external">External wind</string>
+    <string name="wind_external_detail">Take the wind of other instruments.</string>
+    <string name="wind_drift">Trail drift</string>
+    <string name="wind_drift_detail">Drift the snail trail with the wind while circling, at close map scales.</string>
+    <string name="wind_spoken">Wind from %1$s degrees, %2$s %3$s, %4$s</string>
+    <string name="wind_spoken_none">No wind, %1$s</string>
+    <string name="wind_in_use">Wind in use</string>
+    <string name="wind_source_none">None yet: circle to estimate it, or set it by hand</string>
+    <string name="wind_source_circling">Circling estimate</string>
+    <string name="wind_source_zigzag">ZigZag estimate</string>
+    <string name="wind_source_external">External instrument</string>
+
+    <!-- shared -->
+    <string name="wind">Wind</string>
+
+    <!-- the airspace alerts page -->
+    <string name="airalerts_warnings">Airspace warnings</string>
+    <string name="airalerts_warnings_detail">Airspace ahead, inside, or crossing the task</string>
+    <string name="airalerts_off">Off: nothing warns of airspace ahead or inside in flight.</string>
+    <string name="airalerts_when">When</string>
+    <string name="airalerts_warn_name">warning time</string>
+    <string name="airalerts_warn">Warn ahead</string>
+    <string name="airalerts_ack_name">acknowledgement time</string>
+    <string name="airalerts_ack">Quiet after Ack</string>
+    <string name="airalerts_how">How</string>
+    <string name="airalerts_sound_detail">A tone for a new warning, and when it gets worse</string>
+    <string name="airalerts_vibration">Vibration</string>
+    <string name="airalerts_vibration_detail">Vibrate for a new warning, and when it gets worse</string>
+    <string name="airalerts_hide">Hide after %1$d s</string>
+    <string name="airalerts_hide_detail">The banner counts down, then goes; it comes back if the warning gets worse</string>
+    <string name="notam_title">NOTAMs</string>
+    <string name="airalerts_notams_detail">Download, filters, list</string>
+    <string name="airalerts_classes">Airspace classes</string>
+    <string name="airalerts_no_file">No airspace file is loaded (%1$s).</string>
+    <string name="airalerts_hide_others">Hide other classes</string>
+    <string name="airalerts_others">Other classes (%1$d)</string>
+    <string name="airalerts_in_files">%1$d in the files</string>
+    <string name="airalerts_map">Map</string>
+    <string name="airalerts_warn_chip">Warn</string>
+
+    <!-- the NOTAM page -->
+    <string name="notam_needs_fix">Needs a GPS fix: NOTAMs are downloaded around the glider</string>
+    <string name="notam_detail">From XCSoar\'s NOTAM server, shown as airspace and in the warnings</string>
+    <string name="notam_radius_name">download radius</string>
+    <string name="notam_radius">Around the glider · km</string>
+    <string name="notam_interval_name">refresh interval</string>
+    <string name="notam_refresh">Refresh</string>
+    <string name="notam_when_asked">When asked</string>
+    <string name="notam_show">Show</string>
+    <string name="notam_effective">Only in force now</string>
+    <string name="notam_effective_detail">Hide NOTAMs that start later</string>
+    <string name="notam_ifr">IFR only NOTAMs</string>
+    <string name="notam_ifr_detail">Usually of no use to a glider pilot</string>
+    <string name="notam_qcodes">Hidden Q-codes</string>
+    <string name="notam_qcodes_hint">NOTAMs whose Q-code starts with one of these are hidden (QA: aerodromes, QN: navaids, QOL: obstacle lights…).</string>
+    <string name="notam_shown">%1$d shown of %2$d</string>
+    <string name="notam_updated">Updated %1$s</string>
+    <string name="notam_not_downloaded">Not downloaded yet</string>
+    <string name="notam_from">from %1$s</string>
+    <string name="notam_permanent">permanent</string>
+    <string name="notam_until">until %1$s</string>
+
+    <!-- the live tracking page -->
+    <string name="track_cloud">XCSoar Cloud</string>
+    <string name="track_share">Share my position</string>
+    <string name="track_share_detail">With XCSoar\'s server, which shows you the gliders near you</string>
+    <string name="track_traffic">Traffic</string>
+    <string name="track_traffic_detail">Gliders near you on the map, also from OGN</string>
+    <string name="track_thermals">Thermals</string>
+    <string name="track_thermals_detail">Thermals other pilots found</string>
+    <string name="track_roaming">When roaming</string>
+    <string name="track_roaming_detail">Also on mobile data abroad</string>
+    <string name="track_skylines">Track on SkyLines</string>
+    <string name="track_skylines_detail">skylines.aero: others follow your flight live</string>
+    <string name="track_key">Tracking key</string>
+    <string name="track_key_error">Up to 16 characters, 0-9 and A-F</string>
+    <string name="track_key_hint">On skylines.aero: Settings → Tracking key.</string>
+    <string name="track_skylines_interval">SkyLines interval</string>
+    <string name="track_friends">Friends</string>
+    <string name="track_friends_detail">Your SkyLines friends on the map</string>
+    <string name="track_nearby">Nearby pilots</string>
+    <string name="track_nearby_detail">SkyLines users near you on the map</string>
+    <string name="track_livetrack">Track on LiveTrack24</string>
+    <string name="track_livetrack_detail">Or a server using its protocol, like DHV\'s</string>
+    <string name="track_test">Test</string>
+    <string name="track_server">Server: %1$s</string>
+    <string name="track_username">Username</string>
+    <string name="track_password">Password</string>
+    <string name="track_at_most">At most %1$d characters</string>
+    <string name="track_livetrack_interval">LiveTrack24 interval</string>
+    <string name="track_footer">Positions are sent over mobile data while Buteo runs.</string>
+    <string name="track_every">Send every</string>
+
+    <!-- the team code page -->
+    <string name="team_title">Team code</string>
+    <string name="team_mate">Team mate</string>
+    <string name="team_mate_code">Mate code</string>
+    <string name="team_range">Range</string>
+    <string name="team_bearing">Bearing</string>
+    <string name="team_rel_bearing">Rel. bearing</string>
+    <string name="team_flarm_lock">Flarm Lock</string>
+    <string name="team_invalid">Letters and digits, up to 7</string>
+    <string name="team_set_code">Set code</string>
+    <string name="team_reference">Reference waypoint</string>
+    <string name="team_set_wp">Set WP</string>
+    <string name="team_same_reference">Every glider of the team needs the same one.</string>
+    <string name="team_set_reference_first">Set a reference waypoint first</string>
+    <string name="team_needs_fix">Needs a GPS fix</string>
+    <string name="team_from">From %1$s</string>
+    <string name="team_spoken_own">Own code %1$s, %2$s</string>
+    <string name="team_spoken_none">No own code, %1$s</string>
+    <string name="team_own">Own code</string>
+
+    <!-- the radio page -->
+    <string name="radio_title">Radio</string>
+    <string name="radio_active">Active frequency</string>
+    <string name="radio_standby">Standby frequency</string>
+    <string name="radio_invalid">No channel: 118.000 to 136.990 MHz</string>
+    <string name="radio_frequency">Frequency · MHz</string>
+    <string name="radio_set_active">Set active</string>
+    <string name="radio_set_standby">Set standby</string>
+    <string name="radio_sent">Sent to a connected radio.</string>
+    <string name="radio_none_set">None: set one below</string>
+    <string name="radio_none">none</string>
+    <string name="radio_megahertz">%1$s megahertz</string>
+
+    <!-- the ATC radial page -->
+    <string name="atc_title">ATC radial</string>
+    <string name="atc_reference">Reference</string>
+    <string name="atc_location">Location</string>
+    <string name="atc_hint">The ATC radial tile shows your magnetic radial and distance from this point, as controllers ask for them.</string>
+    <string name="atc_setup">Setup</string>
+    <string name="atc_declination_name">magnetic declination</string>
+    <string name="atc_declination">Mag declination</string>
+    <string name="atc_spoken_west">magnetic declination %1$d degrees west</string>
+    <string name="atc_spoken_east">magnetic declination %1$d degrees east</string>
+    <string name="atc_declination_hint">Turns true bearings into magnetic ones, as the controller uses.</string>
+    <string name="atc_east">%1$d° E</string>
+    <string name="atc_west">%1$d° W</string>
+
+    <!-- the airspace details page -->
+    <string name="airdetails_none">No airspace nearby.</string>
+    <string name="airdetails_class">Class</string>
+    <string name="airdetails_type">Type</string>
+    <string name="airdetails_top">Top</string>
+    <string name="airdetails_base">Base</string>
+    <string name="airdetails_station">Station</string>
+    <string name="airdetails_squawk">Squawk code</string>
+    <string name="airdetails_now_active">%1$s MHz is now the active frequency.</string>
+    <string name="airdetails_now_standby">%1$s MHz is now the standby frequency.</string>
+    <string name="airdetails_sends">Sends %1$s MHz to the radio.</string>
+    <string name="airdetails_enable">Enable</string>
+    <string name="airdetails_ack_day">Ack Day</string>
+    <string name="airdetails_acked">No warnings for it until tomorrow.</string>
+    <string name="airdetails_ack_hint">Ack Day: no warnings for it until tomorrow.</string>
+
+    <!-- the flight setup page -->
+    <string name="setup_crew">Crew</string>
+    <string name="setup_crew_mass_name">crew mass</string>
+    <string name="setup_crew_mass">Crew mass</string>
+    <string name="setup_crew_hint">Pilots, parachutes and baggage: all on board but the glider and the water.</string>
+    <string name="setup_no_ballast">This plane carries no water ballast.</string>
+    <string name="setup_ballast_name">ballast</string>
+    <string name="setup_ballast">Ballast</string>
+    <string name="setup_empty">Empty</string>
+    <string name="setup_full">Full</string>
+    <string name="setup_bugs">Bugs</string>
+    <string name="setup_bugs_name">bugs</string>
+    <string name="setup_bugs_lost">Performance lost</string>
+    <string name="setup_bugs_hint">%1$d %% is a clean glider; %2$d %% doubles the sink rate.</string>
+    <string name="setup_over_mtow">Above the glider\'s maximum take-off mass.</string>
+    <string name="setup_altimeter">Altimeter</string>
+    <string name="setup_no_baro">No barometer: Buteo uses the GPS altitude. QNH still converts flight levels for airspace.</string>
+    <string name="setup_qnh_unset">Not set yet: Buteo sets it after a while on the ground at an airfield, or set it here. Until then it uses the GPS altitude.</string>
+    <string name="setup_baro_altitude">Barometric altitude</string>
+    <string name="setup_wind_detail">Set by hand, estimates</string>
+    <string name="setup_spoken_auto">automatic, %1$s</string>
+    <string name="setup_auto_mc">Auto MacCready</string>
+    <string name="setup_auto_mc_detail">Buteo sets it as you fly; changing it by hand turns this off.</string>
+    <string name="setup_mode_both">Both</string>
+    <string name="setup_mode_final_glide_hint">On final glide: the highest MacCready that still gets you home.</string>
+    <string name="setup_mode_climbs_hint">The average climb of your recent thermals.</string>
+    <string name="setup_mode_both_hint">The average climb, then on final glide the highest MacCready that still gets you home.</string>
+
+    <!-- task messages -->
+    <string name="task_not_possible">Not possible for this task type</string>
+    <string name="task_cannot_edit">Cannot edit the task</string>
+    <string name="task_no_next">No next point</string>
+    <string name="task_no_previous">No previous point</string>
+    <string name="task_invalid">The task is not valid</string>
+    <string name="task_full">The task is full</string>
+    <string name="task_weglide_silent">WeGlide did not answer</string>
+    <string name="task_weglide_not_loaded">%1$s: not loaded</string>
+    <string name="task_cannot_load">%1$s: cannot load the task</string>
+    <string name="task_not_file_name">Not a file name: %1$s</string>
+    <string name="task_cannot_save">Cannot save %1$s</string>
+    <string name="task_saved">Saved as %1$s</string>
+
+    <!-- the task page -->
+    <string name="task_edit_title">Edit task</string>
+    <string name="task_dismiss">Dismiss</string>
+    <string name="task_empty_editing">Add the start, the turn points and the finish, in order.</string>
+    <string name="task_empty">No task. Edit to build one from waypoints, or load a task file.</string>
+    <string name="task_save_dots">Save…</string>
+    <string name="task_load_dots">Load…</string>
+    <string name="task_previous">Previous</string>
+    <string name="task_restart">Restart</string>
+    <string name="task_type">Task type</string>
+    <string name="task_nominal">%1$s nominal</string>
+    <string name="task_min_time_name">minimum time</string>
+    <string name="task_min_time">Minimum time</string>
+    <string name="task_start">Start</string>
+    <string name="task_finish">Finish</string>
+    <string name="task_tp">TP %1$d</string>
+    <string name="task_change_point">Change %1$s</string>
+    <string name="task_zone_size_name">zone size</string>
+    <string name="task_half_width">Half width</string>
+    <string name="task_radius">Radius</string>
+    <string name="task_up">Up</string>
+    <string name="task_down">Down</string>
+    <string name="task_save_title">Save task</string>
+    <string name="task_save_hint">In XCSoarData/tasks, as a .tsk file XCSoar reads too.</string>
+
+    <!-- the load task page -->
+    <string name="task_load_title">Load task</string>
+    <string name="task_looking">Looking for tasks…</string>
+    <string name="task_no_files">No task files. Saved tasks go to XCSoarData/tasks; tasks in SeeYou .cup files there are found too.</string>
+    <string name="task_load_name">Load %1$s</string>
+    <string name="task_no_tasks">No tasks</string>
+    <string name="task_numbered">Task %1$d</string>
+    <string name="task_turnpoints">%1$d TPs</string>
+    <string name="task_list_mine">Mine</string>
+    <string name="task_list_declared">Declared</string>
+    <string name="task_list_today">Today</string>
+    <string name="task_list_scores">Scores</string>
+
+    <!-- the flight log -->
+    <string name="flights_cannot_delete">Could not delete %1$s</string>
+
+    <!-- the flight summary -->
+    <string name="summary_share">Share</string>
+    <string name="summary_upload">Upload</string>
+    <string name="summary_replay_finished">Replay finished</string>
+    <string name="summary_landed">Landed</string>
+    <string name="summary_landed_at">Landed at %1$s</string>
+    <string name="summary_takeoff">Take-off %1$s</string>
+    <string name="summary_replay_hint">A replay: nothing was recorded, nothing to share.</string>
+    <string name="summary_waiting">The flight log closes a little after the landing; Share and WeGlide follow.</string>
+    <string name="summary_no_log">No flight log found: %1$s has the recorded ones.</string>
+    <string name="summary_set_pilot_id">To upload to WeGlide, set your pilot ID: %1$s.</string>
+    <string name="summary_on_weglide">On WeGlide: flight %1$s · Open</string>
+    <string name="summary_weglide_error">WeGlide: %1$s</string>
+    <string name="summary_upload_failed">Upload failed</string>
+    <string name="summary_time">Time</string>
+    <string name="summary_score">Score</string>
+    <string name="summary_best_climb">Best climb</string>
+    <string name="summary_average_climb">Average climb</string>
+    <string name="summary_climbs">%1$d climbs</string>
+    <string name="summary_highest">Highest</string>
+    <string name="summary_contest">Contest</string>
+
+    <!-- a recorded flight -->
+    <string name="flights_replay">Replay</string>
+    <string name="flights_landing">landing %1$s</string>
+    <string name="flights_reading">Reading the flight…</string>
+    <string name="flights_no_takeoff">No take-off in this file.</string>
+    <string name="summary_uploading">Uploading…</string>
+    <string name="flights_upload">Upload to WeGlide</string>
+    <string name="flights_delete">Delete</string>
+    <string name="flights_ground">Replay and Delete: on the ground.</string>
+    <string name="flights_delete_title">Delete this flight?</string>
+    <string name="flights_delete_text">%1$s goes from the phone for good. Copies shared or on WeGlide stay.</string>
+
+    <!-- profiles messages -->
+    <string name="profiles_cannot_switch">Could not switch profiles</string>
+    <string name="profiles_not_created">Not created: \"%1$s\" is taken or not a file name</string>
+    <string name="profiles_not_imported">Not imported</string>
+    <string name="profiles_not_deleted">%1$s not deleted</string>
+    <string name="error_with_cause">%1$s: %2$s</string>
+
+    <!-- the profiles page -->
+    <string name="profiles_fly_with">Fly with %1$s?</string>
+    <string name="profiles_switch_text">Buteo saves %1$s and restarts with the settings of %2$s.</string>
+    <string name="profiles_this_profile">this profile</string>
+    <string name="profiles_restart">Restart</string>
+    <string name="profiles_delete_title">Delete %1$s?</string>
+    <string name="profiles_delete_text">Its settings are lost. Data files, planes and flights stay.</string>
+    <string name="profiles_title">Profiles</string>
+    <string name="profiles_intro">A profile holds Buteo\'s settings: units, map, airspace, safety heights, data files, tiles, the plane. Pilots sharing a phone, or a club, each keep their own. Buteo restarts to switch.</string>
+    <string name="profiles_ground">In flight: profiles switch on the ground only.</string>
+    <string name="profiles_new">New profile</string>
+    <string name="profiles_import">Import a .prf file…</string>
+    <string name="profiles_in_use">In use</string>
+    <string name="profiles_protected">Password protected</string>
+    <string name="profiles_use">Use</string>
+    <string name="profiles_wrong_password">Wrong password</string>
+    <string name="profiles_copy">Start from the settings of %1$s</string>
+    <string name="profiles_create">Create</string>
+
+    <!-- the weather page -->
+    <string name="weather_download_failed">Download failed</string>
+    <string name="weather_cannot_add">Could not add %1$s</string>
+    <string name="weather_none_received">No weather received: check the internet connection and the codes</string>
+    <string name="weather_updating">Updating…</string>
+    <string name="weather_update">Update METAR and TAF</string>
+    <string name="weather_metar_taf">METAR and TAF</string>
+    <string name="weather_icao">ICAO code, e.g. LFMT</string>
+    <string name="weather_add_hint">Add the airports whose METAR and TAF you want. Buteo downloads them from NOAA (internet needed); the map shows the stations.</string>
+    <string name="weather_calm">Calm</string>
+    <string name="weather_rasp">Forecast on the map (RASP)</string>
+    <string name="weather_rasp_hint">Thermals, wind and clouds forecast over the map, from thermalmap.info for many countries. New every day.</string>
+    <string name="weather_rasp_download">Download a forecast</string>
+    <string name="weather_rasp_not_downloaded">Not downloaded</string>
+    <string name="weather_rasp_old">From %1$s: today\'s comes on Wi-Fi</string>
+    <string name="weather_rasp_today">Today\'s forecast</string>
+    <string name="weather_rasp_todays">Today\'s</string>
+    <string name="weather_rasp_empty">The file has no forecast: download today\'s.</string>
+    <string name="weather_now">Now</string>
+    <string name="weather_time_name">forecast time</string>
+    <string name="weather_time">Forecast time · local</string>
+
+    <!-- the analysis page -->
+    <string name="ana_barograph">Barograph</string>
+    <string name="ana_climb">Climb</string>
+    <string name="ana_thermal_band">Thermal band</string>
+    <string name="ana_barograph_title">Barograph: altitude over the flight</string>
+    <string name="ana_barograph_hint">Dashed: climb tops in blue, climb bases in grey.</string>
+    <string name="ana_barograph_hint_terrain">Dashed: climb tops in blue, climb bases in grey. Shaded: terrain.</string>
+    <string name="ana_working_band">Working band</string>
+    <string name="ana_ceiling_trend">Ceiling trend</string>
+    <string name="ana_climb_title">Climb history: the average of each climb</string>
+    <string name="ana_climb_hint">Each bar is one climb, as wide as it lasted. Dashed: MacCready %1$s and the climb trend.</string>
+    <string name="ana_climb_trend">Climb trend</string>
+    <string name="ana_speed_title">Task speed over the flight</string>
+    <string name="ana_speed_needs_task">Needs a task: the chart starts once the task has started.</string>
+    <string name="ana_speed_hint">Dashed: the trend in blue, and the speed the polar gives at the current MacCready (Vest) in grey.</string>
+    <string name="ana_avg_task_speed">Average task speed</string>
+    <string name="ana_estimated">Estimated (Vest)</string>
+    <string name="ana_no_contest">No contest result yet.</string>
+    <string name="ana_contest_description">Contest: the flight and the scored path</string>
+
+    <!-- the analysis charts -->
+    <string name="ana_band_title">Thermal band: climb rate by height</string>
+    <string name="ana_band_hint">Grey: the climbs so far by height; blue: this climb. The dot is your height at your MacCready; dashed red, the MacCready the risk factor allows; grey lines, the working band.</string>
+    <string name="ana_band_none">No climb recorded yet.</string>
+    <string name="ana_histogram_title">Vario histogram: how often each climb rate was flown</string>
+    <string name="ana_histogram_hint_sink">Blue: circling; grey: cruise. Dashed: your MacCready, and the sink at the best glide speed.</string>
+    <string name="ana_histogram_hint">Blue: circling; grey: cruise. Dashed: your MacCready.</string>
+    <string name="ana_wind_title">Wind by height</string>
+    <string name="ana_wind_hint">The line: wind speed by height. Arrows: where it blows, north up.</string>
+    <string name="ana_wind_needs_climbs">Needs climbs: Buteo measures the wind while circling.</string>
+    <string name="ana_polar_title">Polar: sink rate by airspeed</string>
+    <string name="ana_best_glide">Best glide</string>
+    <string name="ana_no_polar">No polar: choose the plane in %1$s.</string>
+    <string name="ana_polar_hint">Dashed red: the speed to fly in sink and lift at MacCready %1$s; blue: the climb rates flown.</string>
+    <string name="ana_best_ld">Best L/D</string>
+    <string name="ana_at">at %1$s</string>
+    <string name="ana_min_sink">Min. sink</string>
+    <string name="ana_mc_title">Speeds by MacCready</string>
+    <string name="ana_mc_hint">Vopt: the speed to fly between climbs; Vave: the average cross-country speed. Dashed red: your MacCready.</string>
+    <string name="ana_temp_title">Temperature trace by height</string>
+    <string name="ana_temp_needs">Needs an outside air temperature from a device (a vario or a probe); the phone has none.</string>
+    <string name="ana_temp_hint">Black: air temperature; dashed red: the dry adiabat; dashed blue: dew point.</string>
+    <string name="ana_thermal_height">Thermal height</string>
+    <string name="ana_cloud_base">Cloud base</string>
+    <string name="ana_task_description">Task: its points and the flight</string>
+    <string name="ana_no_task">No task</string>
+    <string name="ana_make_task">Load or make a task in %1$s.</string>
+    <string name="ana_task_to_go">Task to go</string>
+    <string name="ana_aat_to_go">AAT to go</string>
+    <string name="ana_distance_to_go">Distance to go</string>
+    <string name="ana_target_speed">Target speed</string>
+    <string name="ana_xs_not_moving">Not moving: the cross-section follows the track.</string>
+    <string name="ana_xs_title">Airspace and terrain ahead along the track</string>
+    <string name="ana_xs_none">No airspace on the next %1$s along the track.</string>
+    <string name="ana_ground">GND</string>
+    <string name="ana_xs_hint">Blue: the glide at MacCready; brown: the terrain.</string>
+
+    <!-- the flight screen events -->
+    <string name="event_core_failed">Core failed to start: %1$s</string>
+    <string name="event_replay_failed">Replay failed: %1$s</string>
+    <string name="event_replay_not_stopped">Replay not stopped: %1$s</string>
+    <string name="event_map_failed">Map failed: %1$s</string>
+    <string name="event_map_items">Map items: %1$s</string>
+    <string name="event_goto_landable">Go to: only landable waypoints (profile setting)</string>
+    <string name="event_mc_not_set">MacCready not set: %1$s</string>
+    <string name="event_takeoff">Take-off</string>
+    <string name="event_landing">Landing</string>
+    <string name="event_task_started">Task started</string>
+    <string name="event_next_turnpoint">Next turnpoint</string>
+    <string name="event_task_finished">Task finished</string>
+    <string name="event_no_landable">No landable in reach</string>
+
+    <!-- profile and download errors -->
+    <string name="profiles_exists">A profile named %1$s exists already</string>
+    <string name="download_unknown_kind">%1$s: unknown kind of file</string>
+    <string name="download_gone">%1$s is no longer in XCSoar\'s repository</string>
 </resources>

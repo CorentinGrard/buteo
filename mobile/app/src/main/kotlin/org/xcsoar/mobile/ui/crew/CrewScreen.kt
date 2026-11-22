@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.PlaneInfo
 import org.xcsoar.mobile.ui.ActionButton
 import org.xcsoar.mobile.ui.PageLayout
@@ -83,20 +85,21 @@ fun CrewContent(
     val canSkip = onBack == null && planes != null
     PageLayout(bottom = if (plane == null && !canSkip) null else ({
         if (plane != null) {
-            val crew = if (plane.doubleSeater && state.copilot.isNotEmpty())
-                " with ${state.copilot}" else ""
-            ActionButton("Fly ${plane.registration}$crew", primary = true,
+            ActionButton(if (plane.doubleSeater && state.copilot.isNotEmpty())
+                             stringResource(R.string.crew_fly_with, plane.registration,
+                                            state.copilot)
+                         else stringResource(R.string.crew_fly, plane.registration),
+                         primary = true,
                          modifier = Modifier.weight(1f), onClick = onConfirm)
         } else
-            ActionButton("Not now", outlined = true, modifier = Modifier.weight(1f),
+            ActionButton(stringResource(R.string.crew_not_now), outlined = true, modifier = Modifier.weight(1f),
                          onClick = onSkip)
     })) {
-        ScreenHeader("Aircraft & crew", onBack)
+        ScreenHeader(stringResource(R.string.menu_crew), onBack)
 
-        Caption("Aircraft", Modifier.padding(start = 4.dp))
+        Caption(stringResource(R.string.crew_aircraft), Modifier.padding(start = 4.dp))
         if (planes != null && planes.isEmpty())
-            Text("Add the aircraft you fly: its registration, its polar and its " +
-                 "WeGlide type.", color = colors.textSecondary, fontSize = 16.sp,
+            Text(stringResource(R.string.crew_add_hint), color = colors.textSecondary, fontSize = 16.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
 
         Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -106,20 +109,20 @@ fun CrewContent(
                          onSelect = { onSelect(plane.path) },
                          onEdit = { onEditPlane(plane) })
         }
-        ActionButton("Add aircraft", outlined = true, modifier = Modifier.fillMaxWidth()) {
+        ActionButton(stringResource(R.string.crew_add_aircraft), outlined = true, modifier = Modifier.fillMaxWidth()) {
             onEditPlane(null)
         }
 
         if (plane != null && plane.doubleSeater)
             CopilotChoice(state, onSelectCopilot, onAddCopilot)
 
-        Caption("Pilot", Modifier.padding(start = 4.dp, top = 8.dp))
+        Caption(stringResource(R.string.pilot), Modifier.padding(start = 4.dp, top = 8.dp))
         SettingsGroup {
-            LinkRow(state.pilot.ifEmpty { "Set your name" },
-                    "Name in the IGC file, WeGlide account", onClick = onEditPilot)
+            LinkRow(state.pilot.ifEmpty { stringResource(R.string.crew_set_name) },
+                    stringResource(R.string.crew_name_detail), onClick = onEditPilot)
         }
 
-        state.error?.let { Text(it, color = colors.warning, fontSize = 16.sp) }
+        state.error?.let { Text(it.text(), color = colors.warning, fontSize = 16.sp) }
     }
 }
 
@@ -151,13 +154,13 @@ internal fun PlaneRow(
                  maxLines = 1, overflow = TextOverflow.Ellipsis)
             val details = listOfNotNull(
                 plane.type.ifEmpty { plane.polarName }.ifEmpty { null },
-                if (plane.doubleSeater) "two seats" else null,
-                if (lastFlown) "last flown" else null)
+                if (plane.doubleSeater) stringResource(R.string.crew_two_seats) else null,
+                if (lastFlown) stringResource(R.string.crew_last_flown) else null)
             Text(details.joinToString(" · "), color = colors.textSecondary, fontSize = 15.sp,
                  maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (onEdit != null)
-            ActionButton("Edit", onClick = onEdit)
+            ActionButton(stringResource(R.string.edit), onClick = onEdit)
     }
 }
 
@@ -169,12 +172,12 @@ private fun CopilotChoice(
     onAdd: (String) -> Unit,
 ) {
     val colors = XcsTheme.colors
-    Caption("Co-pilot", Modifier.padding(start = 4.dp))
+    Caption(stringResource(R.string.crew_copilot), Modifier.padding(start = 4.dp))
     Column(Modifier
                .fillMaxWidth()
                .background(colors.panel, RoundedCornerShape(14.dp))
                .selectableGroup()) {
-        CopilotRow("Solo", state.copilot.isEmpty()) { onSelect("") }
+        CopilotRow(stringResource(R.string.crew_solo), state.copilot.isEmpty()) { onSelect("") }
         for (name in state.copilots)
             CopilotRow(name, state.copilot == name) { onSelect(name) }
     }
@@ -182,9 +185,9 @@ private fun CopilotChoice(
     var name by rememberSaveable { mutableStateOf("") }
     Row(verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        InputField(name, { name = it }, "New co-pilot", Modifier.weight(1f),
+        InputField(name, { name = it }, stringResource(R.string.crew_new_copilot), Modifier.weight(1f),
                    capitalization = KeyboardCapitalization.Words)
-        ActionButton("Add", outlined = true, enabled = name.isNotBlank()) {
+        ActionButton(stringResource(R.string.add), outlined = true, enabled = name.isNotBlank()) {
             onAdd(name)
             name = ""
         }

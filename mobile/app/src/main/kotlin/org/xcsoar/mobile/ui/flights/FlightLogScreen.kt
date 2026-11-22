@@ -17,15 +17,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.ui.ActionButton
 import org.xcsoar.mobile.ui.PageLayout
 import org.xcsoar.mobile.ui.ScreenHeader
+import org.xcsoar.mobile.ui.menuPath
 import org.xcsoar.mobile.ui.summary.FlightFacts
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import java.text.DateFormat
@@ -85,8 +88,8 @@ fun FlightLogContent(
     val log = detail.log
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
     PageLayout(bottom = {
-        ActionButton("Share", outlined = true, onClick = onShare)
-        ActionButton("Replay", primary = true, enabled = onGround,
+        ActionButton(stringResource(R.string.summary_share), outlined = true, onClick = onShare)
+        ActionButton(stringResource(R.string.flights_replay), primary = true, enabled = onGround,
                      modifier = Modifier.weight(1f), onClick = onReplay)
     }) {
         ScreenHeader(title(detail, timeZone), onBack)
@@ -94,17 +97,17 @@ fun FlightLogContent(
         val summary = detail.summary
         val times = summary?.times
         val line = listOfNotNull(
-            times?.takeoffLocal?.ifEmpty { null }?.let { "Take-off $it" },
-            times?.landingLocal?.ifEmpty { null }?.let { "landing $it" },
+            times?.takeoffLocal?.ifEmpty { null }?.let { stringResource(R.string.summary_takeoff, it) },
+            times?.landingLocal?.ifEmpty { null }?.let { stringResource(R.string.flights_landing, it) },
             summary?.contest?.name?.ifEmpty { null })
         if (line.isNotEmpty())
             Text(line.joinToString(" · "), color = colors.textSecondary, fontSize = 16.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
 
         when {
-            detail.reading -> Hint("Reading the flight…")
+            detail.reading -> Hint(stringResource(R.string.flights_reading))
             summary != null -> FlightFacts(summary)
-            else -> Hint("No take-off in this file.")
+            else -> Hint(stringResource(R.string.flights_no_takeoff))
         }
 
         Text("${log.name} · ${kilobytes(log.size)}", color = colors.textSecondary,
@@ -113,50 +116,52 @@ fun FlightLogContent(
 
         when {
             upload is Upload.Done -> Text(
-                "On WeGlide: flight ${upload.flight.flightId} · Open",
+                stringResource(R.string.summary_on_weglide, upload.flight.flightId.toString()),
                 color = colors.text, fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
                     .heightIn(min = 48.dp)
                     .clickable(role = Role.Button) { onOpenUrl(upload.flight.url) }
                     .padding(horizontal = 4.dp, vertical = 12.dp))
             weGlideReady -> {
-                ActionButton(if (upload == Upload.Running) "Uploading…" else "Upload to WeGlide",
+                ActionButton(stringResource(if (upload == Upload.Running) R.string.summary_uploading
+                                         else R.string.flights_upload),
                              outlined = true, enabled = upload != Upload.Running,
                              modifier = Modifier.fillMaxWidth(), onClick = onUpload)
                 if (upload is Upload.Failed)
-                    Text("WeGlide: ${upload.message}", color = colors.warning, fontSize = 15.sp,
+                    Text(stringResource(R.string.summary_weglide_error,
+                                     upload.message ?: stringResource(R.string.summary_upload_failed)),
+                         color = colors.warning, fontSize = 15.sp,
                          modifier = Modifier.padding(horizontal = 4.dp))
             }
-            else -> Hint("To upload to WeGlide, set your pilot ID: Menu → Aircraft & crew → " +
-                             "Pilot.")
+            else -> Hint(stringResource(R.string.summary_set_pilot_id,
+                              menuPath(R.string.menu, R.string.menu_crew, R.string.pilot)))
         }
 
-        ActionButton("Delete", outlined = true, enabled = onGround,
+        ActionButton(stringResource(R.string.flights_delete), outlined = true, enabled = onGround,
                      modifier = Modifier.fillMaxWidth()) { confirmDelete = true }
         detail.error?.let {
-            Text(it, color = colors.warning, fontSize = 15.sp,
+            Text(it.text(), color = colors.warning, fontSize = 15.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
         }
         if (!onGround)
-            Hint("Replay and Delete: on the ground.")
+            Hint(stringResource(R.string.flights_ground))
     }
 
     if (confirmDelete)
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("Delete this flight?") },
+            title = { Text(stringResource(R.string.flights_delete_title)) },
             text = {
-                Text("${log.name} goes from the phone for good. Copies shared or on " +
-                         "WeGlide stay.")
+                Text(stringResource(R.string.flights_delete_text, log.name))
             },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = false
                     onDelete()
-                }) { Text("Delete", color = colors.warning) }
+                }) { Text(stringResource(R.string.flights_delete), color = colors.warning) }
             },
             dismissButton = {
-                TextButton(onClick = { confirmDelete = false }) { Text("Cancel") }
+                TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) }
             },
         )
 }

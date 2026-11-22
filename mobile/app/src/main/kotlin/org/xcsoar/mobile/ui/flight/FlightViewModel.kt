@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.AirspaceAlerts
 import org.xcsoar.mobile.core.AirspaceWarningInfo
 import org.xcsoar.mobile.core.airspaceAlerts
@@ -40,6 +41,8 @@ import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.core.SoundOption
 import org.xcsoar.mobile.core.Thermal
 import org.xcsoar.mobile.ui.Format
+import org.xcsoar.mobile.ui.UiText
+import org.xcsoar.mobile.ui.asText
 import org.xcsoar.mobile.ui.summary.FlightEnd
 import org.xcsoar.mobile.core.TileAction
 import org.xcsoar.mobile.core.TileGraphic
@@ -47,6 +50,7 @@ import org.xcsoar.mobile.core.TileLayout
 import org.xcsoar.mobile.core.TileValue
 import org.xcsoar.mobile.core.XcsoarCore
 import kotlin.math.abs
+import org.xcsoar.mobile.ui.text
 
 /**
  * State and actions of the flight screen; knows only [XcsoarCore].
@@ -110,9 +114,9 @@ class FlightViewModel(
         .transform { emit(it); delay(VARIO_INTERVAL_MS) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    private val lastEventFlow = MutableStateFlow<String?>(null)
+    private val lastEventFlow = MutableStateFlow<UiText?>(null)
     /** A short text for the latest glide computer event, for the status line. */
-    val lastEvent: StateFlow<String?> = lastEventFlow.asStateFlow()
+    val lastEvent: StateFlow<UiText?> = lastEventFlow.asStateFlow()
 
     /* the pilot's choice of layout, until the next flight mode change */
     private val modeOverride = MutableStateFlow<Boolean?>(null)
@@ -363,7 +367,7 @@ class FlightViewModel(
                 core.units()?.let { Format.units = it }
             } catch (e: Exception) {
                 // never crash the app: show why and keep the UI usable
-                lastEventFlow.value = "Core failed to start: ${e.message}"
+                lastEventFlow.value = text(R.string.event_core_failed, e.message.orEmpty())
             }
         }
         // leaving a climb: its average and height gained
@@ -404,8 +408,8 @@ class FlightViewModel(
                     modeOverride.value = null
                 lastEventFlow.value = when (event) {
                     is CoreEvent.GlideComputer -> describe(event.event)
-                    is CoreEvent.Message -> event.text
-                    is CoreEvent.ReplayFinished -> "Replay finished"
+                    is CoreEvent.Message -> event.text.asText()
+                    is CoreEvent.ReplayFinished -> text(R.string.summary_replay_finished)
                 }
             }
         }
@@ -422,7 +426,7 @@ class FlightViewModel(
             try {
                 core.startReplay(path, timeScale = replaySpeedFlow.value.timeScale)
             } catch (e: Exception) {
-                lastEventFlow.value = "Replay failed: ${e.message}"
+                lastEventFlow.value = text(R.string.event_replay_failed, e.message.orEmpty())
             }
         }
     }
@@ -432,7 +436,7 @@ class FlightViewModel(
             try {
                 core.stopReplay()
             } catch (e: Exception) {
-                lastEventFlow.value = "Replay not stopped: ${e.message}"
+                lastEventFlow.value = text(R.string.event_replay_not_stopped, e.message.orEmpty())
             }
         }
     }
@@ -495,7 +499,7 @@ class FlightViewModel(
                 // a newer surface replaced this one: not a failure
                 throw e
             } catch (e: Exception) {
-                lastEventFlow.value = "Map failed: ${e.message}"
+                lastEventFlow.value = text(R.string.event_map_failed, e.message.orEmpty())
             }
         }
     }
@@ -588,7 +592,7 @@ class FlightViewModel(
             mapItemsFlow.value = try {
                 core.mapItemsAt(x, y)
             } catch (e: Exception) {
-                lastEventFlow.value = "Map items: ${e.message}"
+                lastEventFlow.value = text(R.string.event_map_items, e.message.orEmpty())
                 null
             }
         }
@@ -601,7 +605,7 @@ class FlightViewModel(
             try {
                 core.gotoWaypoint(id)
             } catch (_: Exception) {
-                lastEventFlow.value = "Go to: only landable waypoints (profile setting)"
+                lastEventFlow.value = text(R.string.event_goto_landable)
             }
         }
     }
@@ -645,7 +649,7 @@ class FlightViewModel(
                 // speed to fly and the like follow MacCready
                 refreshTiles()
             } catch (e: Exception) {
-                lastEventFlow.value = "MacCready not set: ${e.message}"
+                lastEventFlow.value = text(R.string.event_mc_not_set, e.message.orEmpty())
             }
             // unless the pilot stepped again meanwhile
             pendingMacCready.compareAndSet(mc, null)
@@ -653,14 +657,14 @@ class FlightViewModel(
     }
 
     /* climb and cruise are left out: the tiles already show the mode */
-    private fun describe(e: GlideComputerEvent): String? = when (e) {
-        GlideComputerEvent.TAKEOFF -> "Take-off"
-        GlideComputerEvent.LANDING -> "Landing"
-        GlideComputerEvent.FLIGHTMODE_FINALGLIDE -> "Final glide"
-        GlideComputerEvent.TASK_START -> "Task started"
-        GlideComputerEvent.TASK_NEXTWAYPOINT -> "Next turnpoint"
-        GlideComputerEvent.TASK_FINISH -> "Task finished"
-        GlideComputerEvent.LANDABLE_UNREACHABLE -> "No landable in reach"
+    private fun describe(e: GlideComputerEvent): UiText? = when (e) {
+        GlideComputerEvent.TAKEOFF -> text(R.string.event_takeoff)
+        GlideComputerEvent.LANDING -> text(R.string.event_landing)
+        GlideComputerEvent.FLIGHTMODE_FINALGLIDE -> text(R.string.voice_final_glide_title)
+        GlideComputerEvent.TASK_START -> text(R.string.event_task_started)
+        GlideComputerEvent.TASK_NEXTWAYPOINT -> text(R.string.event_next_turnpoint)
+        GlideComputerEvent.TASK_FINISH -> text(R.string.event_task_finished)
+        GlideComputerEvent.LANDABLE_UNREACHABLE -> text(R.string.event_no_landable)
         else -> null
     }
 }

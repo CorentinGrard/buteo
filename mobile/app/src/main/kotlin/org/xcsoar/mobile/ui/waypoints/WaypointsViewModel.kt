@@ -14,16 +14,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.WaypointFilter
 import org.xcsoar.mobile.core.WaypointInfo
 import org.xcsoar.mobile.core.XcsoarCore
+import org.xcsoar.mobile.ui.UiText
+import org.xcsoar.mobile.ui.text
+import org.xcsoar.mobile.ui.toText
 
 data class WaypointsState(
     val query: String = "",
     val filter: WaypointFilter = WaypointFilter.LANDABLE,
     /** null until the core answered. */
     val waypoints: List<WaypointInfo>? = null,
-    val error: String? = null,
+    val error: UiText? = null,
     /** Set after a successful "Go to": the screen closes. */
     val done: Boolean = false,
 )
@@ -71,8 +75,7 @@ class WaypointsViewModel(
                 stateFlow.update { it.copy(done = true) }
             } catch (_: Exception) {
                 stateFlow.update {
-                    it.copy(error = "${waypoint.name}: go to only to landable waypoints " +
-                        "(profile setting)")
+                    it.copy(error = text(R.string.waypoints_landable_only, waypoint.name))
                 }
             }
         }
@@ -94,7 +97,7 @@ class WaypointsViewModel(
                     // a newer search replaced this one
                     throw e
                 } catch (e: Exception) {
-                    stateFlow.update { it.copy(waypoints = emptyList(), error = e.message) }
+                    stateFlow.update { it.copy(waypoints = emptyList(), error = e.toText()) }
                 }
                 delay(REFRESH_MS)
             }

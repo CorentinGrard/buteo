@@ -9,8 +9,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.ProfileInfo
 import org.xcsoar.mobile.core.XcsoarCore
+import org.xcsoar.mobile.ui.UiText
+import org.xcsoar.mobile.ui.text
+import org.xcsoar.mobile.ui.toText
 
 /**
  * XCSoar's profiles: list, create, copy, import, delete, and switch
@@ -28,9 +32,9 @@ class ProfilesViewModel(
     /** `null` while loading. */
     val profiles: StateFlow<List<ProfileInfo>?> = profilesFlow.asStateFlow()
 
-    private val errorFlow = MutableStateFlow<String?>(null)
+    private val errorFlow = MutableStateFlow<UiText?>(null)
     /** Why the last action failed; cleared by the next one. */
-    val error: StateFlow<String?> = errorFlow.asStateFlow()
+    val error: StateFlow<UiText?> = errorFlow.asStateFlow()
 
     fun refresh() {
         viewModelScope.launch {
@@ -51,32 +55,32 @@ class ProfilesViewModel(
         }
 
     /** Fly with [profile] from now on: the app restarts with it. */
-    fun use(profile: ProfileInfo) = act("Could not switch profiles") { switch(profile.path) }
+    fun use(profile: ProfileInfo) = act(text(R.string.profiles_cannot_switch)) { switch(profile.path) }
 
     /**
      * A new profile [name]: XCSoar's defaults, or a copy of the profile
      * in use.
      */
     fun create(name: String, copyCurrent: Boolean) =
-        act("Not created: \"${name.trim()}\" is taken or not a file name") {
+        act(text(R.string.profiles_not_created, name.trim())) {
             val current = profilesFlow.value?.firstOrNull { it.current }
             core.createProfile(name.trim(), current?.path.takeIf { copyCurrent })
         }
 
-    fun import(uri: String) = act("Not imported", showCause = true) { importFile(uri) }
+    fun import(uri: String) = act(text(R.string.profiles_not_imported), showCause = true) { importFile(uri) }
 
     fun delete(profile: ProfileInfo, password: String? = null) =
-        act("${profile.name} not deleted") { core.deleteProfile(profile.path, password) }
+        act(text(R.string.profiles_not_deleted, profile.name)) { core.deleteProfile(profile.path, password) }
 
     /** @param showCause add the exception's message (ours, not the core's) */
-    private fun act(failure: String, showCause: Boolean = false, block: suspend () -> Unit) {
+    private fun act(failure: UiText, showCause: Boolean = false, block: suspend () -> Unit) {
         errorFlow.value = null
         viewModelScope.launch {
             try {
                 block()
             } catch (e: Exception) {
-                errorFlow.value = e.message?.takeIf { showCause }?.let { "$failure: $it" }
-                    ?: failure
+                errorFlow.value = e.takeIf { showCause }?.toText()
+                    ?.let { text(R.string.error_with_cause, failure, it) } ?: failure
             }
             refresh()
         }

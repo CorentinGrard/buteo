@@ -11,9 +11,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.DataFile
 import org.xcsoar.mobile.core.RepositoryFile
 import org.xcsoar.mobile.core.XcsoarCore
+import org.xcsoar.mobile.ui.MessageException
+import org.xcsoar.mobile.ui.UiText
+import org.xcsoar.mobile.ui.text
+import org.xcsoar.mobile.ui.toText
 
 data class DownloadState(
     val kind: DataFile = DataFile.MAP,
@@ -23,7 +28,7 @@ data class DownloadState(
     /** The file being downloaded and its progress (0..1, -1 unknown). */
     val downloading: String? = null,
     val progress: Float = 0f,
-    val error: String? = null,
+    val error: UiText? = null,
     /** Set when the file was downloaded and loaded: the screen closes. */
     val done: Boolean = false,
 ) {
@@ -68,12 +73,13 @@ class DownloadViewModel(
         job = viewModelScope.launch {
             try {
                 val files = core.repositoryFiles(index())
-                    ?: error("downloads need the native core")
+                    ?: throw MessageException(text(R.string.download_needs_core),
+                        "downloads need the native core")
                 stateFlow.update {
                     it.copy(files = files.filter { f -> f.dataFile == kind }.sortedBy { f -> f.name })
                 }
             } catch (e: Exception) {
-                stateFlow.update { it.copy(files = emptyList(), error = e.message ?: e.toString()) }
+                stateFlow.update { it.copy(files = emptyList(), error = e.toText()) }
             }
         }
     }
@@ -89,7 +95,7 @@ class DownloadViewModel(
                 core.setDataFile(stateFlow.value.kind, path)
                 stateFlow.update { it.copy(downloading = null, done = true) }
             } catch (e: Exception) {
-                stateFlow.update { it.copy(downloading = null, error = e.message ?: e.toString()) }
+                stateFlow.update { it.copy(downloading = null, error = e.toText()) }
             }
         }
     }

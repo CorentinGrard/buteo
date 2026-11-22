@@ -38,6 +38,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.core.content.FileProvider
@@ -622,7 +623,8 @@ class MainActivity : ComponentActivity() {
                                 onBack = { screen = Screen.FLIGHT })
                             Screen.TEAM_REFERENCE -> WaypointsScreen(
                                 pickViewModel, onDone = { screen = Screen.TEAM_CODE },
-                                title = "Reference", pickLabel = "Set",
+                                title = stringResource(R.string.waypoints_reference),
+                                pickLabel = stringResource(R.string.waypoints_set),
                                 onPick = { teamCodeViewModel.setReference(it.id) })
                             Screen.RADIO -> RadioScreen(
                                 radioViewModel, onBack = { screen = Screen.FLIGHT })
@@ -631,7 +633,8 @@ class MainActivity : ComponentActivity() {
                                 onBack = { screen = Screen.FLIGHT })
                             Screen.ATC_REFERENCE -> WaypointsScreen(
                                 pickViewModel, onDone = { screen = Screen.ATC },
-                                title = "Relocate", pickLabel = "Set",
+                                title = stringResource(R.string.waypoints_relocate),
+                                pickLabel = stringResource(R.string.waypoints_set),
                                 onPick = { atcViewModel.setReference(it.id) })
                             Screen.AIRSPACE_DETAILS -> AirspaceDetailsScreen(
                                 airspaceDetailsViewModel, onBack = { screen = Screen.FLIGHT })
@@ -694,7 +697,7 @@ class MainActivity : ComponentActivity() {
                                 taskViewModel, onBack = { screen = Screen.TASK })
                             Screen.TASK_ADD_POINT -> WaypointsScreen(
                                 pickViewModel, onDone = { screen = Screen.TASK },
-                                title = "Add point", onPick = taskViewModel::add)
+                                title = stringResource(R.string.waypoints_add_point), onPick = taskViewModel::add)
                             Screen.SUMMARY -> SummaryScreen(
                                 summaryViewModel, flightsViewModel, onShare = ::share,
                                 onOpenUrl = ::openUrl, onDone = { screen = Screen.FLIGHT })

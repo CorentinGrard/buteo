@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.WindInfo
 import org.xcsoar.mobile.core.WindOption
 import org.xcsoar.mobile.core.WindSource
@@ -152,22 +154,25 @@ fun WindContent(
     onBack: () -> Unit,
 ) {
     PageLayout {
-        ScreenHeader("Wind", onBack)
+        ScreenHeader(stringResource(R.string.wind), onBack)
 
         CurrentWind(wind)
 
-        Caption("Set by hand", Modifier.padding(start = 4.dp, top = 8.dp))
+        Caption(stringResource(R.string.wind_manual), Modifier.padding(start = 4.dp, top = 8.dp))
         val known = wind != null && wind.source != WindSource.NONE
         val speed = if (known) wind.speed else 0.0
         val bearing = if (known) wind.bearing.roundToInt() else 0
         val direction = Format.bearing(bearing.toDouble())
-        Stepper("wind direction", "From · °", direction.text, "from ${direction.text} degrees",
+        Stepper(stringResource(R.string.wind_direction_name),
+                "${stringResource(R.string.sound_from)} · °", direction.text,
+                stringResource(R.string.wind_spoken_direction, direction.text),
                 canDecrease = wind != null, canIncrease = wind != null,
                 onDecrease = { onManual(speed, stepBearing(bearing, -1)) },
                 onIncrease = { onManual(speed, stepBearing(bearing, +1)) },
                 modifier = Modifier.fillMaxWidth())
         val value = Format.windSpeed(speed)
-        Stepper("wind speed", "Speed · ${value.unit}", value.text, "${value.text} ${value.unit}",
+        Stepper(stringResource(R.string.wind_speed_name),
+                "${stringResource(R.string.wind_speed)} · ${value.unit}", value.text, "${value.text} ${value.unit}",
                 canDecrease = wind != null && speed > 0.01,
                 canIncrease = wind != null && speed < WindViewModel.MAX_SPEED - 0.01,
                 onDecrease = {
@@ -181,26 +186,25 @@ fun WindContent(
                 modifier = Modifier.fillMaxWidth())
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            ActionButton("Clear", enabled = wind?.manual == true, onClick = onClearManual)
-            Explanation("Used at once, until a newer estimate replaces it.")
+            ActionButton(stringResource(R.string.wind_clear), enabled = wind?.manual == true, onClick = onClearManual)
+            Explanation(stringResource(R.string.wind_manual_hint))
         }
 
-        Caption("Estimates", Modifier.padding(start = 4.dp, top = 8.dp))
+        Caption(stringResource(R.string.wind_estimates), Modifier.padding(start = 4.dp, top = 8.dp))
         SettingsGroup {
-            SwitchRow("Circling wind",
-                      "Estimate the wind while circling. Needs only a GPS.",
+            SwitchRow(stringResource(R.string.wind_circling),
+                      stringResource(R.string.wind_circling_detail),
                       options[WindOption.CIRCLING]) { onOption(WindOption.CIRCLING, it) }
-            SwitchRow("ZigZag wind",
-                      "Estimate the wind in glides. Needs an airspeed sensor.",
+            SwitchRow(stringResource(R.string.wind_zigzag),
+                      stringResource(R.string.wind_zigzag_detail),
                       options[WindOption.ZIG_ZAG]) { onOption(WindOption.ZIG_ZAG, it) }
-            SwitchRow("External wind",
-                      "Take the wind of other instruments.",
+            SwitchRow(stringResource(R.string.wind_external),
+                      stringResource(R.string.wind_external_detail),
                       options[WindOption.EXTERNAL]) { onOption(WindOption.EXTERNAL, it) }
         }
         SettingsGroup {
-            SwitchRow("Trail drift",
-                      "Drift the snail trail with the wind while circling, at close " +
-                          "map scales.",
+            SwitchRow(stringResource(R.string.wind_drift),
+                      stringResource(R.string.wind_drift_detail),
                       options[WindOption.TRAIL_DRIFT]) { onOption(WindOption.TRAIL_DRIFT, it) }
         }
     }
@@ -214,17 +218,17 @@ private fun CurrentWind(wind: WindInfo?) {
     val direction = Format.bearing(if (known) wind.bearing else null)
     val speed = Format.windSpeed(if (known) wind.speed else null)
     val source = describe(wind)
+    val spoken = if (known)
+        stringResource(R.string.wind_spoken, direction.text, speed.text, speed.unit, source)
+    else stringResource(R.string.wind_spoken_none, source)
     Column(Modifier
                .fillMaxWidth()
                .background(colors.panel, RoundedCornerShape(14.dp))
                .padding(16.dp)
                .clearAndSetSemantics {
-                   contentDescription =
-                       if (known) "Wind from ${direction.text} degrees, ${speed.text} " +
-                           "${speed.unit}, $source"
-                       else "No wind, $source"
+                   contentDescription = spoken
                }) {
-        Caption("Wind in use")
+        Caption(stringResource(R.string.wind_in_use))
         Text(if (known) "${direction.text}${direction.unit}  ${speed.text} ${speed.unit}"
              else Format.INVALID,
              color = colors.text, fontSize = 34.sp, fontWeight = FontWeight.Bold)
@@ -233,14 +237,15 @@ private fun CurrentWind(wind: WindInfo?) {
 }
 
 /** Where the wind comes from, as upstream's wind dialog says it. */
-private fun describe(wind: WindInfo?): String = when (wind?.source) {
-    null -> "Reading…"
-    WindSource.NONE -> "None yet: circle to estimate it, or set it by hand"
-    WindSource.MANUAL -> "Set by hand"
-    WindSource.CIRCLING -> "Circling estimate"
-    WindSource.ZIG_ZAG -> "ZigZag estimate"
-    WindSource.EXTERNAL -> "External instrument"
-}
+@Composable
+private fun describe(wind: WindInfo?): String = stringResource(when (wind?.source) {
+    null -> R.string.status_reading
+    WindSource.NONE -> R.string.wind_source_none
+    WindSource.MANUAL -> R.string.wind_manual
+    WindSource.CIRCLING -> R.string.wind_source_circling
+    WindSource.ZIG_ZAG -> R.string.wind_source_zigzag
+    WindSource.EXTERNAL -> R.string.wind_source_external
+})
 
 /** One step of the manual direction, on the 5° grid, wrapping at 360°. */
 private fun stepBearing(bearing: Int, direction: Int): Double {

@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.SafetyOption
 import org.xcsoar.mobile.core.UnitGroup
 import org.xcsoar.mobile.core.XcsoarCore
@@ -86,25 +88,28 @@ fun SafetyContent(
     onBack: () -> Unit,
 ) {
     PageLayout {
-        ScreenHeader("Safety heights", onBack)
+        ScreenHeader(stringResource(R.string.menu_safety), onBack)
 
-        Caption("Margins", Modifier.padding(start = 4.dp))
-        HeightStepper("arrival height", "Arrival height",
+        Caption(stringResource(R.string.safety_margins), Modifier.padding(start = 4.dp))
+        HeightStepper(stringResource(R.string.safety_arrival_name),
+                      stringResource(R.string.safety_arrival),
                       values[SafetyOption.ARRIVAL_HEIGHT], 2000.0) {
             onSet(SafetyOption.ARRIVAL_HEIGHT, it)
         }
-        Explanation("Above the field when you land there: arrival heights and reach use it.")
-        HeightStepper("terrain clearance", "Terrain clearance",
+        Explanation(stringResource(R.string.safety_arrival_hint))
+        HeightStepper(stringResource(R.string.safety_terrain_name),
+                      stringResource(R.string.safety_terrain),
                       values[SafetyOption.TERRAIN_HEIGHT], 1000.0) {
             onSet(SafetyOption.TERRAIN_HEIGHT, it)
         }
-        Explanation("Kept between the glide path and the terrain on final glide.")
+        Explanation(stringResource(R.string.safety_terrain_hint))
 
-        Caption("Glide computer", Modifier.padding(start = 4.dp, top = 8.dp))
+        Caption(stringResource(R.string.safety_computer), Modifier.padding(start = 4.dp, top = 8.dp))
         val mc = values[SafetyOption.MC]
         val mcUnit = Format.unit(UnitGroup.VERTICAL_SPEED).name
         val mcText = mc?.let { Format.macCready(it).text } ?: Format.INVALID
-        Stepper("safety MacCready", "Safety MacCready · $mcUnit", mcText, "$mcText $mcUnit",
+        Stepper(stringResource(R.string.safety_mc_name),
+                "${stringResource(R.string.safety_mc)} · $mcUnit", mcText, "$mcText $mcUnit",
                 canDecrease = mc != null && mc > 0, canIncrease = mc != null && mc < 10,
                 onDecrease = {
                     mc?.let { onSet(SafetyOption.MC, Format.stepVerticalSpeed(it, -1)
@@ -115,11 +120,12 @@ fun SafetyContent(
                         .coerceIn(0.0, 10.0)) }
                 },
                 modifier = Modifier.fillMaxWidth())
-        Explanation("The MacCready of the reach and of the arrival heights at fields.")
+        Explanation(stringResource(R.string.safety_mc_hint))
 
         val startup = values[SafetyOption.STARTUP_MC]
         val startupText = startup?.let { Format.macCready(it).text } ?: Format.INVALID
-        Stepper("MacCready at start", "MacCready at start · $mcUnit", startupText,
+        Stepper(stringResource(R.string.safety_start_mc_name),
+                "${stringResource(R.string.safety_start_mc)} · $mcUnit", startupText,
                 "$startupText $mcUnit",
                 canDecrease = startup != null && startup > 0,
                 canIncrease = startup != null && startup < STARTUP_MC_MAX,
@@ -132,31 +138,31 @@ fun SafetyContent(
                         .coerceIn(0.0, STARTUP_MC_MAX)) }
                 },
                 modifier = Modifier.fillMaxWidth())
-        Explanation("The MacCready for speed to fly when the app starts; changing it " +
-                        "sets the MacCready now too.")
+        Explanation(stringResource(R.string.safety_start_mc_hint))
 
         val risk = values[SafetyOption.RISK_FACTOR]
         val riskText = risk?.let { String.format(Locale.ROOT, "%.1f", it) } ?: Format.INVALID
-        Stepper("risk factor", "Speed to fly risk factor", riskText, riskText,
+        Stepper(stringResource(R.string.safety_risk_name),
+                stringResource(R.string.safety_risk), riskText, riskText,
                 canDecrease = risk != null && risk > 0.05,
                 canIncrease = risk != null && risk < 0.95,
                 onDecrease = { risk?.let { onSet(SafetyOption.RISK_FACTOR, tenths(it - 0.1)) } },
                 onIncrease = { risk?.let { onSet(SafetyOption.RISK_FACTOR, tenths(it + 0.1)) } },
                 modifier = Modifier.fillMaxWidth())
-        Explanation("Lowers MacCready for speed to fly as you get low: 0 off, 0.3 is " +
-                        "common.")
+        Explanation(stringResource(R.string.safety_risk_hint))
 
-        Caption("Alternates", Modifier.padding(start = 4.dp, top = 8.dp))
-        Segmented(listOf("Nearest", "Along task", "Toward home"),
+        Caption(stringResource(R.string.safety_alternates), Modifier.padding(start = 4.dp, top = 8.dp))
+        Segmented(listOf(stringResource(R.string.safety_nearest),
+                         stringResource(R.string.safety_along_task),
+                         stringResource(R.string.safety_toward_home)),
                   selected = values[SafetyOption.ALTERNATES]?.roundToInt() ?: -1,
                   onSelect = { onSet(SafetyOption.ALTERNATES, it.toDouble()) },
                   modifier = Modifier.fillMaxWidth())
-        Explanation("How the alternates, the fields in reach, are sorted.")
+        Explanation(stringResource(R.string.safety_alternates_hint))
 
         SettingsGroup {
-            SwitchRow("Turn back marker",
-                      "A green triangle on your track: the last point from which the " +
-                          "target is still in reach",
+            SwitchRow(stringResource(R.string.safety_turn_back),
+                      stringResource(R.string.safety_turn_back_detail),
                       values[SafetyOption.TURN_BACK_MARKER]?.let { it != 0.0 }) {
                 onSet(SafetyOption.TURN_BACK_MARKER, if (it) 1.0 else 0.0)
             }

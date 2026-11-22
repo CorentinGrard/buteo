@@ -17,6 +17,7 @@ import org.xcsoar.mobile.core.UnitGroupInfo
 import org.xcsoar.mobile.core.UnitInfo
 import org.xcsoar.mobile.core.UnitPreset
 import org.xcsoar.mobile.core.UnitSettings
+import org.xcsoar.mobile.ui.asText
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
 /** L4: the first start's three steps (mobile/docs/ARCHITECTURE.md §6). */
@@ -107,7 +108,7 @@ class WelcomeScreenshotTest {
     fun dataOffline() = captureRoboImage("src/test/screenshots/welcome_offline.png") {
         XcsTheme(dark = false) {
             WelcomeContent(WelcomeState(step = WelcomeStep.DATA, units = units,
-                                        repositoryError = "Unable to resolve host"))
+                                        repositoryError = "Unable to resolve host".asText()))
         }
     }
 
@@ -154,7 +155,7 @@ class WelcomeScreenshotTest {
     fun frenchOffline() = captureRoboImage("src/test/screenshots/fr_welcome_offline.png") {
         XcsTheme(dark = false) {
             WelcomeContent(WelcomeState(step = WelcomeStep.DATA, units = units,
-                                        repositoryError = "Unable to resolve host"))
+                                        repositoryError = "Unable to resolve host".asText()))
         }
     }
 }

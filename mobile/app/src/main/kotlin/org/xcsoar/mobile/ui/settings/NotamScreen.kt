@@ -21,6 +21,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -30,12 +31,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import java.time.Month
+import java.time.format.TextStyle
+import java.util.Locale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.NotamInfo
 import org.xcsoar.mobile.core.NotamList
 import org.xcsoar.mobile.core.NotamSettings
@@ -47,8 +52,10 @@ import org.xcsoar.mobile.ui.PageLayout
 import org.xcsoar.mobile.ui.ScreenHeader
 import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.SwitchRow
+import org.xcsoar.mobile.ui.UiText
 import org.xcsoar.mobile.ui.flight.Caption
 import org.xcsoar.mobile.ui.flight.Stepper
+import org.xcsoar.mobile.ui.text
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import org.xcsoar.mobile.ui.weather.utcTime
 
@@ -58,7 +65,7 @@ data class NotamState(
     /** The settings differ from the saved ones. */
     val changed: Boolean = false,
     val list: NotamList = NotamList(),
-    val message: String? = null,
+    val message: UiText? = null,
 )
 
 /** NOTAMConfigPanel and NOTAMList in one page. */
@@ -93,7 +100,7 @@ class NotamViewModel(private val core: XcsoarCore) : ViewModel() {
                 stateFlow.update { it.copy(changed = false) }
                 followDownload()
             } catch (_: Exception) {
-                stateFlow.update { it.copy(message = "Could not save") }
+                stateFlow.update { it.copy(message = text(R.string.crew_could_not_save)) }
             }
         }
     }
@@ -102,8 +109,7 @@ class NotamViewModel(private val core: XcsoarCore) : ViewModel() {
         viewModelScope.launch {
             val started = try { core.refreshNotams() } catch (_: Exception) { false }
             if (!started) {
-                stateFlow.update { it.copy(message = "Needs a GPS fix: NOTAMs are " +
-                                                     "downloaded around the glider") }
+                stateFlow.update { it.copy(message = text(R.string.notam_needs_fix)) }
                 return@launch
             }
             stateFlow.update { it.copy(message = null) }
@@ -150,43 +156,47 @@ fun NotamContent(
 ) {
     val colors = XcsTheme.colors
     val s = state.settings
+    val whenAsked = stringResource(R.string.notam_when_asked)
     PageLayout(bottom = if (state.changed) ({
-        ActionButton("Save", primary = true, modifier = Modifier.weight(1f), onClick = onSave)
+        ActionButton(stringResource(R.string.save), primary = true, modifier = Modifier.weight(1f), onClick = onSave)
     }) else null) {
-        ScreenHeader("NOTAMs", onBack)
+        ScreenHeader(stringResource(R.string.notam_title), onBack)
 
         SettingsGroup {
-            SwitchRow("NOTAMs", "From XCSoar's NOTAM server, shown as airspace and " +
-                          "in the warnings", s.enabled, enabled = state.loaded) { on ->
+            SwitchRow(stringResource(R.string.notam_title), stringResource(R.string.notam_detail),
+                      s.enabled, enabled = state.loaded) { on ->
                 onChange { it.copy(enabled = on) }
             }
         }
 
         if (s.enabled) {
-            ListStepper("download radius", "Around the glider · km", RADII, s.radiusKm,
+            ListStepper(stringResource(R.string.notam_radius_name),
+                        stringResource(R.string.notam_radius), RADII, s.radiusKm,
                         { "${it}" }) { r -> onChange { it.copy(radiusKm = r) } }
-            ListStepper("refresh interval", "Refresh", INTERVALS, s.refreshMinutes,
-                        { if (it == 0) "When asked" else "${it} min" }) { m ->
+            ListStepper(stringResource(R.string.notam_interval_name),
+                        stringResource(R.string.notam_refresh), INTERVALS, s.refreshMinutes,
+                        { if (it == 0) whenAsked else "${it} min" }) { m ->
                 onChange { it.copy(refreshMinutes = m) }
             }
 
-            Caption("Show", Modifier.padding(start = 4.dp, top = 8.dp))
+            Caption(stringResource(R.string.notam_show), Modifier.padding(start = 4.dp, top = 8.dp))
             SettingsGroup {
-                SwitchRow("Only in force now", "Hide NOTAMs that start later",
+                SwitchRow(stringResource(R.string.notam_effective),
+                          stringResource(R.string.notam_effective_detail),
                           s.onlyEffective) { on -> onChange { it.copy(onlyEffective = on) } }
-                SwitchRow("IFR only NOTAMs", "Usually of no use to a glider pilot",
+                SwitchRow(stringResource(R.string.notam_ifr),
+                          stringResource(R.string.notam_ifr_detail),
                           s.showIfr) { on -> onChange { it.copy(showIfr = on) } }
             }
             InputField(s.hiddenQCodes,
                        { v -> onChange { it.copy(hiddenQCodes = v.uppercase().take(255)) } },
-                       "Hidden Q-codes", capitalization = KeyboardCapitalization.Characters)
-            Explanation("NOTAMs whose Q-code starts with one of these are hidden " +
-                            "(QA: aerodromes, QN: navaids, QOL: obstacle lights…).")
+                       stringResource(R.string.notam_qcodes), capitalization = KeyboardCapitalization.Characters)
+            Explanation(stringResource(R.string.notam_qcodes_hint))
 
             NotamList(state, onRefresh)
         }
 
-        state.message?.let { Text(it, color = colors.caution, fontSize = 15.sp) }
+        state.message?.let { Text(it.text(), color = colors.caution, fontSize = 15.sp) }
     }
 }
 
@@ -196,16 +206,16 @@ private fun NotamList(state: NotamState, onRefresh: () -> Unit) {
     val list = state.list
     Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f).padding(start = 4.dp)) {
-            Caption("${list.notams.size} shown of ${list.total}")
+            Caption(stringResource(R.string.notam_shown, list.notams.size, list.total))
             val updated = list.updated
             Text(when {
-                     list.loading -> "Downloading…"
-                     updated != null -> "Updated ${utcTime(updated)}"
-                     else -> "Not downloaded yet"
+                     list.loading -> stringResource(R.string.welcome_downloading)
+                     updated != null -> stringResource(R.string.notam_updated, utcTime(updated))
+                     else -> stringResource(R.string.notam_not_downloaded)
                  },
                  color = colors.textSecondary, fontSize = 14.sp)
         }
-        ActionButton("Refresh", outlined = true, enabled = !list.loading && !state.changed,
+        ActionButton(stringResource(R.string.notam_refresh), outlined = true, enabled = !list.loading && !state.changed,
                      onClick = onRefresh)
     }
     var expanded by rememberSaveable { mutableStateOf<String?>(null) }
@@ -245,21 +255,22 @@ private fun NotamCard(notam: NotamInfo, expanded: Boolean, onToggle: () -> Unit)
 }
 
 /** "until 03 18:00 UTC", "from 05 07:00 UTC", "permanent" */
+@Composable
 private fun validity(notam: NotamInfo): String = when {
-    !notam.active && notam.start.isNotEmpty() -> "from ${dayTime(notam.start)}"
-    notam.permanent -> "permanent"
-    else -> notam.end?.let { "until ${dayTime(it)}" } ?: ""
+    !notam.active && notam.start.isNotEmpty() ->
+        stringResource(R.string.notam_from, dayTime(notam.start))
+    notam.permanent -> stringResource(R.string.notam_permanent)
+    else -> notam.end?.let { stringResource(R.string.notam_until, dayTime(it)) } ?: ""
 }
 
 /** "2026-10-03T18:00:00Z" → "3 Oct 18:00 UTC" */
 private fun dayTime(iso: String): String {
     if (iso.length < 16) return iso
-    val month = iso.substring(5, 7).toIntOrNull()?.let { MONTHS.getOrNull(it - 1) } ?: return iso
+    val month = iso.substring(5, 7).toIntOrNull()?.takeIf { it in 1..12 }?.let {
+        Month.of(it).getDisplayName(TextStyle.SHORT, Locale.getDefault())
+    } ?: return iso
     return "${iso.substring(8, 10).trimStart('0')} $month ${utcTime(iso)}"
 }
-
-private val MONTHS = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
-                            "Oct", "Nov", "Dec")
 
 /** One of [values]; a value between them steps to the next. */
 @Composable

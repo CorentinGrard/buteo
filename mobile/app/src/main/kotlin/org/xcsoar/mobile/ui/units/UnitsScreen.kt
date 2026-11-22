@@ -30,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -37,9 +38,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.UnitGroup
 import org.xcsoar.mobile.core.UnitSettings
 import org.xcsoar.mobile.ui.Format
+import org.xcsoar.mobile.ui.ScreenHeader
 import org.xcsoar.mobile.ui.flight.Caption
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
@@ -52,15 +55,15 @@ fun UnitsScreen(viewModel: UnitsViewModel, onBack: () -> Unit) {
 
 /** The groups the pilot sets, in XCSoar's units panel order. */
 private val GROUPS = listOf(
-    UnitGroup.HORIZONTAL_SPEED to "Aircraft and wind speed",
-    UnitGroup.DISTANCE to "Distance",
-    UnitGroup.VERTICAL_SPEED to "Lift",
-    UnitGroup.ALTITUDE to "Altitude",
-    UnitGroup.TASK_SPEED to "Task speed",
-    UnitGroup.WING_LOADING to "Wing loading",
-    UnitGroup.MASS to "Mass",
-    UnitGroup.PRESSURE to "Pressure",
-    UnitGroup.TEMPERATURE to "Temperature",
+    UnitGroup.HORIZONTAL_SPEED to R.string.units_speed,
+    UnitGroup.DISTANCE to R.string.units_distance,
+    UnitGroup.VERTICAL_SPEED to R.string.units_lift,
+    UnitGroup.ALTITUDE to R.string.units_altitude,
+    UnitGroup.TASK_SPEED to R.string.units_task_speed,
+    UnitGroup.WING_LOADING to R.string.units_wing_loading,
+    UnitGroup.MASS to R.string.units_mass,
+    UnitGroup.PRESSURE to R.string.units_pressure,
+    UnitGroup.TEMPERATURE to R.string.units_temperature,
 )
 
 /** XCSoar's presets and a unit per group; applies at once. */
@@ -81,31 +84,18 @@ fun UnitsContent(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier
-                    .height(56.dp)
-                    .widthIn(min = 96.dp)
-                    .clickable(role = Role.Button, onClick = onBack)
-                    .semantics { contentDescription = "Back" }
-                    .padding(horizontal = 18.dp),
-                contentAlignment = Alignment.Center) {
-                Text("Back", color = colors.text, fontSize = 16.sp,
-                     fontWeight = FontWeight.SemiBold)
-            }
-            Text("Units", color = colors.text, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        }
+        ScreenHeader(stringResource(R.string.units), onBack)
 
         if (units.presets.isNotEmpty()) {
-            Caption("Preset", Modifier.padding(start = 4.dp))
+            Caption(stringResource(R.string.units_preset), Modifier.padding(start = 4.dp))
             Segments(units.presets.mapIndexed { i, p -> i to p.name }, units.preset, onPreset)
         }
 
-        for ((group, label) in GROUPS) {
+        for ((group, labelRes) in GROUPS) {
             val choices = units.choices(group)
             if (choices.size < 2)
                 continue
-            Caption(label, Modifier.padding(start = 4.dp))
+            Caption(stringResource(labelRes), Modifier.padding(start = 4.dp))
             Segments(choices.map { it.unit to it.name }, units.unitOf(group).unit) {
                 onSet(group, it)
             }

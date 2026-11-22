@@ -13,6 +13,7 @@ import org.xcsoar.mobile.core.FakeXcsoarCore
 import org.xcsoar.mobile.core.TileLayout
 import org.xcsoar.mobile.core.TileType
 import org.xcsoar.mobile.core.TileValue
+import org.xcsoar.mobile.ui.asText
 import org.xcsoar.mobile.ui.flight.FlightContent
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
@@ -24,7 +25,7 @@ class TilesScreenshotTest {
     @Test
     fun flightScreenWithInfoBoxes() = captureRoboImage("src/test/screenshots/flight_tiles.png") {
         XcsTheme(dark = false) {
-            FlightContent(FakeXcsoarCore.syntheticState(120), "Cruise", circling = false, {},
+            FlightContent(FakeXcsoarCore.syntheticState(120), "Cruise".asText(), circling = false, {},
                           tiles = listOf(
                               TileValue(118, "Alt", "1842", "m"),
                               TileValue(1, "H AGL", "212", "m", color = TileValue.COLOR_RED),

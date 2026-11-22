@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -41,6 +42,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.AirspaceAlerts
 import org.xcsoar.mobile.core.AirspaceClassInfo
 import org.xcsoar.mobile.core.AirspaceOption
@@ -53,6 +55,7 @@ import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.SwitchRow
 import org.xcsoar.mobile.ui.flight.Caption
 import org.xcsoar.mobile.ui.flight.Stepper
+import org.xcsoar.mobile.ui.menuPath
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
 class AirspaceAlertsViewModel(private val core: XcsoarCore) : ViewModel() {
@@ -172,41 +175,45 @@ fun AirspaceAlertsContent(
     val colors = XcsTheme.colors
     val warnings = alerts?.warnings == true
     PageLayout {
-        ScreenHeader("Airspace", onBack)
+        ScreenHeader(stringResource(R.string.airspace), onBack)
 
         SettingsGroup {
-            SwitchRow("Airspace warnings", "Airspace ahead, inside, or crossing the task",
+            SwitchRow(stringResource(R.string.airalerts_warnings),
+                      stringResource(R.string.airalerts_warnings_detail),
                       alerts?.warnings) {
                 onSet(AirspaceOption.WARNINGS, if (it) 1 else 0)
             }
         }
         if (alerts != null && !warnings)
-            Text("Off: nothing warns of airspace ahead or inside in flight.",
+            Text(stringResource(R.string.airalerts_off),
                  color = colors.caution, fontSize = 15.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
 
-        Caption("When", Modifier.padding(start = 4.dp, top = 8.dp))
-        SecondsStepper("warning time", "Warn ahead", alerts?.warningSeconds, warnings) {
+        Caption(stringResource(R.string.airalerts_when), Modifier.padding(start = 4.dp, top = 8.dp))
+        SecondsStepper(stringResource(R.string.airalerts_warn_name),
+                      stringResource(R.string.airalerts_warn), alerts?.warningSeconds, warnings) {
             onSet(AirspaceOption.WARNING_TIME, it)
         }
-        SecondsStepper("acknowledgement time", "Quiet after Ack", alerts?.ackSeconds,
+        SecondsStepper(stringResource(R.string.airalerts_ack_name),
+                       stringResource(R.string.airalerts_ack), alerts?.ackSeconds,
                        warnings) {
             onSet(AirspaceOption.ACK_TIME, it)
         }
 
-        Caption("How", Modifier.padding(start = 4.dp, top = 8.dp))
+        Caption(stringResource(R.string.airalerts_how), Modifier.padding(start = 4.dp, top = 8.dp))
         SettingsGroup {
-            SwitchRow("Sound", "A tone for a new warning, and when it gets worse",
+            SwitchRow(stringResource(R.string.menu_sound),
+                      stringResource(R.string.airalerts_sound_detail),
                       alerts?.sound, enabled = warnings) {
                 onSet(AirspaceOption.ALERT_SOUND, if (it) 1 else 0)
             }
-            SwitchRow("Vibration", "Vibrate for a new warning, and when it gets worse",
+            SwitchRow(stringResource(R.string.airalerts_vibration),
+                      stringResource(R.string.airalerts_vibration_detail),
                       alerts?.vibration, enabled = warnings) {
                 onSet(AirspaceOption.ALERT_VIBRATION, if (it) 1 else 0)
             }
-            SwitchRow("Hide after ${AirspaceAlerts.AUTO_HIDE_SECONDS} s",
-                      "The banner counts down, then goes; it comes back if the " +
-                          "warning gets worse",
+            SwitchRow(stringResource(R.string.airalerts_hide, AirspaceAlerts.AUTO_HIDE_SECONDS),
+                      stringResource(R.string.airalerts_hide_detail),
                       alerts?.let { it.autoHideSeconds > 0 }, enabled = warnings) {
                 onSet(AirspaceOption.AUTO_HIDE,
                       if (it) AirspaceAlerts.AUTO_HIDE_SECONDS else 0)
@@ -215,7 +222,9 @@ fun AirspaceAlertsContent(
 
         if (onOpenNotams != null)
             SettingsGroup(Modifier.padding(top = 8.dp)) {
-                LinkRow("NOTAMs", "Download, filters, list", onClick = onOpenNotams)
+                LinkRow(stringResource(R.string.notam_title),
+                        stringResource(R.string.airalerts_notams_detail),
+                        onClick = onOpenNotams)
             }
 
         if (classes.isNotEmpty())
@@ -249,9 +258,10 @@ private fun ClassList(
     var showOthers by rememberSaveable { mutableStateOf(false) }
     val (used, others) = classes.sortedBy { it.name.lowercase() }.partition { it.count > 0 }
 
-    Caption("Airspace classes", Modifier.padding(start = 4.dp, top = 8.dp))
+    Caption(stringResource(R.string.airalerts_classes), Modifier.padding(start = 4.dp, top = 8.dp))
     if (used.isEmpty())
-        Text("No airspace file is loaded (Menu → Data files).",
+        Text(stringResource(R.string.airalerts_no_file,
+                            menuPath(R.string.menu, R.string.menu_data_files)),
              color = colors.textSecondary, fontSize = 15.sp,
              modifier = Modifier.padding(horizontal = 4.dp))
     ClassGroup(used, warnings, onSetClass)
@@ -262,7 +272,8 @@ private fun ClassList(
             .clickable(role = Role.Button) { showOthers = !showOthers }
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically) {
-        Text(if (showOthers) "Hide other classes" else "Other classes (${others.size})",
+        Text(if (showOthers) stringResource(R.string.airalerts_hide_others)
+             else stringResource(R.string.airalerts_others, others.size),
              color = colors.text, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
     }
     if (showOthers)
@@ -291,13 +302,13 @@ private fun ClassGroup(
                          fontWeight = FontWeight.SemiBold, maxLines = 1,
                          overflow = TextOverflow.Ellipsis)
                     if (c.count > 0)
-                        Text("${c.count} in the files", color = colors.textSecondary,
+                        Text(stringResource(R.string.airalerts_in_files, c.count), color = colors.textSecondary,
                              fontSize = 14.sp)
                 }
-                ToggleChip("Map", c.display, enabled = true) {
+                ToggleChip(stringResource(R.string.airalerts_map), c.display, enabled = true) {
                     onSetClass(c.code, it, c.warning)
                 }
-                ToggleChip("Warn", c.warning, enabled = warnings) {
+                ToggleChip(stringResource(R.string.airalerts_warn_chip), c.warning, enabled = warnings) {
                     onSetClass(c.code, c.display, it)
                 }
             }

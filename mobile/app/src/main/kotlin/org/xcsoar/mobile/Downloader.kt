@@ -12,6 +12,8 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
 import kotlin.coroutines.coroutineContext
+import org.xcsoar.mobile.ui.MessageException
+import org.xcsoar.mobile.ui.text
 
 /**
  * Downloads files from XCSoar's repository.  The platform does the I/O;
@@ -65,9 +67,11 @@ class Downloader(private val cacheDir: File) {
                 }
             }
             if (sha256 != null && !digest.digest().toHex().equals(sha256, ignoreCase = true))
-                throw IOException("Download of ${target.name} is damaged (checksum)")
+                throw MessageException(text(R.string.download_damaged, target.name),
+                    "Download of ${target.name} is damaged (checksum)")
             if (!partial.renameTo(target))
-                throw IOException("Cannot write ${target.path}")
+                throw MessageException(text(R.string.download_cannot_write, target.path),
+                    "Cannot write ${target.path}")
         } finally {
             connection.disconnect()
             partial.delete()
@@ -90,17 +94,20 @@ class Downloader(private val cacheDir: File) {
                 HttpURLConnection.HTTP_OK -> return connection
                 in 300..399 -> {
                     val location = connection.getHeaderField("Location")
-                        ?: throw IOException("Redirect without location from $url")
+                        ?: throw MessageException(text(R.string.download_no_location, url.toString()),
+                            "Redirect without location from $url")
                     connection.disconnect()
                     url = URL(URL(url, location).toString().replaceFirst(Regex("^http://"), "https://"))
                 }
                 else -> {
                     connection.disconnect()
-                    throw IOException("HTTP $code for $url")
+                    throw MessageException(text(R.string.download_http, code, url.toString()),
+                        "HTTP $code for $url")
                 }
             }
         }
-        throw IOException("Too many redirects for $uri")
+        throw MessageException(text(R.string.download_redirects, uri),
+            "Too many redirects for $uri")
     }
 
     private companion object {

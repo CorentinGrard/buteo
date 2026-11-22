@@ -51,6 +51,7 @@ import org.xcsoar.mobile.ui.InputField
 import org.xcsoar.mobile.ui.PageLayout
 import org.xcsoar.mobile.ui.crew.PlaneRow
 import org.xcsoar.mobile.ui.flight.Caption
+import org.xcsoar.mobile.ui.menuPath
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import java.util.Locale
 
@@ -237,7 +238,7 @@ private fun DataStep(state: WelcomeState, onCountries: (Boolean) -> Unit,
     val error = state.repositoryError
     if (state.repository == null) {
         if (error != null) {
-            Text(stringResource(R.string.welcome_repository_error, error), color = colors.warning,
+            Text(stringResource(R.string.welcome_repository_error, error.text()), color = colors.warning,
                  fontSize = 16.sp, modifier = Modifier.padding(horizontal = 4.dp))
             ActionButton(stringResource(R.string.welcome_try_again), outlined = true, onClick = onRetry)
             Hint(stringResource(R.string.welcome_files_later,
@@ -307,7 +308,7 @@ private fun FileChoice(entry: RegionFileState, enabled: Boolean, onToggle: () ->
                 when {
                     entry.done -> Text(stringResource(R.string.welcome_downloaded), color = colors.safe,
                                        fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    entry.error != null -> Text(entry.error, color = colors.warning,
+                    entry.error != null -> Text(entry.error.text(), color = colors.warning,
                                                 fontSize = 15.sp, maxLines = 2,
                                                 overflow = TextOverflow.Ellipsis)
                 }
@@ -358,11 +359,6 @@ private fun CountryList(state: WelcomeState, onCountry: (String) -> Unit) {
         }
     }
 }
-
-/** "Menu → Map & units → Units", in the phone's language. */
-@Composable
-private fun menuPath(vararg ids: Int): String =
-    ids.map { stringResource(it) }.joinToString(" → ")
 
 @Composable
 private fun Loading(text: String) {

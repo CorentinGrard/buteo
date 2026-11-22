@@ -11,8 +11,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.PlaneInfo
 import org.xcsoar.mobile.core.XcsoarCore
+import org.xcsoar.mobile.ui.UiText
+import org.xcsoar.mobile.ui.asText
+import org.xcsoar.mobile.ui.text
 
 /** What the aircraft and crew picker shows. */
 data class CrewState(
@@ -27,7 +31,7 @@ data class CrewState(
     val copilot: String = "",
     /** The pilot's name in the IGC file; empty if not set. */
     val pilot: String = "",
-    val error: String? = null,
+    val error: UiText? = null,
 ) {
     val selectedPlane get() = planes?.firstOrNull { it.path == selected }
 }
@@ -94,7 +98,7 @@ class CrewViewModel(private val core: XcsoarCore) : ViewModel() {
                 core.setCrew(null, if (plane.doubleSeater) s.copilot else "")
                 onDone()
             } catch (e: Exception) {
-                stateFlow.update { it.copy(error = e.message ?: "Could not save") }
+                stateFlow.update { it.copy(error = e.message?.asText() ?: text(R.string.crew_could_not_save)) }
             }
         }
     }

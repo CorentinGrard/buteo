@@ -4,6 +4,7 @@
 package org.xcsoar.mobile.ui.map
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -45,8 +47,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.MapOption
 import org.xcsoar.mobile.core.TerrainRamp
+import org.xcsoar.mobile.ui.ScreenHeader
 import org.xcsoar.mobile.ui.flight.Caption
 import org.xcsoar.mobile.ui.LinkRow
 import org.xcsoar.mobile.ui.SettingsGroup
@@ -84,60 +88,50 @@ fun MapSettingsContent(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier
-                    .height(56.dp)
-                    .widthIn(min = 96.dp)
-                    .clickable(role = Role.Button, onClick = onBack)
-                    .semantics { contentDescription = "Back" }
-                    .padding(horizontal = 18.dp),
-                contentAlignment = Alignment.Center) {
-                Text("Back", color = colors.text, fontSize = 16.sp,
-                     fontWeight = FontWeight.SemiBold)
-            }
-            Text("Map & units", color = colors.text, fontSize = 24.sp,
-                 fontWeight = FontWeight.Bold)
-        }
+        ScreenHeader(stringResource(R.string.menu_map_units), onBack)
 
         SettingsGroup {
-            SwitchRow("Terrain", "Shaded relief from the map file",
+            SwitchRow(stringResource(R.string.terrain), stringResource(R.string.map_terrain_detail),
                       options[MapOption.TERRAIN]?.let { it != 0 }) {
                 onSet(MapOption.TERRAIN, if (it) 1 else 0)
             }
-            SwitchRow("Topography", "Roads, rivers, lakes and towns",
+            SwitchRow(stringResource(R.string.map_topography), stringResource(R.string.map_topography_detail),
                       options[MapOption.TOPOGRAPHY]?.let { it != 0 }) {
                 onSet(MapOption.TOPOGRAPHY, if (it) 1 else 0)
             }
         }
 
-        Caption("Circling", Modifier.padding(start = 4.dp))
+        Caption(stringResource(R.string.circling), Modifier.padding(start = 4.dp))
         SettingsGroup {
-            SwitchRow("Zoom of its own", "Closer in a climb, back to the cruise's after",
+            SwitchRow(stringResource(R.string.map_zoom), stringResource(R.string.map_zoom_detail),
                       options[MapOption.CIRCLING_ZOOM]?.let { it != 0 }) {
                 onSet(MapOption.CIRCLING_ZOOM, if (it) 1 else 0)
             }
-            SwitchRow("Thermal assistant", "The lift around the circle, on the glider",
+            SwitchRow(stringResource(R.string.map_thermal_assistant),
+                      stringResource(R.string.map_thermal_assistant_detail),
                       options[MapOption.THERMAL_ASSISTANT]?.let { it != 0 }) {
                 onSet(MapOption.THERMAL_ASSISTANT, if (it) 1 else 0)
             }
         }
 
-        Caption("Terrain colours", Modifier.padding(start = 4.dp))
+        Caption(stringResource(R.string.map_terrain_colours), Modifier.padding(start = 4.dp))
         SettingsGroup(Modifier.selectableGroup()) {
             for (ramp in TerrainRamp.entries)
-                ChoiceRow(ramp.label, options[MapOption.TERRAIN_RAMP] == ramp.code) {
+                ChoiceRow(stringResource(ramp.labelRes()), options[MapOption.TERRAIN_RAMP] == ramp.code) {
                     onSet(MapOption.TERRAIN_RAMP, ramp.code)
                 }
         }
 
-        Caption("Trail", Modifier.padding(start = 4.dp))
+        Caption(stringResource(R.string.map_trail), Modifier.padding(start = 4.dp))
         Row(Modifier
                 .fillMaxWidth()
                 .height(56.dp)
                 .background(colors.panel, RoundedCornerShape(12.dp))
                 .selectableGroup()) {
-            for ((label, value) in listOf("Off" to 0, "Short" to 2, "Long" to 1, "Full" to 3)) {
+            for ((label, value) in listOf(stringResource(R.string.off) to 0,
+                                        stringResource(R.string.map_trail_short) to 2,
+                                        stringResource(R.string.map_trail_long) to 1,
+                                        stringResource(R.string.map_trail_full) to 3)) {
                 val selected = options[MapOption.TRAIL] == value
                 Box(Modifier
                         .weight(1f)
@@ -157,9 +151,25 @@ fun MapSettingsContent(
 
         if (onOpenUnits != null)
             SettingsGroup(Modifier.padding(top = 8.dp)) {
-                LinkRow("Units", "Altitude, speed, lift…", onClick = onOpenUnits)
+                LinkRow(stringResource(R.string.menu_units),
+                        stringResource(R.string.menu_units_detail), onClick = onOpenUnits)
             }
     }
+}
+
+/** XCSoar's names of the colour ramps. */
+@StringRes
+private fun TerrainRamp.labelRes(): Int = when (this) {
+    TerrainRamp.PASTEL -> R.string.ramp_pastel
+    TerrainRamp.LOW_LANDS -> R.string.ramp_low_lands
+    TerrainRamp.MOUNTAINOUS -> R.string.ramp_mountainous
+    TerrainRamp.IMHOF_ATLAS -> R.string.ramp_imhof
+    TerrainRamp.ICAO -> R.string.ramp_icao
+    TerrainRamp.FRENCH_SIA -> R.string.ramp_french_sia
+    TerrainRamp.GERMAN_DFS -> R.string.ramp_german_dfs
+    TerrainRamp.SANDSTONE -> R.string.ramp_sandstone
+    TerrainRamp.GREY -> R.string.ramp_grey
+    TerrainRamp.HIGH_CONTRAST -> R.string.ramp_high_contrast
 }
 
 @Composable

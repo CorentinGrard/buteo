@@ -10,6 +10,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.xcsoar.mobile.core.ProfileInfo
+import org.xcsoar.mobile.ui.asText
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
 /** L4: the profile list (mobile/docs/ARCHITECTURE.md §6). */
@@ -33,7 +34,7 @@ class ProfilesScreenshotTest {
     @Test
     fun inFlight() = captureRoboImage("src/test/screenshots/profiles_flying.png") {
         XcsTheme(dark = false) {
-            ProfilesContent(profiles, "Not created: \"Club\" is taken or not a file name",
+            ProfilesContent(profiles, "Not created: \"Club\" is taken or not a file name".asText(),
                             flying = true, {}, {}, {}, {}, {})
         }
     }

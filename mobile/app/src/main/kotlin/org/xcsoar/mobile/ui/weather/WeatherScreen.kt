@@ -8,8 +8,11 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.RaspInfo
+import org.xcsoar.mobile.ui.UiText
 import org.xcsoar.mobile.ui.flight.Caption
 import org.xcsoar.mobile.ui.flight.Stepper
 import androidx.compose.foundation.background
@@ -52,21 +55,23 @@ import org.xcsoar.mobile.ui.InputField
 import org.xcsoar.mobile.ui.PageLayout
 import org.xcsoar.mobile.ui.ScreenHeader
 import org.xcsoar.mobile.ui.settings.Explanation
+import org.xcsoar.mobile.ui.text
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import kotlin.math.roundToInt
+import org.xcsoar.mobile.ui.toText
 
 data class WeatherState(
     val stations: List<WeatherStation> = emptyList(),
     /** The code being typed. */
     val code: String = "",
     val updating: Boolean = false,
-    val error: String? = null,
+    val error: UiText? = null,
     /** The RASP forecast's fields and what the map shows. */
     val rasp: RaspInfo = RaspInfo(),
     /** The configured RASP file (a path), if any. */
     val raspFile: String? = null,
     val raspUpdating: Boolean = false,
-    val raspError: String? = null,
+    val raspError: UiText? = null,
 ) {
     val canAdd get() = WeatherStation.isValidCode(code) &&
         stations.none { it.code == code } && stations.size < WeatherStation.MAX_STATIONS
@@ -137,7 +142,7 @@ class WeatherViewModel(
                 updateRasp(path.substringAfterLast('/'))
                 null
             } catch (e: Exception) {
-                e.message ?: "Download failed"
+                e.toText().takeIf { e.message != null } ?: text(R.string.weather_download_failed)
             }
             stateFlow.update { it.copy(raspUpdating = false, raspError = error) }
             loadRasp()
@@ -154,7 +159,7 @@ class WeatherViewModel(
         viewModelScope.launch {
             val added = try { core.addWeatherStation(code) } catch (_: Exception) { false }
             if (!added) {
-                stateFlow.update { it.copy(error = "Could not add $code") }
+                stateFlow.update { it.copy(error = text(R.string.weather_cannot_add, code)) }
                 return@launch
             }
             stateFlow.update { it.copy(code = "") }
@@ -181,7 +186,7 @@ class WeatherViewModel(
                 core.updateWeather()
                 null
             } catch (_: Exception) {
-                "No weather received: check the internet connection and the codes"
+                text(R.string.weather_none_received)
             }
             val stations = try { core.weatherStations() } catch (_: Exception) { null }
             stateFlow.update {
@@ -225,28 +230,27 @@ fun WeatherContent(
     val colors = XcsTheme.colors
     var expanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
     PageLayout(bottom = {
-        ActionButton(if (state.updating) "Updating…" else "Update METAR and TAF", primary = true,
+        ActionButton(stringResource(if (state.updating) R.string.weather_updating
+                                     else R.string.weather_update), primary = true,
                      enabled = state.stations.isNotEmpty() && !state.updating,
                      modifier = Modifier.weight(1f), onClick = onUpdate)
     }) {
-        ScreenHeader("Weather", onBack)
+        ScreenHeader(stringResource(R.string.menu_weather), onBack)
 
         RaspSection(state, onRaspField, onRaspTime, onUpdateRasp, onDownloadRasp)
 
-        Caption("METAR and TAF", Modifier.padding(start = 4.dp, top = 8.dp))
+        Caption(stringResource(R.string.weather_metar_taf), Modifier.padding(start = 4.dp, top = 8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            InputField(state.code, onCode, "ICAO code, e.g. LFMT",
+            InputField(state.code, onCode, stringResource(R.string.weather_icao),
                        modifier = Modifier.weight(1f),
                        capitalization = KeyboardCapitalization.Characters)
-            ActionButton("Add", enabled = state.canAdd, onClick = onAdd)
+            ActionButton(stringResource(R.string.add), enabled = state.canAdd, onClick = onAdd)
         }
-        state.error?.let { Text(it, color = colors.warning, fontSize = 15.sp) }
+        state.error?.let { Text(it.text(), color = colors.warning, fontSize = 15.sp) }
 
         if (state.stations.isEmpty())
-            Explanation("Add the airports whose METAR and TAF you want. Buteo " +
-                            "downloads them from NOAA (internet needed); the map " +
-                            "shows the stations.")
+            Explanation(stringResource(R.string.weather_add_hint))
 
         for (station in state.stations) {
             StationCard(station, expanded = expanded == station.code,
@@ -281,14 +285,14 @@ private fun StationCard(
                     Text(it, color = colors.textSecondary, fontSize = 14.sp, maxLines = 1)
                 }
             }
-            Text("Remove", color = colors.textSecondary, fontSize = 15.sp,
+            Text(stringResource(R.string.data_remove), color = colors.textSecondary, fontSize = 15.sp,
                  modifier = Modifier
                      .clickable(role = Role.Button, onClick = onRemove)
                      .padding(8.dp))
         }
 
         if (!station.downloaded) {
-            Text("Not downloaded yet", color = colors.textSecondary, fontSize = 15.sp)
+            Text(stringResource(R.string.notam_not_downloaded), color = colors.textSecondary, fontSize = 15.sp)
             return@Column
         }
 
@@ -308,13 +312,14 @@ private fun StationCard(
 }
 
 /** Wind, QNH and temperatures, in the pilot's units. */
+@Composable
 private fun summary(s: WeatherStation): String? {
     val parts = mutableListOf<String>()
     val bearing = s.windBearing
     val windSpeed = s.windSpeed
     if (bearing != null && windSpeed != null) {
         val speed = Format.windSpeed(windSpeed)
-        parts += if (windSpeed < 0.5) "Calm"
+        parts += if (windSpeed < 0.5) stringResource(R.string.weather_calm)
                  else "${bearing.roundToInt()}° ${speed.text} ${speed.unit}"
     }
     s.qnh?.let { val p = Format.pressure(it); parts += "QNH ${p.text} ${p.unit}" }
@@ -345,12 +350,11 @@ private fun RaspSection(
 ) {
     val colors = XcsTheme.colors
     val rasp = state.rasp
-    Caption("Forecast on the map (RASP)", Modifier.padding(start = 4.dp))
+    Caption(stringResource(R.string.weather_rasp), Modifier.padding(start = 4.dp))
 
     if (state.raspFile == null) {
-        Explanation("Thermals, wind and clouds forecast over the map, from " +
-                        "thermalmap.info for many countries. New every day.")
-        ActionButton("Download a forecast", outlined = true,
+        Explanation(stringResource(R.string.weather_rasp_hint))
+        ActionButton(stringResource(R.string.weather_rasp_download), outlined = true,
                      modifier = Modifier.fillMaxWidth(), onClick = onDownload)
         return
     }
@@ -361,26 +365,28 @@ private fun RaspSection(
             Text(state.raspFile.substringAfterLast('/'), color = colors.textSecondary,
                  fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(when {
-                     rasp.fileDate == null -> "Not downloaded"
-                     rasp.outOfDate -> "From ${rasp.fileDate}: today's comes on Wi-Fi"
-                     else -> "Today's forecast"
+                     rasp.fileDate == null -> stringResource(R.string.weather_rasp_not_downloaded)
+                     rasp.outOfDate ->
+                         stringResource(R.string.weather_rasp_old, rasp.fileDate.orEmpty())
+                     else -> stringResource(R.string.weather_rasp_today)
                  },
                  color = if (rasp.outOfDate) colors.caution else colors.text,
                  fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
         }
-        ActionButton(if (state.raspUpdating) "Downloading…" else "Today's",
+        ActionButton(stringResource(if (state.raspUpdating) R.string.welcome_downloading
+                                     else R.string.weather_rasp_todays),
                      outlined = true, enabled = !state.raspUpdating, onClick = onUpdate)
     }
-    state.raspError?.let { Text(it, color = colors.warning, fontSize = 15.sp) }
+    state.raspError?.let { Text(it.text(), color = colors.warning, fontSize = 15.sp) }
 
     if (rasp.fields.isEmpty()) {
-        Explanation("The file has no forecast: download today's.")
+        Explanation(stringResource(R.string.weather_rasp_empty))
         return
     }
 
     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Chip("Off", rasp.field < 0) { onField(-1) }
+        Chip(stringResource(R.string.off), rasp.field < 0) { onField(-1) }
         rasp.fields.forEachIndexed { i, field ->
             // thermalmap.info names its fields like "Windspeed_1000m"
             Chip(field.label.replace('_', ' '), rasp.field == i) { onField(i) }
@@ -390,8 +396,9 @@ private fun RaspSection(
     val field = rasp.selected ?: return
     val times = listOf(null) + field.times
     val index = times.indexOf(rasp.time)
-    val text = rasp.time ?: "Now"
-    Stepper("forecast time", "Forecast time · local", text, text,
+    val text = rasp.time ?: stringResource(R.string.weather_now)
+    Stepper(stringResource(R.string.weather_time_name),
+            stringResource(R.string.weather_time), text, text,
             canDecrease = index > 0, canIncrease = index < times.lastIndex,
             onDecrease = { onTime(-1) }, onIncrease = { onTime(+1) },
             modifier = Modifier.fillMaxWidth())

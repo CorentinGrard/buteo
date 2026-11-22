@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -27,6 +28,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.ChartPoint
 import org.xcsoar.mobile.core.XY
 import org.xcsoar.mobile.core.TaskLeg
@@ -182,7 +184,7 @@ fun XYChart(
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center) {
         if (!hasData || xMax <= xMin || yMax <= yMin) {
-            Text("No data yet", color = colors.textSecondary, fontSize = 15.sp)
+            Text(stringResource(R.string.no_data_yet), color = colors.textSecondary, fontSize = 15.sp)
             return@Box
         }
         Canvas(Modifier.matchParentSize()) {
@@ -263,7 +265,7 @@ fun TimeChart(
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center) {
         if (!hasData) {
-            Text("No data yet", color = colors.textSecondary, fontSize = 15.sp)
+            Text(stringResource(R.string.no_data_yet), color = colors.textSecondary, fontSize = 15.sp)
             return@Box
         }
         Canvas(Modifier.matchParentSize()) {

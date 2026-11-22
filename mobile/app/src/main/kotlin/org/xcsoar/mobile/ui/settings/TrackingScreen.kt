@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.TrackingSettings
 import org.xcsoar.mobile.core.XcsoarCore
 import org.xcsoar.mobile.ui.ActionButton
@@ -30,16 +32,18 @@ import org.xcsoar.mobile.ui.PageLayout
 import org.xcsoar.mobile.ui.ScreenHeader
 import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.SwitchRow
+import org.xcsoar.mobile.ui.UiText
 import org.xcsoar.mobile.ui.flight.Caption
 import org.xcsoar.mobile.ui.flight.Segmented
 import org.xcsoar.mobile.ui.flight.Stepper
+import org.xcsoar.mobile.ui.text
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
 /** The live tracking settings as edited; saved with "Save". */
 data class TrackingState(
     val loaded: Boolean = false,
     val settings: TrackingSettings = TrackingSettings(),
-    val error: String? = null,
+    val error: UiText? = null,
 ) {
     private val skyLinesKeyValid get() = TrackingSettings.isValidKey(settings.skylines.key)
     val canSave get() = loaded && skyLinesKeyValid && settings.livetrack24.let {
@@ -72,7 +76,7 @@ class TrackingViewModel(private val core: XcsoarCore) : ViewModel() {
                 core.setTrackingSettings(s.settings)
                 onSaved()
             } catch (_: Exception) {
-                stateFlow.update { it.copy(error = "Could not save") }
+                stateFlow.update { it.copy(error = text(R.string.crew_could_not_save)) }
             }
         }
     }
@@ -101,27 +105,30 @@ fun TrackingContent(
     val colors = XcsTheme.colors
     val s = state.settings
     PageLayout(bottom = {
-        ActionButton("Save", primary = true, enabled = state.canSave,
+        ActionButton(stringResource(R.string.save), primary = true, enabled = state.canSave,
                      modifier = Modifier.weight(1f), onClick = onSave)
     }) {
-        ScreenHeader("Live tracking", onBack)
+        ScreenHeader(stringResource(R.string.menu_tracking), onBack)
 
-        Caption("XCSoar Cloud", Modifier.padding(start = 4.dp))
+        Caption(stringResource(R.string.track_cloud), Modifier.padding(start = 4.dp))
         SettingsGroup {
-            SwitchRow("Share my position",
-                      "With XCSoar's server, which shows you the gliders near you",
+            SwitchRow(stringResource(R.string.track_share),
+                      stringResource(R.string.track_share_detail),
                       s.cloud.enabled == true, enabled = state.loaded) { on ->
                 onChange { it.copy(cloud = it.cloud.copy(enabled = on)) }
             }
             if (s.cloud.enabled == true) {
-                SwitchRow("Traffic", "Gliders near you on the map, also from OGN",
+                SwitchRow(stringResource(R.string.track_traffic),
+                          stringResource(R.string.track_traffic_detail),
                           s.cloud.showTraffic) { on ->
                     onChange { it.copy(cloud = it.cloud.copy(showTraffic = on)) }
                 }
-                SwitchRow("Thermals", "Thermals other pilots found", s.cloud.showThermals) { on ->
+                SwitchRow(stringResource(R.string.track_thermals),
+                          stringResource(R.string.track_thermals_detail), s.cloud.showThermals) { on ->
                     onChange { it.copy(cloud = it.cloud.copy(showThermals = on)) }
                 }
-                SwitchRow("When roaming", "Also on mobile data abroad", s.cloud.roaming) { on ->
+                SwitchRow(stringResource(R.string.track_roaming),
+                          stringResource(R.string.track_roaming_detail), s.cloud.roaming) { on ->
                     onChange { it.copy(cloud = it.cloud.copy(roaming = on)) }
                 }
             }
@@ -129,7 +136,8 @@ fun TrackingContent(
 
         Caption("SkyLines", Modifier.padding(start = 4.dp, top = 8.dp))
         SettingsGroup {
-            SwitchRow("Track on SkyLines", "skylines.aero: others follow your flight live",
+            SwitchRow(stringResource(R.string.track_skylines),
+                      stringResource(R.string.track_skylines_detail),
                       s.skylines.enabled, enabled = state.loaded) { on ->
                 onChange { it.copy(skylines = it.skylines.copy(enabled = on)) }
             }
@@ -138,25 +146,28 @@ fun TrackingContent(
             InputField(s.skylines.key.takeUnless { it == "0" }.orEmpty(),
                        { key -> onChange { it.copy(skylines = it.skylines.copy(
                            key = key.trim().uppercase().ifEmpty { "0" })) } },
-                       "Tracking key",
+                       stringResource(R.string.track_key),
                        capitalization = KeyboardCapitalization.Characters)
             if (state.keyError)
-                Text("Up to 16 characters, 0-9 and A-F", color = colors.warning,
+                Text(stringResource(R.string.track_key_error), color = colors.warning,
                      fontSize = 15.sp, modifier = Modifier.padding(horizontal = 4.dp))
             else
-                Explanation("On skylines.aero: Settings → Tracking key.")
-            IntervalStepper("SkyLines interval", s.skylines.interval) { i ->
+                Explanation(stringResource(R.string.track_key_hint))
+            IntervalStepper(stringResource(R.string.track_skylines_interval), s.skylines.interval) { i ->
                 onChange { it.copy(skylines = it.skylines.copy(interval = i)) }
             }
             SettingsGroup {
-                SwitchRow("Friends", "Your SkyLines friends on the map", s.skylines.traffic) { on ->
+                SwitchRow(stringResource(R.string.track_friends),
+                          stringResource(R.string.track_friends_detail), s.skylines.traffic) { on ->
                     onChange { it.copy(skylines = it.skylines.copy(traffic = on)) }
                 }
-                SwitchRow("Nearby pilots", "SkyLines users near you on the map",
+                SwitchRow(stringResource(R.string.track_nearby),
+                          stringResource(R.string.track_nearby_detail),
                           s.skylines.nearTraffic) { on ->
                     onChange { it.copy(skylines = it.skylines.copy(nearTraffic = on)) }
                 }
-                SwitchRow("When roaming", "Also on mobile data abroad", s.skylines.roaming) { on ->
+                SwitchRow(stringResource(R.string.track_roaming),
+                          stringResource(R.string.track_roaming_detail), s.skylines.roaming) { on ->
                     onChange { it.copy(skylines = it.skylines.copy(roaming = on)) }
                 }
             }
@@ -164,42 +175,43 @@ fun TrackingContent(
 
         Caption("LiveTrack24", Modifier.padding(start = 4.dp, top = 8.dp))
         SettingsGroup {
-            SwitchRow("Track on LiveTrack24", "Or a server using its protocol, like DHV's",
+            SwitchRow(stringResource(R.string.track_livetrack),
+                      stringResource(R.string.track_livetrack_detail),
                       s.livetrack24.enabled, enabled = state.loaded) { on ->
                 onChange { it.copy(livetrack24 = it.livetrack24.copy(enabled = on)) }
             }
         }
         if (s.livetrack24.enabled) {
             val servers = TrackingSettings.SERVERS
-            Segmented(listOf("LiveTrack24", "Test", "DHV"),
+            Segmented(listOf("LiveTrack24", stringResource(R.string.track_test), "DHV"),
                       selected = servers.indexOf(s.livetrack24.server),
                       onSelect = { i ->
                           onChange { it.copy(livetrack24 = it.livetrack24.copy(server = servers[i])) }
                       },
                       modifier = Modifier.fillMaxWidth())
-            Explanation("Server: ${s.livetrack24.server}")
+            Explanation(stringResource(R.string.track_server, s.livetrack24.server))
             InputField(s.livetrack24.username,
                        { v -> onChange { it.copy(livetrack24 = it.livetrack24.copy(username = v)) } },
-                       "Username")
+                       stringResource(R.string.track_username))
             InputField(s.livetrack24.password,
                        { v -> onChange { it.copy(livetrack24 = it.livetrack24.copy(password = v)) } },
-                       "Password", password = true)
+                       stringResource(R.string.track_password), password = true)
             InputField(s.livetrack24.vehicleName,
                        { v ->
                            onChange { it.copy(livetrack24 = it.livetrack24.copy(vehicleName = v)) }
                        },
-                       "Glider", capitalization = KeyboardCapitalization.Words)
+                       stringResource(R.string.glider), capitalization = KeyboardCapitalization.Words)
             if (!state.canSave && !state.keyError)
-                Text("At most ${TrackingSettings.MAX_TEXT_BYTES} characters",
+                Text(stringResource(R.string.track_at_most, TrackingSettings.MAX_TEXT_BYTES),
                      color = colors.warning, fontSize = 15.sp,
                      modifier = Modifier.padding(horizontal = 4.dp))
-            IntervalStepper("LiveTrack24 interval", s.livetrack24.interval) { i ->
+            IntervalStepper(stringResource(R.string.track_livetrack_interval), s.livetrack24.interval) { i ->
                 onChange { it.copy(livetrack24 = it.livetrack24.copy(interval = i)) }
             }
         }
 
-        Explanation("Positions are sent over mobile data while Buteo runs.")
-        state.error?.let { Text(it, color = colors.warning, fontSize = 16.sp) }
+        Explanation(stringResource(R.string.track_footer))
+        state.error?.let { Text(it.text(), color = colors.warning, fontSize = 16.sp) }
     }
 }
 
@@ -210,7 +222,7 @@ private fun IntervalStepper(name: String, seconds: Int, onChange: (Int) -> Unit)
     val index = intervals.indexOf(seconds).takeIf { it >= 0 }
         ?: intervals.indexOfFirst { it >= seconds }.takeIf { it >= 0 } ?: intervals.lastIndex
     val text = formatInterval(seconds)
-    Stepper(name, "Send every", text, text,
+    Stepper(name, stringResource(R.string.track_every), text, text,
             canDecrease = index > 0, canIncrease = index < intervals.lastIndex,
             onDecrease = { onChange(intervals[index - 1]) },
             onIncrease = { onChange(intervals[index + 1]) },

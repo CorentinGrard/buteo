@@ -4,6 +4,7 @@
 package org.xcsoar.mobile.ui.data
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -39,10 +41,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.DataFile
 import org.xcsoar.mobile.core.DataStatus
 import org.xcsoar.mobile.core.FileStatus
 import org.xcsoar.mobile.core.MapStatus
+import org.xcsoar.mobile.ui.ScreenHeader
 import org.xcsoar.mobile.ui.flight.Caption
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
@@ -82,49 +86,44 @@ fun DataFilesContent(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ActionButton("Back", primary = false, onClick = onBack)
-            Text("Data files", color = colors.text, fontSize = 24.sp,
-                 fontWeight = FontWeight.Bold)
-        }
+        ScreenHeader(stringResource(R.string.menu_data_files), onBack)
 
         val status = state.status
         FileCard(
-            title = "Map",
-            formats = "XCSoar map (.xcm): terrain, roads, rivers, towns",
+            title = stringResource(R.string.data_map),
+            formats = stringResource(R.string.data_map_formats),
             files = status?.map?.files,
-            loaded = status?.map?.let { if (it.terrain) "Terrain loaded" else null },
+            loaded = status?.map?.let { if (it.terrain) stringResource(R.string.data_terrain_loaded) else null },
             busy = state.busy == DataFile.MAP,
             onChoose = { onChoose(DataFile.MAP) },
             onRemove = { onRemove(DataFile.MAP) },
             onDownload = onDownload?.let { { it(DataFile.MAP) } },
         )
         FileCard(
-            title = "Airspace",
-            formats = "OpenAir (.txt, .air) or Tim Newport-Peace (.sua)",
+            title = stringResource(R.string.airspace),
+            formats = stringResource(R.string.data_airspace_formats),
             files = status?.airspace?.files,
-            loaded = status?.airspace?.let { count(it.count, "airspace", "airspaces") },
+            loaded = status?.airspace?.let { count(it.count, R.string.data_airspaces_loaded) },
             busy = state.busy == DataFile.AIRSPACE,
             onChoose = { onChoose(DataFile.AIRSPACE) },
             onRemove = { onRemove(DataFile.AIRSPACE) },
             onDownload = onDownload?.let { { it(DataFile.AIRSPACE) } },
         )
         FileCard(
-            title = "Waypoints",
-            formats = "SeeYou (.cup), WinPilot (.dat) and other XCSoar formats",
+            title = stringResource(R.string.data_waypoints),
+            formats = stringResource(R.string.data_waypoints_formats),
             files = status?.waypoints?.files,
-            loaded = status?.waypoints?.let { count(it.count, "waypoint", "waypoints") },
+            loaded = status?.waypoints?.let { count(it.count, R.string.data_waypoints_loaded) },
             busy = state.busy == DataFile.WAYPOINTS,
             onChoose = { onChoose(DataFile.WAYPOINTS) },
             onRemove = { onRemove(DataFile.WAYPOINTS) },
             onDownload = onDownload?.let { { it(DataFile.WAYPOINTS) } },
         )
         FileCard(
-            title = "RASP forecast",
-            formats = "Soaring forecast for the map (-rasp.dat), new every day",
+            title = stringResource(R.string.data_rasp),
+            formats = stringResource(R.string.data_rasp_formats),
             files = status?.rasp?.files,
-            loaded = status?.rasp?.let { count(it.count, "field", "fields") },
+            loaded = status?.rasp?.let { count(it.count, R.string.data_rasp_loaded) },
             busy = state.busy == DataFile.RASP,
             onChoose = { onChoose(DataFile.RASP) },
             onRemove = { onRemove(DataFile.RASP) },
@@ -132,15 +131,15 @@ fun DataFilesContent(
         )
 
         if (state.error != null)
-            Text(state.error, color = colors.warning, fontSize = 16.sp)
-        Text("Airspace and waypoints inside the map file are counted too. " +
-             "Load errors are shown on the flight screen.",
+            Text(state.error.text(), color = colors.warning, fontSize = 16.sp)
+        Text(stringResource(R.string.data_footer),
              color = colors.textSecondary, fontSize = 14.sp)
     }
 }
 
-private fun count(n: Int, one: String, many: String) =
-    if (n == 0) null else "$n ${if (n == 1) one else many} loaded"
+@Composable
+private fun count(n: Int, @StringRes loaded: Int) =
+    if (n == 0) null else stringResource(loaded, n)
 
 @Composable
 private fun FileCard(
@@ -163,7 +162,7 @@ private fun FileCard(
     ) {
         Caption(title)
         val name = files?.joinToString { it.substringAfterLast('/') }?.ifEmpty { null }
-        Text(name ?: "No file", color = if (name != null) colors.text else colors.textSecondary,
+        Text(name ?: stringResource(R.string.data_no_file), color = if (name != null) colors.text else colors.textSecondary,
              fontSize = 20.sp, fontWeight = FontWeight.Bold, maxLines = 2,
              overflow = TextOverflow.Ellipsis)
         Text(loaded ?: formats, color = if (loaded != null) colors.safe else colors.textSecondary,
@@ -173,14 +172,15 @@ private fun FileCard(
             if (busy) {
                 CircularProgressIndicator(Modifier.size(32.dp), color = colors.text,
                                           strokeWidth = 3.dp)
-                Text("Loading…", color = colors.textSecondary, fontSize = 16.sp)
+                Text(stringResource(R.string.loading), color = colors.textSecondary, fontSize = 16.sp)
             } else {
-                ActionButton(if (name == null) "Choose file" else "Replace", primary = true,
+                ActionButton(stringResource(if (name == null) R.string.data_choose_file
+                                         else R.string.data_replace), primary = true,
                              onClick = onChoose)
                 if (onDownload != null)
-                    ActionButton("Download", primary = false, onClick = onDownload)
+                    ActionButton(stringResource(R.string.download), primary = false, onClick = onDownload)
                 if (name != null)
-                    ActionButton("Remove", primary = false, onClick = onRemove)
+                    ActionButton(stringResource(R.string.data_remove), primary = false, onClick = onRemove)
             }
         }
     }

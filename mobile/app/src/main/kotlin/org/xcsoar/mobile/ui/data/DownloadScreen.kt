@@ -34,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -42,8 +43,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.DataFile
 import org.xcsoar.mobile.core.RepositoryFile
+import org.xcsoar.mobile.ui.ScreenHeader
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
 @Composable
@@ -70,10 +73,10 @@ fun DownloadContent(
 ) {
     val colors = XcsTheme.colors
     val what = when (state.kind) {
-        DataFile.MAP -> "maps"
-        DataFile.AIRSPACE -> "airspace"
-        DataFile.WAYPOINTS -> "waypoints"
-        DataFile.RASP -> "RASP forecasts"
+        DataFile.MAP -> R.string.download_maps
+        DataFile.AIRSPACE -> R.string.download_airspace
+        DataFile.WAYPOINTS -> R.string.download_waypoints
+        DataFile.RASP -> R.string.download_rasp
     }
     Column(
         Modifier
@@ -83,27 +86,13 @@ fun DownloadContent(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier
-                    .height(56.dp)
-                    .widthIn(min = 96.dp)
-                    .clickable(role = Role.Button, onClick = onBack)
-                    .semantics { contentDescription = "Back" }
-                    .padding(horizontal = 18.dp),
-                contentAlignment = Alignment.Center) {
-                Text("Back", color = colors.text, fontSize = 16.sp,
-                     fontWeight = FontWeight.SemiBold)
-            }
-            Text("Download $what", color = colors.text, fontSize = 22.sp,
-                 fontWeight = FontWeight.Bold)
-        }
+        ScreenHeader(stringResource(what), onBack)
 
         OutlinedTextField(
             value = state.query,
             onValueChange = onSearch,
             singleLine = true,
-            label = { Text("Search name or country code (fr, de…)") },
+            label = { Text(stringResource(R.string.download_search)) },
             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = colors.selected, focusedLabelColor = colors.text,
@@ -111,14 +100,14 @@ fun DownloadContent(
         )
 
         if (state.error != null)
-            Text(state.error, color = colors.warning, fontSize = 16.sp)
+            Text(state.error.text(), color = colors.warning, fontSize = 16.sp)
 
         val files = state.files
         if (files == null) {
             Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 CircularProgressIndicator(Modifier.size(28.dp), color = colors.text)
-                Text("Loading XCSoar's file list…", color = colors.textSecondary, fontSize = 16.sp)
+                Text(stringResource(R.string.download_loading), color = colors.textSecondary, fontSize = 16.sp)
             }
         } else {
             LazyColumn(Modifier
@@ -143,7 +132,7 @@ private fun FileRow(file: RepositoryFile, downloading: Boolean, progress: Float,
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .clickable(enabled = enabled, role = Role.Button,
-                       onClickLabel = "Download ${file.name}", onClick = onClick)
+                       onClickLabel = stringResource(R.string.download_file, file.name), onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 10.dp),
            verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(file.name, color = colors.text, fontSize = 17.sp, fontWeight = FontWeight.SemiBold,

@@ -26,10 +26,12 @@ import org.xcsoar.mobile.core.REPOSITORY_URI
 import org.xcsoar.mobile.core.RepositoryFile
 import org.xcsoar.mobile.core.XcsoarCore
 import org.xcsoar.mobile.core.WeGlideFlight
+import org.xcsoar.mobile.ui.MessageException
 import org.xcsoar.mobile.ui.flights.FlightLog
 import org.xcsoar.mobile.ui.flight.CalloutSettings
 import org.xcsoar.mobile.ui.flights.UploadStore
 import org.xcsoar.mobile.ui.flight.TILE_ROWS
+import org.xcsoar.mobile.ui.text
 import org.xcsoar.mobile.ui.theme.ThemeChoice
 import java.io.File
 import java.util.Locale
@@ -110,7 +112,9 @@ class XcsoarApp : Application() {
         var name = displayName(uri)
         if (!name.endsWith(".prf", ignoreCase = true)) name += ".prf"
         val target = File(File(xcsoarDataDir, "profiles").apply { mkdirs() }, name)
-        check(!target.exists()) { "A profile named ${name.removeSuffix(".prf")} exists already" }
+        if (target.exists())
+            throw MessageException(text(R.string.profiles_exists, name.removeSuffix(".prf")),
+                                   "A profile named ${name.removeSuffix(".prf")} exists already")
         val input = checkNotNull(contentResolver.openInputStream(uri)) { "cannot open $uri" }
         input.use { source -> target.outputStream().use { source.copyTo(it) } }
         target.path
@@ -242,7 +246,9 @@ class XcsoarApp : Application() {
      * @return the path of the file
      */
     suspend fun downloadDataFile(file: RepositoryFile, progress: (Float) -> Unit): String {
-        val folder = file.folder ?: error("${file.name}: unknown kind of file")
+        val folder = file.folder ?: throw MessageException(
+            text(R.string.download_unknown_kind, file.name),
+            "${file.name}: unknown kind of file")
         val target = File(File(xcsoarDataDir, folder), File(file.name).name)
         downloader.download(file.uri, target, file.sha256, progress)
         return target.path
@@ -254,9 +260,11 @@ class XcsoarApp : Application() {
      */
     suspend fun updateDataFile(kind: DataFile, name: String) {
         val files = anyCore.repositoryFiles(downloader.index(REPOSITORY_URI).path)
-            ?: error("downloads need the native core")
+            ?: throw MessageException(text(R.string.download_needs_core),
+                                      "downloads need the native core")
         val file = files.firstOrNull { it.name == name }
-            ?: error("$name is no longer in XCSoar's repository")
+            ?: throw MessageException(text(R.string.download_gone, name),
+                                      "$name is no longer in XCSoar's repository")
         anyCore.setDataFile(kind, downloadDataFile(file) {})
     }
 

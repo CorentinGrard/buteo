@@ -37,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -45,9 +46,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.WaypointFilter
 import org.xcsoar.mobile.core.WaypointInfo
 import org.xcsoar.mobile.ui.Format
+import org.xcsoar.mobile.ui.ScreenHeader
+import org.xcsoar.mobile.ui.menuPath
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
 /**
@@ -61,10 +65,10 @@ fun WaypointsScreen(
     viewModel: WaypointsViewModel,
     onDone: () -> Unit,
     onBack: () -> Unit = onDone,
-    title: String = "Go to",
+    title: String? = null,
     onPick: ((WaypointInfo) -> Unit)? = null,
     /** The rows' button when picking. */
-    pickLabel: String = "Add",
+    pickLabel: String? = null,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     DisposableEffect(Unit) {
@@ -76,7 +80,8 @@ fun WaypointsScreen(
     val onTap: (WaypointInfo) -> Unit =
         if (onPick != null) { waypoint -> onPick(waypoint); onDone() } else viewModel::goto
     WaypointsContent(state, viewModel::search, viewModel::filter, onTap, onBack, title,
-                     action = if (onPick != null) pickLabel else "Go")
+                     action = if (onPick != null) pickLabel ?: stringResource(R.string.add)
+                              else stringResource(R.string.waypoints_go))
 }
 
 /**
@@ -91,8 +96,8 @@ fun WaypointsContent(
     onFilter: (WaypointFilter) -> Unit,
     onGoto: (WaypointInfo) -> Unit,
     onBack: () -> Unit,
-    title: String = "Go to",
-    action: String = "Go",
+    title: String? = null,
+    action: String = stringResource(R.string.waypoints_go),
 ) {
     val colors = XcsTheme.colors
     Column(
@@ -103,29 +108,18 @@ fun WaypointsContent(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier
-                    .height(56.dp)
-                    .widthIn(min = 96.dp)
-                    .clickable(role = Role.Button, onClick = onBack)
-                    .semantics { contentDescription = "Back" }
-                    .padding(horizontal = 18.dp),
-                contentAlignment = Alignment.Center) {
-                Text("Back", color = colors.text, fontSize = 16.sp,
-                     fontWeight = FontWeight.SemiBold)
-            }
-            Text(title, color = colors.text, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        }
+        ScreenHeader(title ?: stringResource(R.string.go_to), onBack)
 
         Row(Modifier
                 .fillMaxWidth()
                 .height(56.dp)
                 .background(colors.panel, RoundedCornerShape(12.dp))
                 .selectableGroup()) {
-            for ((label, filter) in listOf("Landable" to WaypointFilter.LANDABLE,
-                                           "Airports" to WaypointFilter.AIRPORT,
-                                           "All" to WaypointFilter.ALL)) {
+            for ((label, filter) in listOf(stringResource(R.string.landable) to WaypointFilter.LANDABLE,
+                                           stringResource(R.string.waypoints_airports)
+                                               to WaypointFilter.AIRPORT,
+                                           stringResource(R.string.waypoints_all)
+                                               to WaypointFilter.ALL)) {
                 val selected = state.filter == filter
                 Box(Modifier
                         .weight(1f)
@@ -145,7 +139,7 @@ fun WaypointsContent(
             value = state.query,
             onValueChange = onSearch,
             singleLine = true,
-            label = { Text("Name") },
+            label = { Text(stringResource(R.string.waypoints_name)) },
             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = colors.selected, focusedLabelColor = colors.text,
@@ -153,11 +147,12 @@ fun WaypointsContent(
         )
 
         if (state.error != null)
-            Text(state.error, color = colors.warning, fontSize = 16.sp)
+            Text(state.error.text(), color = colors.warning, fontSize = 16.sp)
 
         val waypoints = state.waypoints
         if (waypoints != null && waypoints.isEmpty())
-            Text("No waypoint found. Load a map or waypoint file (Menu → Data files).",
+            Text(stringResource(R.string.waypoints_none,
+                            menuPath(R.string.menu, R.string.menu_data_files)),
                  color = colors.textSecondary, fontSize = 16.sp)
         LazyColumn(Modifier
             .fillMaxWidth()
@@ -187,12 +182,12 @@ private fun WaypointRow(waypoint: WaypointInfo, action: String, onClick: () -> U
             val elevation = waypoint.elevation?.let { Format.altitude(it) }
             Text(listOfNotNull(
                      when {
-                         waypoint.airport -> "Airport"
-                         waypoint.landable -> "Landable"
+                         waypoint.airport -> stringResource(R.string.waypoints_airport)
+                         waypoint.landable -> stringResource(R.string.landable)
                          else -> null
                      },
                      waypoint.bearing?.let { "${bearing.text}${bearing.unit}" },
-                     elevation?.let { "elev ${it.text} ${it.unit}" })
+                     elevation?.let { stringResource(R.string.waypoints_elevation, "${it.text} ${it.unit}") })
                      .joinToString(" · "),
                  color = colors.textSecondary, fontSize = 14.sp, maxLines = 1)
         }

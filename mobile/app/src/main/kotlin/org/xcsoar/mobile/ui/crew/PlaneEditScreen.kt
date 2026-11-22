@@ -3,6 +3,8 @@
 
 package org.xcsoar.mobile.ui.crew
 
+import androidx.compose.ui.res.stringResource
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.UnitGroup
 import org.xcsoar.mobile.core.PolarPoint
 import androidx.compose.ui.text.input.KeyboardType
@@ -105,7 +107,7 @@ fun PlaneEditScreen(
         }
         Picker.POLAR -> {
             BackHandler { picker = Picker.NONE }
-            SearchList("Polar", state.polars.withIndex().toList(), { it.value },
+            SearchList(stringResource(R.string.plane_polar), state.polars.withIndex().toList(), { it.value },
                        onBack = { picker = Picker.NONE }) {
                 viewModel.pickPolar(it.index)
                 picker = Picker.NONE
@@ -139,34 +141,39 @@ fun PlaneEditContent(
 ) {
     val colors = XcsTheme.colors
     PageLayout(bottom = {
-        ActionButton(if (state.busy) "…" else "Save", primary = true, enabled = state.canSave,
+        ActionButton(if (state.busy) "…" else stringResource(R.string.save), primary = true, enabled = state.canSave,
                      modifier = Modifier.weight(1f), onClick = onSave)
     }) {
-        ScreenHeader(if (state.isNew) "New aircraft" else "Aircraft", onBack)
+        ScreenHeader(stringResource(if (state.isNew) R.string.plane_new else R.string.crew_aircraft),
+                     onBack)
 
-        InputField(state.registration, onRegistration, "Registration",
+        InputField(state.registration, onRegistration, stringResource(R.string.plane_registration),
                    capitalization = KeyboardCapitalization.Characters)
-        InputField(state.competitionId, onCompetitionId, "Competition ID",
+        InputField(state.competitionId, onCompetitionId, stringResource(R.string.plane_competition_id),
                    capitalization = KeyboardCapitalization.Characters)
 
-        Caption("Model", Modifier.padding(start = 4.dp))
-        ChoiceRow(state.type.ifEmpty { "Choose the model" }, onPickModel)
+        Caption(stringResource(R.string.plane_model), Modifier.padding(start = 4.dp))
+        ChoiceRow(state.type.ifEmpty { stringResource(R.string.plane_choose_model) }, onPickModel)
 
         // what the model brings; the polar can still be changed
         if (state.type.isNotEmpty()) {
-            Caption("Polar", Modifier.padding(start = 4.dp))
+            Caption(stringResource(R.string.plane_polar), Modifier.padding(start = 4.dp))
             if (state.polarName.isNotEmpty())
                 ChoiceRow(state.polarName, onPickPolar)
             else
-                ChoiceRow("No polar for this model: choose one", onPickPolar,
+                ChoiceRow(stringResource(R.string.plane_no_polar_choose), onPickPolar,
                           color = colors.caution)
             if (state.points.size == 3)
                 PolarPoints(state.points, state.pointsRevision, onPoint)
-            ActionButton("Import a polar file (.plr)", outlined = true,
+            ActionButton(stringResource(R.string.plane_import_polar), outlined = true,
                          modifier = Modifier.fillMaxWidth(), onClick = onImportPolar)
             Text(if (state.weGlideType != 0)
-                     "WeGlide: ${state.weGlideName.ifEmpty { "type ${state.weGlideType}" }}"
-                 else "Not a WeGlide type: flights upload without one",
+                     stringResource(R.string.plane_weglide,
+                                    state.weGlideName.ifEmpty {
+                                        stringResource(R.string.plane_weglide_type,
+                                                       state.weGlideType)
+                                    })
+                 else stringResource(R.string.plane_no_weglide),
                  color = colors.textSecondary, fontSize = 15.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
         }
@@ -180,9 +187,9 @@ fun PlaneEditContent(
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Two seats", color = colors.text, fontSize = 17.sp,
+                Text(stringResource(R.string.plane_two_seats), color = colors.text, fontSize = 17.sp,
                      fontWeight = FontWeight.SemiBold)
-                Text("Asks for the co-pilot before each flight", color = colors.textSecondary,
+                Text(stringResource(R.string.plane_two_seats_detail), color = colors.textSecondary,
                      fontSize = 14.sp)
             }
             Switch(state.doubleSeater, onCheckedChange = null,
@@ -191,10 +198,10 @@ fun PlaneEditContent(
 
         state.details?.let { MassesAndLimits(it, onDetails) }
 
-        state.error?.let { Text(it, color = colors.warning, fontSize = 16.sp) }
+        state.error?.let { Text(it.text(), color = colors.warning, fontSize = 16.sp) }
 
         if (!state.isNew)
-            ActionButton("Delete aircraft", modifier = Modifier.fillMaxWidth(),
+            ActionButton(stringResource(R.string.plane_delete), modifier = Modifier.fillMaxWidth(),
                          onClick = onDelete)
     }
 }
@@ -210,7 +217,7 @@ private fun PolarPoints(points: List<PolarPoint>, revision: Int,
     val speedUnit = Format.unit(UnitGroup.HORIZONTAL_SPEED)
     val sinkUnit = Format.unit(UnitGroup.VERTICAL_SPEED)
     val sinkDecimals = if (sinkUnit.name == "fpm") 0 else 2
-    Caption("Polar points", Modifier.padding(start = 4.dp, top = 4.dp))
+    Caption(stringResource(R.string.plane_polar_points), Modifier.padding(start = 4.dp, top = 4.dp))
     points.forEachIndexed { i, point ->
         // typed text, kept while the pilot types; new when the polar changes
         var speed by rememberSaveable(revision, i) {
@@ -226,13 +233,13 @@ private fun PolarPoints(points: List<PolarPoint>, revision: Int,
                 onPoint(i, PolarPoint(speedUnit.toSi(v), -sinkUnit.toSi(kotlin.math.abs(w))))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            InputField(speed, { speed = it; commit() }, "Speed ${i + 1} · ${speedUnit.name}",
+            InputField(speed, { speed = it; commit() }, stringResource(R.string.plane_speed_n, i + 1, speedUnit.name),
                        Modifier.weight(1f), keyboardType = KeyboardType.Decimal)
-            InputField(sink, { sink = it; commit() }, "Sink ${i + 1} · ${sinkUnit.name}",
+            InputField(sink, { sink = it; commit() }, stringResource(R.string.plane_sink_n, i + 1, sinkUnit.name),
                        Modifier.weight(1f), keyboardType = KeyboardType.Decimal)
         }
     }
-    Explanation("Three points of the sink rate over speed, slowest first.")
+    Explanation(stringResource(R.string.plane_polar_points_hint))
 }
 
 private fun decimal(value: Double, decimals: Int) =
@@ -271,19 +278,23 @@ private fun MassesAndLimits(
     details: PlaneDetails,
     onChange: ((PlaneDetails) -> PlaneDetails) -> Unit,
 ) {
-    Caption("Masses and limits", Modifier.padding(start = 4.dp, top = 8.dp))
-    MassStepper("empty mass", "Empty mass", details.emptyMass, 0.0) { m ->
+    Caption(stringResource(R.string.plane_masses), Modifier.padding(start = 4.dp, top = 8.dp))
+    MassStepper(stringResource(R.string.plane_empty_mass_name),
+                stringResource(R.string.plane_empty_mass), details.emptyMass, 0.0) { m ->
         onChange { it.copy(emptyMass = m) }
     }
-    Explanation("The rigged glider without pilots and water.")
+    Explanation(stringResource(R.string.plane_empty_mass_hint))
     MaxTakeoffMass(details.maxTakeoffMass) { kg -> onChange { it.copy(maxTakeoffMass = kg) } }
-    MassStepper("reference mass", "Polar reference mass", details.referenceMass, 1.0) { m ->
+    MassStepper(stringResource(R.string.plane_reference_mass_name),
+                stringResource(R.string.plane_reference_mass), details.referenceMass, 1.0) { m ->
         onChange { it.copy(referenceMass = m) }
     }
-    Explanation("The mass the polar was measured at.")
+    Explanation(stringResource(R.string.plane_reference_mass_hint))
 
     val ballast = Format.ballast(details.maxBallast).text
-    Stepper("water ballast", "Water ballast · l", ballast, "$ballast litres",
+    Stepper(stringResource(R.string.plane_ballast_name),
+            "${stringResource(R.string.plane_ballast)} · l", ballast,
+            stringResource(R.string.plane_spoken_litres, ballast),
             canDecrease = details.maxBallast > 0, canIncrease = details.maxBallast < MAX_BALLAST,
             onDecrease = {
                 onChange { it.copy(maxBallast = step(it.maxBallast, -5.0, 0.0, MAX_BALLAST)) }
@@ -294,7 +305,9 @@ private fun MassesAndLimits(
             modifier = Modifier.fillMaxWidth())
     if (details.maxBallast > 0) {
         val dump = details.dumpTime.toString()
-        Stepper("dump time", "Dump time · s", dump, "$dump seconds",
+        Stepper(stringResource(R.string.plane_dump_name),
+                "${stringResource(R.string.plane_dump)} · s", dump,
+                stringResource(R.string.plane_spoken_seconds, dump),
                 canDecrease = details.dumpTime > 10, canIncrease = details.dumpTime < 300,
                 onDecrease = {
                     onChange { it.copy(dumpTime = step(it.dumpTime, -10, 10, 300)) }
@@ -303,12 +316,14 @@ private fun MassesAndLimits(
                     onChange { it.copy(dumpTime = step(it.dumpTime, +10, 10, 300)) }
                 },
                 modifier = Modifier.fillMaxWidth())
-        Explanation("The time to dump full ballast.")
+        Explanation(stringResource(R.string.plane_dump_hint))
     }
 
     val speed = Format.speed(details.maxSpeed)
-    val speedText = if (details.maxSpeed > 0) speed.text else "None"
-    Stepper("speed limit", "Speed limit · ${speed.unit}", speedText,
+    val speedText = if (details.maxSpeed > 0) speed.text
+                    else stringResource(R.string.plane_speed_none)
+    Stepper(stringResource(R.string.plane_speed_limit_name),
+            "${stringResource(R.string.plane_speed_limit)} · ${speed.unit}", speedText,
             if (details.maxSpeed > 0) "$speedText ${speed.unit}" else speedText,
             canDecrease = details.maxSpeed > 0, canIncrease = details.maxSpeed < MAX_SPEED,
             onDecrease = {
@@ -322,23 +337,27 @@ private fun MassesAndLimits(
                 }
             },
             modifier = Modifier.fillMaxWidth())
-    Explanation("Speed to fly stays below it (VNE or VNO); none: no limit.")
+    Explanation(stringResource(R.string.plane_speed_limit_hint))
 
     val area = String.format(Locale.ROOT, "%.1f", details.wingArea)
-    Stepper("wing area", "Wing area · m²", area, "$area square metres",
+    Stepper(stringResource(R.string.plane_wing_area_name),
+            "${stringResource(R.string.plane_wing_area)} · m²", area,
+            stringResource(R.string.plane_spoken_square_metres, area),
             canDecrease = details.wingArea > 0, canIncrease = details.wingArea < 40,
             onDecrease = { onChange { it.copy(wingArea = step(it.wingArea, -0.1, 0.0, 40.0)) } },
             onIncrease = { onChange { it.copy(wingArea = step(it.wingArea, +0.1, 0.0, 40.0)) } },
             modifier = Modifier.fillMaxWidth())
-    Explanation("For the wing loading.")
+    Explanation(stringResource(R.string.plane_wing_area_hint))
 
     val handicap = details.handicap.toString()
-    Stepper("handicap", "Handicap · %", handicap, "$handicap percent",
+    Stepper(stringResource(R.string.plane_handicap_name),
+            "${stringResource(R.string.plane_handicap)} · %", handicap,
+            stringResource(R.string.plane_spoken_percent, handicap),
             canDecrease = details.handicap > 50, canIncrease = details.handicap < 150,
             onDecrease = { onChange { it.copy(handicap = step(it.handicap, -1, 50, 150)) } },
             onIncrease = { onChange { it.copy(handicap = step(it.handicap, +1, 50, 150)) } },
             modifier = Modifier.fillMaxWidth())
-    Explanation("The contest handicap, for the scores Buteo computes.")
+    Explanation(stringResource(R.string.plane_handicap_hint))
 }
 
 /**
@@ -359,9 +378,9 @@ private fun MaxTakeoffMass(kg: Double, onChange: (Double) -> Unit) {
             value != null && value >= 0 && unit.toSi(value) <= MAX_MASS ->
                 onChange(unit.toSi(value))
         }
-    }, "Maximum take-off mass · ${unit.name}", Modifier.fillMaxWidth(),
+    }, stringResource(R.string.plane_mtow, unit.name), Modifier.fillMaxWidth(),
                keyboardType = KeyboardType.Decimal)
-    Explanation("Above it, Flight setup shows the wing loading in red.  Empty if not known.")
+    Explanation(stringResource(R.string.plane_mtow_hint))
 }
 
 /* the ranges of XCSoar's plane dialogs */
@@ -400,7 +419,7 @@ private fun ChoiceRow(text: String, onClick: () -> Unit,
         verticalAlignment = Alignment.CenterVertically) {
         Text(text, color = color, fontSize = 17.sp, modifier = Modifier.weight(1f),
              maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text("Change", color = colors.textSecondary, fontSize = 15.sp)
+        Text(stringResource(R.string.change), color = colors.textSecondary, fontSize = 15.sp)
     }
 }
 
@@ -429,7 +448,8 @@ private fun <T> SearchList(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         ScreenHeader(title, onBack)
-        InputField(query, { query = it; onSearch?.invoke(it) }, "Search")
+        InputField(query, { query = it; onSearch?.invoke(it) },
+                   stringResource(R.string.search))
         header()
         LazyColumn(Modifier
             .fillMaxWidth()
@@ -468,24 +488,25 @@ private fun ModelPicker(
 ) {
     LaunchedEffect(Unit) { onSearch("") }
     var lastQuery by rememberSaveable { mutableStateOf("") }
-    SearchList("Model", state.modelResults, { it.name }, onBack,
+    val withPolar = stringResource(R.string.plane_has_polar)
+    val withoutPolar = stringResource(R.string.plane_has_no_polar)
+    SearchList(stringResource(R.string.plane_model), state.modelResults, { it.name }, onBack,
                detail = { model ->
                    listOfNotNull("WeGlide".takeIf { model.weGlide != null },
-                                 if (model.polar != null) "polar" else "no polar")
+                                 if (model.polar != null) withPolar else withoutPolar)
                        .joinToString(" · ")
                },
                header = {
                    val colors = XcsTheme.colors
                    if (!state.weGlideListLoaded)
-                       Text("Download WeGlide's list once (internet needed) for every " +
-                                "model, its WeGlide type and its seats.",
+                       Text(stringResource(R.string.plane_download_hint),
                             color = colors.textSecondary, fontSize = 15.sp)
-                   state.error?.let { Text(it, color = colors.warning, fontSize = 15.sp) }
-                   ActionButton(when {
-                       state.busy -> "Downloading…"
-                       state.weGlideListLoaded -> "Update WeGlide's list"
-                       else -> "Download WeGlide's list"
-                   }, outlined = true, enabled = !state.busy,
+                   state.error?.let { Text(it.text(), color = colors.warning, fontSize = 15.sp) }
+                   ActionButton(stringResource(when {
+                       state.busy -> R.string.welcome_downloading
+                       state.weGlideListLoaded -> R.string.plane_update_list
+                       else -> R.string.plane_download_list
+                   }), outlined = true, enabled = !state.busy,
                        modifier = Modifier.fillMaxWidth()) { onDownload(lastQuery) }
                },
                onSearch = { lastQuery = it; onSearch(it) },

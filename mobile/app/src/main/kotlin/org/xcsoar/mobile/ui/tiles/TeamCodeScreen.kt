@@ -21,6 +21,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +37,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.TeamCodeInfo
 import org.xcsoar.mobile.core.XcsoarCore
 import org.xcsoar.mobile.ui.ActionButton
@@ -128,18 +130,19 @@ fun TeamCodeContent(
     onPickReference: () -> Unit,
     onBack: () -> Unit,
 ) {
+    val mateCode = stringResource(R.string.team_mate_code)
     PageLayout {
-        ScreenHeader("Team code", onBack)
+        ScreenHeader(stringResource(R.string.team_title), onBack)
 
         OwnCode(info)
 
-        Caption("Team mate", Modifier.padding(start = 4.dp, top = 8.dp))
+        Caption(stringResource(R.string.team_mate), Modifier.padding(start = 4.dp, top = 8.dp))
         ValueList(buildList {
-            add("Mate code" to info?.mate.orEmpty())
-            add("Range" to info?.range.orEmpty())
-            add("Bearing" to info?.bearing.orEmpty())
-            add("Rel. bearing" to info?.relativeBearing.orEmpty())
-            info?.flarmLock?.takeIf { it.isNotEmpty() }?.let { add("Flarm Lock" to it) }
+            add(mateCode to info?.mate.orEmpty())
+            add(stringResource(R.string.team_range) to info?.range.orEmpty())
+            add(stringResource(R.string.team_bearing) to info?.bearing.orEmpty())
+            add(stringResource(R.string.team_rel_bearing) to info?.relativeBearing.orEmpty())
+            info?.flarmLock?.takeIf { it.isNotEmpty() }?.let { add(stringResource(R.string.team_flarm_lock) to it) }
         })
         var code by rememberSaveable { mutableStateOf("") }
         var invalid by rememberSaveable { mutableStateOf(false) }
@@ -148,21 +151,21 @@ fun TeamCodeContent(
             InputField(code, {
                 code = it
                 invalid = false
-            }, label = if (invalid) "Letters and digits, up to 7" else "Mate code",
+            }, label = if (invalid) stringResource(R.string.team_invalid) else mateCode,
                        capitalization = KeyboardCapitalization.Characters,
                        modifier = Modifier.weight(1f))
-            ActionButton("Set code", outlined = true, enabled = info != null) {
+            ActionButton(stringResource(R.string.team_set_code), outlined = true, enabled = info != null) {
                 if (onMateCode(code)) code = "" else invalid = true
             }
         }
 
-        Caption("Reference waypoint", Modifier.padding(start = 4.dp, top = 8.dp))
-        ValueList(listOf("Waypoint" to info?.reference?.name.orEmpty()))
+        Caption(stringResource(R.string.team_reference), Modifier.padding(start = 4.dp, top = 8.dp))
+        ValueList(listOf(stringResource(R.string.waypoint) to info?.reference?.name.orEmpty()))
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            ActionButton("Set WP", outlined = true, enabled = info != null,
+            ActionButton(stringResource(R.string.team_set_wp), outlined = true, enabled = info != null,
                          onClick = onPickReference)
-            Explanation("Every glider of the team needs the same one.")
+            Explanation(stringResource(R.string.team_same_reference))
         }
     }
 }
@@ -174,21 +177,22 @@ private fun OwnCode(info: TeamCodeInfo?) {
     val own = info?.own.orEmpty()
     val reference = info?.reference
     val detail = when {
-        info == null -> "Reading…"
-        reference == null -> "Set a reference waypoint first"
-        own.isEmpty() -> "Needs a GPS fix"
-        else -> "From ${reference.name}"
+        info == null -> stringResource(R.string.status_reading)
+        reference == null -> stringResource(R.string.team_set_reference_first)
+        own.isEmpty() -> stringResource(R.string.team_needs_fix)
+        else -> stringResource(R.string.team_from, reference.name)
     }
+    val spoken = if (own.isNotEmpty())
+        stringResource(R.string.team_spoken_own, own.toList().joinToString(" "), detail)
+    else stringResource(R.string.team_spoken_none, detail)
     Column(Modifier
                .fillMaxWidth()
                .background(colors.panel, RoundedCornerShape(14.dp))
                .padding(16.dp)
                .clearAndSetSemantics {
-                   contentDescription =
-                       if (own.isNotEmpty()) "Own code ${own.toList().joinToString(" ")}, $detail"
-                       else "No own code, $detail"
+                   contentDescription = spoken
                }) {
-        Caption("Own code")
+        Caption(stringResource(R.string.team_own))
         Text(own.ifEmpty { Format.INVALID }, color = colors.text, fontSize = 34.sp,
              fontWeight = FontWeight.Bold, style = XcsTheme.numberStyle)
         Text(detail, color = colors.textSecondary, fontSize = 15.sp)

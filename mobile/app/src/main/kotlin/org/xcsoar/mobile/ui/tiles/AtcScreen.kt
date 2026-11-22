@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.AtcInfo
 import org.xcsoar.mobile.core.XcsoarCore
 import org.xcsoar.mobile.ui.ActionButton
@@ -97,38 +99,39 @@ fun AtcContent(
     onBack: () -> Unit,
 ) {
     PageLayout {
-        ScreenHeader("ATC radial", onBack)
+        ScreenHeader(stringResource(R.string.atc_title), onBack)
 
-        Caption("Reference", Modifier.padding(start = 4.dp, top = 8.dp))
-        ValueList(listOf("Waypoint" to info?.waypoint.orEmpty(),
-                         "Location" to info?.location.orEmpty()))
+        Caption(stringResource(R.string.atc_reference), Modifier.padding(start = 4.dp, top = 8.dp))
+        ValueList(listOf(stringResource(R.string.waypoint) to info?.waypoint.orEmpty(),
+                         stringResource(R.string.atc_location) to info?.location.orEmpty()))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ActionButton("Relocate", outlined = true, enabled = info != null,
+            ActionButton(stringResource(R.string.waypoints_relocate), outlined = true, enabled = info != null,
                          onClick = onRelocate)
-            ActionButton("Clear", outlined = true, enabled = info?.location != null,
+            ActionButton(stringResource(R.string.wind_clear), outlined = true, enabled = info?.location != null,
                          onClick = onClear)
         }
-        Explanation("The ATC radial tile shows your magnetic radial and distance from " +
-                    "this point, as controllers ask for them.")
+        Explanation(stringResource(R.string.atc_hint))
 
-        Caption("Setup", Modifier.padding(start = 4.dp, top = 8.dp))
+        Caption(stringResource(R.string.atc_setup), Modifier.padding(start = 4.dp, top = 8.dp))
         val degrees = info?.declination?.roundToInt() ?: 0
         val text = declination(degrees)
-        Stepper("magnetic declination", "Mag declination", text,
-                "magnetic declination ${abs(degrees)} degrees " +
-                    if (degrees < 0) "west" else "east",
+        Stepper(stringResource(R.string.atc_declination_name),
+                stringResource(R.string.atc_declination), text,
+                stringResource(if (degrees < 0) R.string.atc_spoken_west
+                               else R.string.atc_spoken_east, abs(degrees)),
                 canDecrease = info != null && degrees > -AtcViewModel.MAX_DECLINATION,
                 canIncrease = info != null && degrees < AtcViewModel.MAX_DECLINATION,
                 onDecrease = { onDeclination(degrees - 1) },
                 onIncrease = { onDeclination(degrees + 1) },
                 modifier = Modifier.fillMaxWidth())
-        Explanation("Turns true bearings into magnetic ones, as the controller uses.")
+        Explanation(stringResource(R.string.atc_declination_hint))
     }
 }
 
 /** "2° E", "3° W", "0°". */
+@Composable
 private fun declination(degrees: Int) = when {
-    degrees > 0 -> "$degrees° E"
-    degrees < 0 -> "${-degrees}° W"
+    degrees > 0 -> stringResource(R.string.atc_east, degrees)
+    degrees < 0 -> stringResource(R.string.atc_west, -degrees)
     else -> "0°"
 }

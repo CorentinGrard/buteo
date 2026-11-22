@@ -26,6 +26,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -35,11 +36,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.ProfileInfo
 import org.xcsoar.mobile.ui.ActionButton
 import org.xcsoar.mobile.ui.PageLayout
 import org.xcsoar.mobile.ui.ScreenHeader
 import org.xcsoar.mobile.ui.SettingsGroup
+import org.xcsoar.mobile.ui.UiText
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
 /**
@@ -69,10 +72,12 @@ fun ProfilesScreen(
 
     switching?.let { profile ->
         ConfirmDialog(
-            title = "Fly with ${profile.name}?",
-            text = "Buteo saves ${profiles?.firstOrNull { it.current }?.name ?: "this profile"}" +
-                " and restarts with the settings of ${profile.name}.",
-            confirm = "Restart",
+            title = stringResource(R.string.profiles_fly_with, profile.name),
+            text = stringResource(R.string.profiles_switch_text,
+                                  profiles?.firstOrNull { it.current }?.name
+                                      ?: stringResource(R.string.profiles_this_profile),
+                                  profile.name),
+            confirm = stringResource(R.string.profiles_restart),
             password = profile.password,
             check = { viewModel.checkPassword(profile, it) },
             onConfirm = {
@@ -84,9 +89,9 @@ fun ProfilesScreen(
     }
     deleting?.let { profile ->
         ConfirmDialog(
-            title = "Delete ${profile.name}?",
-            text = "Its settings are lost.  Data files, planes and flights stay.",
-            confirm = "Delete",
+            title = stringResource(R.string.profiles_delete_title, profile.name),
+            text = stringResource(R.string.profiles_delete_text),
+            confirm = stringResource(R.string.flights_delete),
             password = profile.password,
             check = { viewModel.checkPassword(profile, it) },
             onConfirm = { password ->
@@ -114,7 +119,7 @@ fun ProfilesScreen(
 @Composable
 fun ProfilesContent(
     profiles: List<ProfileInfo>?,
-    error: String?,
+    error: UiText?,
     flying: Boolean,
     onUse: (ProfileInfo) -> Unit,
     onDelete: (ProfileInfo) -> Unit,
@@ -124,14 +129,12 @@ fun ProfilesContent(
 ) {
     val colors = XcsTheme.colors
     PageLayout {
-        ScreenHeader("Profiles", onBack)
-        Text("A profile holds Buteo's settings: units, map, airspace, safety heights, " +
-                 "data files, tiles, the plane.  Pilots sharing a phone, or a club, each " +
-                 "keep their own.  Buteo restarts to switch.",
+        ScreenHeader(stringResource(R.string.profiles_title), onBack)
+        Text(stringResource(R.string.profiles_intro),
              color = colors.textSecondary, fontSize = 15.sp,
              modifier = Modifier.padding(horizontal = 4.dp))
         if (flying)
-            Text("In flight: profiles switch on the ground only.",
+            Text(stringResource(R.string.profiles_ground),
                  color = colors.caution, fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
                  modifier = Modifier.padding(horizontal = 4.dp))
 
@@ -143,10 +146,10 @@ fun ProfilesContent(
             }
         }
 
-        error?.let { Text(it, color = colors.warning, fontSize = 16.sp) }
+        error?.let { Text(it.text(), color = colors.warning, fontSize = 16.sp) }
 
-        ActionButton("New profile", Modifier.fillMaxWidth(), outlined = true, onClick = onNew)
-        ActionButton("Import a .prf file…", Modifier.fillMaxWidth(), outlined = true,
+        ActionButton(stringResource(R.string.profiles_new), Modifier.fillMaxWidth(), outlined = true, onClick = onNew)
+        ActionButton(stringResource(R.string.profiles_import), Modifier.fillMaxWidth(), outlined = true,
                      onClick = onImport)
     }
 }
@@ -165,14 +168,16 @@ private fun ProfileRow(profile: ProfileInfo, canSwitch: Boolean, onUse: () -> Un
             Text(profile.name, color = colors.text, fontSize = 17.sp,
                  fontWeight = FontWeight.SemiBold, maxLines = 1,
                  overflow = TextOverflow.Ellipsis)
-            val detail = listOfNotNull("In use".takeIf { profile.current },
-                                       "Password protected".takeIf { profile.password })
+            val inUse = stringResource(R.string.profiles_in_use)
+            val protected = stringResource(R.string.profiles_protected)
+            val detail = listOfNotNull(inUse.takeIf { profile.current },
+                                       protected.takeIf { profile.password })
             if (detail.isNotEmpty())
                 Text(detail.joinToString(" · "), color = colors.textSecondary, fontSize = 14.sp)
         }
         if (!profile.current) {
-            ActionButton("Delete", onClick = onDelete)
-            ActionButton("Use", primary = true, enabled = canSwitch, onClick = onUse)
+            ActionButton(stringResource(R.string.flights_delete), onClick = onDelete)
+            ActionButton(stringResource(R.string.profiles_use), primary = true, enabled = canSwitch, onClick = onUse)
         }
     }
 }
@@ -202,12 +207,12 @@ private fun ConfirmDialog(
                 Text(text)
                 if (password) {
                     OutlinedTextField(typed, { typed = it; wrong = false }, singleLine = true,
-                                      label = { Text("Password") },
+                                      label = { Text(stringResource(R.string.track_password)) },
                                       visualTransformation = PasswordVisualTransformation(),
                                       keyboardOptions = KeyboardOptions(
                                           keyboardType = KeyboardType.Password),
                                       isError = wrong)
-                    if (wrong) Text("Wrong password", color = XcsTheme.colors.warning)
+                    if (wrong) Text(stringResource(R.string.profiles_wrong_password), color = XcsTheme.colors.warning)
                 }
             }
         },
@@ -219,7 +224,7 @@ private fun ConfirmDialog(
                 }
             }) { Text(confirm) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
 
@@ -230,24 +235,24 @@ private fun NewProfileDialog(current: String?, onCreate: (String, Boolean) -> Un
     var copy by remember { mutableStateOf(current != null) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("New profile") },
+        title = { Text(stringResource(R.string.profiles_new)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(name, { name = it }, singleLine = true,
-                                  label = { Text("Name") })
+                                  label = { Text(stringResource(R.string.waypoints_name)) })
                 if (current != null)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(copy, { copy = it })
-                        Text("Start from the settings of $current")
+                        Text(stringResource(R.string.profiles_copy, current))
                     }
             }
         },
         confirmButton = {
             TextButton(onClick = { onCreate(name, copy) }, enabled = name.isNotBlank()) {
-                Text("Create")
+                Text(stringResource(R.string.profiles_create))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
 

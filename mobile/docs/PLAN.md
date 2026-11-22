@@ -645,10 +645,17 @@ the core already links but that has never run in this app:
       by the app's texts, in the phone's language.  The first start
       (Welcome, its three steps) done too, French screenshots included
       (Android collapses a double space after a full stop in
-      strings.xml: the English screenshots moved by that).  Next: each
-      page from the menu; ViewModel messages (task, replay
-      errors); spoken callouts in the language; Android's per-app
-      language list (`localeConfig`) once more pages are done
+      strings.xml: the English screenshots moved by that).  Every page
+      of the menu is done (2026-11-22): data files and downloads,
+      waypoints, aircraft and crew, pilot, the settings pages, tiles'
+      pages, flight setup, task, summary, flights, profiles, weather,
+      analysis; with the messages the logic makes (a `UiText` in the
+      state, resolved when shown; the downloader's errors a
+      `MessageException`).  French in XCSoar's words where it has them
+      ("circuit" for a task).  Left in English: the spoken callouts (the
+      voice is English on purpose) and what the core or the network says
+      (an error's cause, airspace class names).  Next: Android's
+      per-app language list (`localeConfig`)
 
 ### Not done: weather and tracking
 
@@ -912,6 +919,9 @@ caution).  From a fresh install tested on a Redmi 5 and the Pixel 7.
 ---
 
 ## Log
+
+- 2026-11-22 (night) — Translations (D28): every page of the menu in
+  the phone's language, French complete (about 450 more texts).
 
 - 2026-11-22 (evening) — Translations (D28): the Welcome pages in the
   phone's language, French complete.

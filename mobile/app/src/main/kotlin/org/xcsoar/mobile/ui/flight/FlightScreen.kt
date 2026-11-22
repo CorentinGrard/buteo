@@ -71,6 +71,7 @@ import kotlinx.coroutines.flow.StateFlow
 import org.xcsoar.mobile.core.TileValue
 import org.xcsoar.mobile.R
 import org.xcsoar.mobile.ui.Format
+import org.xcsoar.mobile.ui.UiText
 import org.xcsoar.mobile.ui.theme.ThemeChoice
 import org.xcsoar.mobile.ui.theme.XcsColors
 import org.xcsoar.mobile.ui.theme.XcsTheme
@@ -261,7 +262,7 @@ class MapSlot(
 @Composable
 fun FlightContent(
     state: FlightState?,
-    lastEvent: String?,
+    lastEvent: UiText?,
     circling: Boolean,
     onMacCreadyChange: (Double) -> Unit,
     onSetMacCready: (Double) -> Unit = {},
@@ -380,7 +381,7 @@ fun FlightContent(
 @Composable
 private fun MapArea(
     state: FlightState?,
-    lastEvent: String?,
+    lastEvent: UiText?,
     circling: Boolean,
     map: MapSlot?,
     warnings: List<AirspaceWarningInfo>,
@@ -501,7 +502,7 @@ private fun MapArea(
                             StatusChip(stringResource(R.string.flight_on_ground), colors.text)
                     }
                 }
-                if (lastEvent != null) StatusChip(lastEvent, colors.textSecondary)
+                if (lastEvent != null) StatusChip(lastEvent.text(), colors.textSecondary)
             }
         }
 

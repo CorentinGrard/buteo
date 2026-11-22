@@ -21,6 +21,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.RadioInfo
 import org.xcsoar.mobile.core.RadioSlot
 import org.xcsoar.mobile.core.XcsoarCore
@@ -118,10 +120,11 @@ fun RadioContent(
     onBack: () -> Unit,
 ) {
     PageLayout {
-        ScreenHeader("Radio", onBack)
+        ScreenHeader(stringResource(R.string.radio_title), onBack)
 
         for (slot in RadioSlot.entries) {
-            Caption(if (slot == RadioSlot.ACTIVE) "Active frequency" else "Standby frequency",
+            Caption(stringResource(if (slot == RadioSlot.ACTIVE) R.string.radio_active
+                                   else R.string.radio_standby),
                     Modifier.padding(start = 4.dp, top = 8.dp))
             Frequency(slot, radio)
             val set = radio != null && radio[slot].frequency.isNotEmpty()
@@ -132,23 +135,24 @@ fun RadioContent(
             }
         }
 
-        Caption("Set by hand", Modifier.padding(start = 4.dp, top = 8.dp))
+        Caption(stringResource(R.string.wind_manual), Modifier.padding(start = 4.dp, top = 8.dp))
         var mhz by rememberSaveable { mutableStateOf("") }
         var invalid by rememberSaveable { mutableStateOf(false) }
         InputField(mhz, {
             mhz = it
             invalid = false
-        }, label = if (invalid) "No channel: 118.000 to 136.990 MHz" else "Frequency · MHz",
+        }, label = stringResource(if (invalid) R.string.radio_invalid else R.string.radio_frequency),
                    keyboardType = KeyboardType.Decimal)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             for (slot in RadioSlot.entries)
-                ActionButton(if (slot == RadioSlot.ACTIVE) "Set active" else "Set standby",
+                ActionButton(stringResource(if (slot == RadioSlot.ACTIVE) R.string.radio_set_active
+                                         else R.string.radio_set_standby),
                              outlined = true, enabled = radio != null && mhz.isNotBlank(),
                              modifier = Modifier.weight(1f)) {
                     if (onSet(slot, mhz)) mhz = "" else invalid = true
                 }
         }
-        Explanation("Sent to a connected radio.")
+        Explanation(stringResource(R.string.radio_sent))
     }
 }
 
@@ -163,18 +167,21 @@ private fun Frequency(slot: RadioSlot, radio: RadioInfo?) {
     val channel = radio?.get(slot)
     val frequency = channel?.frequency.orEmpty()
     val name = when {
-        radio == null -> "Reading…"
-        frequency.isEmpty() -> "None: set one below"
+        radio == null -> stringResource(R.string.status_reading)
+        frequency.isEmpty() -> stringResource(R.string.radio_none_set)
         else -> channel?.name.orEmpty()
     }
+    val spoken = stringResource(if (slot == RadioSlot.ACTIVE) R.string.radio_active
+                                else R.string.radio_standby) + " " +
+        (if (frequency.isEmpty()) stringResource(R.string.radio_none)
+         else stringResource(R.string.radio_megahertz, frequency)) +
+        (if (name.isEmpty()) "" else ", $name")
     Column(Modifier
                .fillMaxWidth()
                .background(colors.panel, RoundedCornerShape(14.dp))
                .padding(16.dp)
                .clearAndSetSemantics {
-                   contentDescription = "${slot.name.lowercase()} frequency " +
-                       (if (frequency.isEmpty()) "none" else "$frequency megahertz") +
-                       (if (name.isEmpty()) "" else ", $name")
+                   contentDescription = spoken
                }) {
         Row(verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(6.dp)) {

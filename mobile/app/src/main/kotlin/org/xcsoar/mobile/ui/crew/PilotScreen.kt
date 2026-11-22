@@ -28,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -42,13 +43,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.WeGlideSettings
 import org.xcsoar.mobile.core.XcsoarCore
 import org.xcsoar.mobile.ui.ActionButton
 import org.xcsoar.mobile.ui.InputField
 import org.xcsoar.mobile.ui.PageLayout
 import org.xcsoar.mobile.ui.ScreenHeader
+import org.xcsoar.mobile.ui.UiText
 import org.xcsoar.mobile.ui.flight.Caption
+import org.xcsoar.mobile.ui.text
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import java.time.Instant
 import java.time.LocalDate
@@ -64,7 +68,7 @@ data class PilotState(
     /** "YYYY-MM-DD", or empty. */
     val birthdate: String = "",
     val saved: Boolean = false,
-    val error: String? = null,
+    val error: UiText? = null,
 )
 
 class PilotViewModel(private val core: XcsoarCore) : ViewModel() {
@@ -102,7 +106,7 @@ class PilotViewModel(private val core: XcsoarCore) : ViewModel() {
                 stateFlow.update { it.copy(saved = true, error = null) }
                 onSaved()
             } catch (_: Exception) {
-                stateFlow.update { it.copy(error = "Could not save") }
+                stateFlow.update { it.copy(error = text(R.string.crew_could_not_save)) }
             }
         }
     }
@@ -132,13 +136,13 @@ fun PilotContent(
     val colors = XcsTheme.colors
     var pickDate by rememberSaveable { mutableStateOf(false) }
     PageLayout(bottom = {
-        ActionButton("Save", primary = true, enabled = state.loaded,
+        ActionButton(stringResource(R.string.save), primary = true, enabled = state.loaded,
                      modifier = Modifier.weight(1f), onClick = onSave)
     }) {
-        ScreenHeader("Pilot & WeGlide", onBack)
+        ScreenHeader(stringResource(R.string.pilot_title), onBack)
 
-        Caption("Pilot", Modifier.padding(start = 4.dp))
-        InputField(state.pilot, onPilot, "Name in the IGC file",
+        Caption(stringResource(R.string.pilot), Modifier.padding(start = 4.dp))
+        InputField(state.pilot, onPilot, stringResource(R.string.pilot_igc_name),
                    capitalization = KeyboardCapitalization.Words)
 
         Caption("WeGlide", Modifier.padding(start = 4.dp))
@@ -150,16 +154,16 @@ fun PilotContent(
                             onValueChange = onWeGlideEnabled)
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            Text("Upload flights to WeGlide", color = colors.text, fontSize = 17.sp,
+            Text(stringResource(R.string.pilot_upload), color = colors.text, fontSize = 17.sp,
                  fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             Switch(state.weGlideEnabled, onCheckedChange = null,
                    colors = SwitchDefaults.colors(checkedTrackColor = colors.selected))
         }
 
         if (state.weGlideEnabled) {
-            InputField(state.pilotId, onPilotId, "WeGlide pilot ID",
+            InputField(state.pilotId, onPilotId, stringResource(R.string.pilot_weglide_id),
                        keyboardType = KeyboardType.Number)
-            Text("The number in your profile's address: weglide.org/user/1234.",
+            Text(stringResource(R.string.pilot_id_hint),
                  color = colors.textSecondary, fontSize = 15.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
             Row(Modifier
@@ -169,16 +173,16 @@ fun PilotContent(
                     .clickable(role = Role.Button) { pickDate = true }
                     .padding(horizontal = 14.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text("Date of birth", color = colors.text, fontSize = 17.sp,
+                Text(stringResource(R.string.pilot_birthdate), color = colors.text, fontSize = 17.sp,
                      fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                Text(state.birthdate.ifEmpty { "Set" }, color = colors.text, fontSize = 17.sp)
+                Text(state.birthdate.ifEmpty { stringResource(R.string.waypoints_set) }, color = colors.text, fontSize = 17.sp)
             }
-            Text("WeGlide checks your ID and date of birth instead of a password.",
+            Text(stringResource(R.string.pilot_birthdate_hint),
                  color = colors.textSecondary, fontSize = 15.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
         }
 
-        state.error?.let { Text(it, color = colors.warning, fontSize = 16.sp) }
+        state.error?.let { Text(it.text(), color = colors.warning, fontSize = 16.sp) }
     }
 
     if (pickDate) {
@@ -194,9 +198,9 @@ fun PilotContent(
                                         .toLocalDate().toString())
                     }
                     pickDate = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.ok)) }
             },
-            dismissButton = { TextButton(onClick = { pickDate = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { pickDate = false }) { Text(stringResource(R.string.cancel)) } },
         ) { DatePicker(picker) }
     }
 }

@@ -14,11 +14,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.Analysis
 import org.xcsoar.mobile.core.WeGlideFlight
 import org.xcsoar.mobile.core.XcsoarCore
+import org.xcsoar.mobile.ui.UiText
 import org.xcsoar.mobile.ui.summary.FlightSummary
 import java.io.File
+import org.xcsoar.mobile.ui.text
 
 /** One IGC file XCSoar's logger wrote. */
 data class FlightLog(
@@ -35,7 +38,8 @@ data class FlightLog(
 sealed interface Upload {
     data object Running : Upload
     data class Done(val flight: WeGlideFlight) : Upload
-    data class Failed(val message: String) : Upload
+    /** [message]: what WeGlide or the network said, if anything. */
+    data class Failed(val message: String?) : Upload
 }
 
 /** Where the flights uploaded to WeGlide are remembered, by file name. */
@@ -56,7 +60,7 @@ data class FlightDetail(
     /** The take-off's day, "YYYY-MM-DD" (UTC). */
     val date: String? = null,
     /** Why the file could not be deleted. */
-    val error: String? = null,
+    val error: UiText? = null,
 )
 
 /**
@@ -115,7 +119,7 @@ class FlightsViewModel(
     fun delete(flight: FlightLog, onDeleted: () -> Unit) {
         viewModelScope.launch {
             if (!withContext(io) { File(flight.path).delete() }) {
-                detailFlow.update { it?.copy(error = "Could not delete ${flight.name}") }
+                detailFlow.update { it?.copy(error = text(R.string.flights_cannot_delete, flight.name)) }
                 return@launch
             }
             try {
@@ -170,7 +174,7 @@ class FlightsViewModel(
                     }
                 }
             } catch (e: Exception) {
-                Upload.Failed(e.message ?: "Upload failed")
+                Upload.Failed(e.message)
             }
             uploadsFlow.update { it + (flight.path to result) }
         }

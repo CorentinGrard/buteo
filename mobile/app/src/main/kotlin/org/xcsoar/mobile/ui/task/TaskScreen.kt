@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.TaskInfo
 import org.xcsoar.mobile.core.TaskPointInfo
 import org.xcsoar.mobile.ui.Format
@@ -110,44 +112,43 @@ fun TaskContent(state: TaskState, onBack: () -> Unit, actions: TaskActions = Tas
     PageLayout(bottom = if (task == null) null else ({
         // the edit replaces the active task on "Done"
         if (editing)
-            TaskButton("Done", primary = true, modifier = Modifier.weight(1f),
+            TaskButton(stringResource(R.string.done), primary = true, modifier = Modifier.weight(1f),
                        onClick = actions.done)
         else
-            TaskButton("Edit", primary = true, modifier = Modifier.weight(1f),
+            TaskButton(stringResource(R.string.edit), primary = true, modifier = Modifier.weight(1f),
                        onClick = actions.beginEdit)
     })) {
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (editing) {
-                TaskButton("Cancel", onClick = actions.cancel)
-                Text("Edit task", color = colors.text, fontSize = 24.sp,
+                TaskButton(stringResource(R.string.cancel), onClick = actions.cancel)
+                Text(stringResource(R.string.task_edit_title), color = colors.text, fontSize = 24.sp,
                      fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             } else {
-                TaskButton("Back", onClick = onBack)
-                Text("Task", color = colors.text, fontSize = 24.sp,
+                TaskButton(stringResource(R.string.back), onClick = onBack)
+                Text(stringResource(R.string.menu_task), color = colors.text, fontSize = 24.sp,
                      fontWeight = FontWeight.Bold)
             }
         }
 
         state.message?.let { message ->
-            Text(message, color = colors.onAlert, fontSize = 16.sp,
+            Text(message.text(), color = colors.onAlert, fontSize = 16.sp,
                  modifier = Modifier
                      .fillMaxWidth()
                      .background(colors.cautionContainer, RoundedCornerShape(12.dp))
-                     .clickable(onClickLabel = "Dismiss", onClick = actions.dismissMessage)
+                     .clickable(onClickLabel = stringResource(R.string.task_dismiss), onClick = actions.dismissMessage)
                      .padding(14.dp))
         }
 
         if (task == null) {
-            Text("Starting…", color = colors.textSecondary, fontSize = 16.sp)
+            Text(stringResource(R.string.flight_starting), color = colors.textSecondary, fontSize = 16.sp)
             return@PageLayout
         }
 
         Summary(task, editing, actions)
 
         if (task.points.isEmpty())
-            Text(if (editing) "Add the start, the turn points and the finish, in order."
-                 else "No task. Edit to build one from waypoints, or load a task file.",
+            Text(stringResource(if (editing) R.string.task_empty_editing else R.string.task_empty),
                  color = colors.textSecondary, fontSize = 16.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
 
@@ -157,29 +158,31 @@ fun TaskContent(state: TaskState, onBack: () -> Unit, actions: TaskActions = Tas
 
         if (editing) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TaskButton("Add point", primary = true, modifier = Modifier.weight(1f),
+                TaskButton(stringResource(R.string.waypoints_add_point), primary = true, modifier = Modifier.weight(1f),
                            onClick = actions.addPoint)
-                TaskButton("Save…", enabled = task.points.isNotEmpty(),
+                TaskButton(stringResource(R.string.task_save_dots), enabled = task.points.isNotEmpty(),
                            outlined = true, modifier = Modifier.weight(1f)) { saving = true }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TaskButton("Load…", outlined = true, modifier = Modifier.weight(1f),
+                TaskButton(stringResource(R.string.task_load_dots), outlined = true,
+                           modifier = Modifier.weight(1f),
                            onClick = actions.openFiles)
-                TaskButton("Clear", enabled = task.points.isNotEmpty(), outlined = true,
+                TaskButton(stringResource(R.string.wind_clear), enabled = task.points.isNotEmpty(), outlined = true,
                            modifier = Modifier.weight(1f), onClick = actions.clear)
             }
         } else {
             if (task.points.isNotEmpty())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TaskButton("Previous", outlined = true, enabled = (task.active ?: 0) > 0,
+                    TaskButton(stringResource(R.string.task_previous), outlined = true, enabled = (task.active ?: 0) > 0,
                                modifier = Modifier.weight(1f), onClick = actions.previous)
-                    TaskButton("Next", outlined = true,
+                    TaskButton(stringResource(R.string.next), outlined = true,
                                enabled = (task.active ?: 0) < task.points.size - 1,
                                modifier = Modifier.weight(1f), onClick = actions.next)
-                    TaskButton("Restart", outlined = true, modifier = Modifier.weight(1f),
+                    TaskButton(stringResource(R.string.task_restart), outlined = true, modifier = Modifier.weight(1f),
                                onClick = actions.restart)
                 }
-            TaskButton("Load…", outlined = true, modifier = Modifier.fillMaxWidth()) {
+            TaskButton(stringResource(R.string.task_load_dots), outlined = true,
+                       modifier = Modifier.fillMaxWidth()) {
                 actions.beginEdit()
                 actions.openFiles()
             }
@@ -203,12 +206,12 @@ private fun Summary(task: TaskInfo, editing: Boolean, actions: TaskActions) {
            verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Caption(task.name.ifEmpty { "Task type" })
+                Caption(task.name.ifEmpty { stringResource(R.string.task_type) })
                 Text(task.typeName, color = colors.text, fontSize = 20.sp,
                      fontWeight = FontWeight.Bold)
             }
             if (editing)
-                TaskButton(if (choosing) "Close" else "Change", outlined = true) {
+                TaskButton(stringResource(if (choosing) R.string.close else R.string.change), outlined = true) {
                     choosing = !choosing
                 }
         }
@@ -227,7 +230,7 @@ private fun Summary(task: TaskInfo, editing: Boolean, actions: TaskActions) {
             val text = if (task.distanceMin != null && task.distanceMax != null)
                 "${Format.distance(task.distanceMin).text}–" +
                     "${Format.distance(task.distanceMax).text} ${distance.unit} " +
-                    "(${distance.text} nominal)"
+                    "(${stringResource(R.string.task_nominal, distance.text)})"
             else
                 "${distance.text} ${distance.unit}"
             Text(text, color = colors.text, style = XcsTheme.numberStyle, fontSize = 22.sp)
@@ -236,13 +239,14 @@ private fun Summary(task: TaskInfo, editing: Boolean, actions: TaskActions) {
         task.aatMinTime?.let { time ->
             val value = Format.duration(time).text
             if (editing)
-                Stepper("minimum time", "Minimum time · h:mm", value, value,
+                Stepper(stringResource(R.string.task_min_time_name),
+                        "${stringResource(R.string.task_min_time)} · h:mm", value, value,
                         canDecrease = time > 0, canIncrease = true,
                         onDecrease = { actions.changeMinTime(-1) },
                         onIncrease = { actions.changeMinTime(+1) },
                         modifier = Modifier.fillMaxWidth())
             else
-                Text("Minimum time $value", color = colors.textSecondary, fontSize = 15.sp)
+                Text("${stringResource(R.string.task_min_time)} $value", color = colors.textSecondary, fontSize = 15.sp)
         }
 
         if (editing && task.points.isNotEmpty() && !task.valid && task.errors.isNotBlank())
@@ -250,10 +254,11 @@ private fun Summary(task: TaskInfo, editing: Boolean, actions: TaskActions) {
     }
 }
 
+@Composable
 private fun pointLabel(index: Int, point: TaskPointInfo) = when (point.kind) {
-    "start" -> "Start"
-    "finish" -> "Finish"
-    else -> "TP $index"
+    "start" -> stringResource(R.string.task_start)
+    "finish" -> stringResource(R.string.task_finish)
+    else -> stringResource(R.string.task_tp, index)
 }
 
 @Composable
@@ -269,7 +274,7 @@ private fun PointRow(index: Int, point: TaskPointInfo, task: TaskInfo, editing: 
         Row(Modifier
                 .fillMaxWidth()
                 .heightIn(min = 64.dp)
-                .then(if (editing) Modifier.clickable(onClickLabel = "Change ${point.name}") {
+                .then(if (editing) Modifier.clickable(onClickLabel = stringResource(R.string.task_change_point, point.name)) {
                     actions.select(index)
                 } else Modifier)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
@@ -322,8 +327,10 @@ private fun PointEditor(index: Int, point: TaskPointInfo, count: Int, actions: T
         point.radius?.let { radius ->
             val size = Format.distance(radius)
             val value = size.text
-            Stepper("zone size", if (point.typeName.contains("line", ignoreCase = true))
-                        "Half width · ${size.unit}" else "Radius · ${size.unit}",
+            Stepper(stringResource(R.string.task_zone_size_name),
+                    if (point.typeName.contains("line", ignoreCase = true))
+                        "${stringResource(R.string.task_half_width)} · ${size.unit}"
+                    else "${stringResource(R.string.task_radius)} · ${size.unit}",
                     value, "$value ${size.unit}",
                     canDecrease = radius > 100, canIncrease = true,
                     onDecrease = { actions.changeRadius(index, -1) },
@@ -331,11 +338,11 @@ private fun PointEditor(index: Int, point: TaskPointInfo, count: Int, actions: T
                     modifier = Modifier.fillMaxWidth())
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TaskButton("Up", outlined = true, enabled = index > 0,
+            TaskButton(stringResource(R.string.task_up), outlined = true, enabled = index > 0,
                        modifier = Modifier.weight(1f)) { actions.moveUp(index) }
-            TaskButton("Down", outlined = true, enabled = index < count - 1,
+            TaskButton(stringResource(R.string.task_down), outlined = true, enabled = index < count - 1,
                        modifier = Modifier.weight(1f)) { actions.moveDown(index) }
-            TaskButton("Remove", outlined = true, modifier = Modifier.weight(1f)) {
+            TaskButton(stringResource(R.string.data_remove), outlined = true, modifier = Modifier.weight(1f)) {
                 actions.remove(index)
             }
         }
@@ -362,20 +369,20 @@ private fun SaveDialog(name: String, onSave: (String) -> Unit, onDismiss: () -> 
     var text by remember { mutableStateOf(name) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Save task") },
+        title = { Text(stringResource(R.string.task_save_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("In XCSoarData/tasks, as a .tsk file XCSoar reads too.")
+                Text(stringResource(R.string.task_save_hint))
                 OutlinedTextField(text, { text = it }, singleLine = true,
-                                  label = { Text("Name") })
+                                  label = { Text(stringResource(R.string.waypoints_name)) })
             }
         },
         confirmButton = {
             TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank()) {
-                Text("Save")
+                Text(stringResource(R.string.save))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
 

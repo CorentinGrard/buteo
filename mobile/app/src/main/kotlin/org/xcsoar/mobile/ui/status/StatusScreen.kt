@@ -14,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -23,6 +24,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.StatusPages
 import org.xcsoar.mobile.core.XcsoarCore
 import org.xcsoar.mobile.ui.ActionButton
@@ -102,7 +104,7 @@ fun StatusContent(
     onBack: () -> Unit,
 ) {
     PageLayout {
-        ScreenHeader("Status", onBack)
+        ScreenHeader(stringResource(R.string.status_title), onBack)
 
         val list = pages?.pages.orEmpty()
         if (list.isNotEmpty()) {
@@ -117,10 +119,10 @@ fun StatusContent(
             val lat = pages?.latitude
             val lon = pages?.longitude
             if (page.name == StatusViewModel.FLIGHT && lat != null && lon != null)
-                ActionButton("Share position", outlined = true,
+                ActionButton(stringResource(R.string.status_share), outlined = true,
                              modifier = Modifier.fillMaxWidth()) { onShare(lat, lon) }
         } else {
-            Text("Reading…", color = XcsTheme.colors.textSecondary, fontSize = 15.sp,
+            Text(stringResource(R.string.status_reading), color = XcsTheme.colors.textSecondary, fontSize = 15.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
         }
     }

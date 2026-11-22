@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -37,11 +38,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.AutoMacCreadyMode
 import org.xcsoar.mobile.core.FlightState
 import org.xcsoar.mobile.core.UnitGroup
 import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.LinkRow
+import org.xcsoar.mobile.ui.ScreenHeader
 import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.SwitchRow
 import org.xcsoar.mobile.ui.flight.Caption
@@ -93,76 +96,76 @@ fun FlightSetupContent(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextButton("Back", onClick = onBack)
-            Text("Flight setup", color = colors.text, fontSize = 24.sp,
-                 fontWeight = FontWeight.Bold)
-        }
+        ScreenHeader(stringResource(R.string.menu_flight_setup), onBack)
 
         MacCreadySection(setup, onChangeMacCready, onAutoMacCready, onAutoMode)
 
-        Caption("Crew", Modifier.padding(start = 4.dp))
+        Caption(stringResource(R.string.setup_crew), Modifier.padding(start = 4.dp))
         val crew = setup?.crewMass
         val mass = Format.mass(crew)
-        Stepper("crew mass", "Crew mass · ${mass.unit}", mass.text, "${mass.text} ${mass.unit}",
+        Stepper(stringResource(R.string.setup_crew_mass_name),
+                "${stringResource(R.string.setup_crew_mass)} · ${mass.unit}", mass.text, "${mass.text} ${mass.unit}",
                 canDecrease = crew != null && crew > 0,
                 canIncrease = crew != null && crew < MAX_CREW_MASS,
                 onDecrease = { onChangeCrewMass(-1) },
                 onIncrease = { onChangeCrewMass(+1) },
                 modifier = Modifier.fillMaxWidth())
-        Text("Pilots, parachutes and baggage: all on board but the glider and the water.",
+        Text(stringResource(R.string.setup_crew_hint),
              color = colors.textSecondary, fontSize = 15.sp,
              modifier = Modifier.padding(horizontal = 4.dp))
 
         val ballastable = setup != null && setup.maxBallast > 0
-        Caption("Water ballast", Modifier.padding(start = 4.dp))
+        Caption(stringResource(R.string.plane_ballast), Modifier.padding(start = 4.dp))
         if (setup != null && !ballastable) {
-            Text("This plane carries no water ballast.", color = colors.textSecondary,
+            Text(stringResource(R.string.setup_no_ballast), color = colors.textSecondary,
                  fontSize = 15.sp, modifier = Modifier.padding(horizontal = 4.dp))
         } else {
             val ballast = setup?.let { Format.ballast(it.ballast).text } ?: Format.INVALID
-            Stepper("ballast", "Ballast · l", ballast, "$ballast litres",
+            Stepper(stringResource(R.string.setup_ballast_name),
+                    "${stringResource(R.string.setup_ballast)} · l", ballast,
+                    stringResource(R.string.plane_spoken_litres, ballast),
                     canDecrease = setup != null && setup.ballast > 0,
                     canIncrease = setup != null && setup.ballast < setup.maxBallast,
                     onDecrease = { onChangeBallast(-BALLAST_STEP) },
                     onIncrease = { onChangeBallast(+BALLAST_STEP) },
                     modifier = Modifier.fillMaxWidth())
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton("Empty", enabled = setup != null, outlined = true,
+                TextButton(stringResource(R.string.setup_empty), enabled = setup != null, outlined = true,
                            modifier = Modifier.weight(1f)) { onSetBallast(0.0) }
-                TextButton("Full", enabled = setup != null, outlined = true,
+                TextButton(stringResource(R.string.setup_full), enabled = setup != null, outlined = true,
                            modifier = Modifier.weight(1f)) {
                     setup?.let { onSetBallast(it.maxBallast) }
                 }
             }
         }
 
-        Caption("Bugs", Modifier.padding(start = 4.dp))
+        Caption(stringResource(R.string.setup_bugs), Modifier.padding(start = 4.dp))
         val percent = setup?.let { Format.bugsPercent(it.bugs) }
         val bugs = setup?.let { Format.bugs(it.bugs).text } ?: Format.INVALID
-        Stepper("bugs", "Performance lost · %", bugs, "$bugs percent",
+        Stepper(stringResource(R.string.setup_bugs_name),
+                "${stringResource(R.string.setup_bugs_lost)} · %", bugs,
+                stringResource(R.string.plane_spoken_percent, bugs),
                 canDecrease = percent != null && percent > 0,
                 canIncrease = percent != null && percent < MAX_BUGS_PERCENT,
                 onDecrease = { onChangeBugs(-BUGS_STEP) },
                 onIncrease = { onChangeBugs(+BUGS_STEP) },
                 modifier = Modifier.fillMaxWidth())
-        Text("0 % is a clean glider; 50 % doubles the sink rate.",
+        Text(stringResource(R.string.setup_bugs_hint, 0, 50),
              color = colors.textSecondary, fontSize = 15.sp,
              modifier = Modifier.padding(horizontal = 4.dp))
 
         // upstream's Flight setup: the wing loading in red above MTOW
         val overMtow = setup?.overMaxTakeoffMass == true
         setup?.wingLoading?.let {
-            ValueRow("Wing loading", Format.wingLoading(it),
+            ValueRow(stringResource(R.string.units_wing_loading), Format.wingLoading(it),
                      if (overMtow) colors.warning else colors.text)
         }
         if (overMtow)
-            Text("Above the glider's maximum take-off mass.",
+            Text(stringResource(R.string.setup_over_mtow),
                  color = colors.warning, fontSize = 15.sp,
                  modifier = Modifier.padding(horizontal = 4.dp))
 
-        Caption("Altimeter", Modifier.padding(start = 4.dp))
+        Caption(stringResource(R.string.setup_altimeter), Modifier.padding(start = 4.dp))
         val qnh = setup?.let { Format.pressure(it.qnh ?: FlightState.STANDARD_QNH) }
         val qnhText = qnh?.text ?: Format.INVALID
         val unit = Format.unit(UnitGroup.PRESSURE).name
@@ -176,24 +179,21 @@ fun FlightSetupContent(
                 modifier = Modifier.fillMaxWidth())
         if (setup != null) {
             val hint = when {
-                setup.staticPressure == null ->
-                    "No barometer: Buteo uses the GPS altitude. QNH still converts " +
-                        "flight levels for airspace."
-                setup.qnh == null ->
-                    "Not set yet: Buteo sets it after a while on the ground at an " +
-                        "airfield, or set it here. Until then it uses the GPS altitude."
+                setup.staticPressure == null -> stringResource(R.string.setup_no_baro)
+                setup.qnh == null -> stringResource(R.string.setup_qnh_unset)
                 else -> null
             }
             hint?.let {
                 Text(it, color = colors.textSecondary, fontSize = 15.sp,
                      modifier = Modifier.padding(horizontal = 4.dp))
             }
-            setup.baroAltitude?.let { ValueRow("Barometric altitude", Format.altitude(it)) }
+            setup.baroAltitude?.let { ValueRow(stringResource(R.string.setup_baro_altitude), Format.altitude(it)) }
         }
 
         if (onOpenWind != null)
             SettingsGroup(Modifier.padding(top = 8.dp)) {
-                LinkRow("Wind", "Set by hand, estimates", onClick = onOpenWind)
+                LinkRow(stringResource(R.string.wind), stringResource(R.string.setup_wind_detail),
+                        onClick = onOpenWind)
             }
     }
 }
@@ -215,30 +215,27 @@ private fun MacCreadySection(
     val unit = Format.unit(UnitGroup.VERTICAL_SPEED).name
     val text = mc?.let { Format.macCready(it).text } ?: Format.INVALID
     val auto = setup?.autoMacCready == true
-    Stepper("MacCready", if (auto) "Auto · $unit" else "MacCready · $unit", text,
-            if (auto) "automatic, $text $unit" else "$text $unit",
+    Stepper(stringResource(R.string.mac_cready),
+            "${stringResource(if (auto) R.string.auto else R.string.mac_cready)} · $unit", text,
+            if (auto) stringResource(R.string.setup_spoken_auto, "$text $unit") else "$text $unit",
             canDecrease = mc != null && mc > 0,
             canIncrease = mc != null && mc < FlightSetupViewModel.MAX_MC,
             onDecrease = { onChange(-1) },
             onIncrease = { onChange(+1) },
             modifier = Modifier.fillMaxWidth())
     SettingsGroup {
-        SwitchRow("Auto MacCready",
-                  "Buteo sets it as you fly; changing it by hand turns this off.",
+        SwitchRow(stringResource(R.string.setup_auto_mc),
+                  stringResource(R.string.setup_auto_mc_detail),
                   setup?.autoMacCready, enabled = setup != null, onChange = onAuto)
     }
     val mode = setup?.autoMode
-    Segmented(AUTO_MODES.map { it.second }, selected = AUTO_MODES.indexOfFirst { it.first == mode },
+    Segmented(AUTO_MODES.map { stringResource(it.second) }, selected = AUTO_MODES.indexOfFirst { it.first == mode },
               onSelect = { onAutoMode(AUTO_MODES[it].first) },
               modifier = Modifier.fillMaxWidth().alpha(if (auto) 1f else 0.6f))
     Text(when (mode) {
-             AutoMacCreadyMode.FINAL_GLIDE ->
-                 "On final glide: the highest MacCready that still gets you home."
-             AutoMacCreadyMode.CLIMB_AVERAGE ->
-                 "The average climb of your recent thermals."
-             AutoMacCreadyMode.BOTH ->
-                 "The average climb, then on final glide the highest MacCready that " +
-                     "still gets you home."
+             AutoMacCreadyMode.FINAL_GLIDE -> stringResource(R.string.setup_mode_final_glide_hint)
+             AutoMacCreadyMode.CLIMB_AVERAGE -> stringResource(R.string.setup_mode_climbs_hint)
+             AutoMacCreadyMode.BOTH -> stringResource(R.string.setup_mode_both_hint)
              null -> ""
          },
          color = colors.textSecondary, fontSize = 15.sp,
@@ -247,9 +244,9 @@ private fun MacCreadySection(
 
 /** XCSoar's auto MacCready modes, in its order, as the choice shows them. */
 private val AUTO_MODES = listOf(
-    AutoMacCreadyMode.FINAL_GLIDE to "Final glide",
-    AutoMacCreadyMode.CLIMB_AVERAGE to "Climbs",
-    AutoMacCreadyMode.BOTH to "Both",
+    AutoMacCreadyMode.FINAL_GLIDE to R.string.voice_final_glide_title,
+    AutoMacCreadyMode.CLIMB_AVERAGE to R.string.voice_climbs_title,
+    AutoMacCreadyMode.BOTH to R.string.setup_mode_both,
 )
 
 /** A read-only value, like the wing loading. */

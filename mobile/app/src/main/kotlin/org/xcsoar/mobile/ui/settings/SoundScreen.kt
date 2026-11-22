@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.SoundOption
 import org.xcsoar.mobile.core.UnitGroup
 import org.xcsoar.mobile.core.XcsoarCore
@@ -94,9 +96,9 @@ fun SoundContent(
     onBack: () -> Unit,
 ) {
     PageLayout {
-        ScreenHeader("Sound", onBack)
+        ScreenHeader(stringResource(R.string.menu_sound), onBack)
         VarioSound(values, onSet)
-        Caption("Voice callouts", Modifier.padding(start = 4.dp, top = 8.dp))
+        Caption(stringResource(R.string.sound_callouts), Modifier.padding(start = 4.dp, top = 8.dp))
         VoiceCallouts(callouts, voiceAvailable, onCallouts, onSampleCallout)
     }
 }
@@ -109,7 +111,7 @@ fun SoundContent(
 private fun VarioSound(values: Map<SoundOption, Int>?, onSet: (SoundOption, Int) -> Unit) {
     val colors = XcsTheme.colors
     if (values != null && values.isEmpty()) {
-        Text("This device has no sound output for the vario.",
+        Text(stringResource(R.string.sound_no_output),
              color = colors.textSecondary, fontSize = 16.sp,
              modifier = Modifier.padding(horizontal = 4.dp))
         return
@@ -117,44 +119,48 @@ private fun VarioSound(values: Map<SoundOption, Int>?, onSet: (SoundOption, Int)
 
     val on = values?.get(SoundOption.VARIO)?.let { it != 0 }
     SettingsGroup {
-        SwitchRow("Vario sound", "A tone that rises with lift; also in the menu's " +
-                      "Quick settings", on) {
+        SwitchRow(stringResource(R.string.menu_vario_sound),
+                  stringResource(R.string.sound_vario_detail), on) {
             onSet(SoundOption.VARIO, if (it) 1 else 0)
         }
     }
 
     val volume = values?.get(SoundOption.VARIO_VOLUME)
-    Stepper("volume", "Volume · %", volume?.toString() ?: Format.INVALID,
-            "${volume ?: Format.INVALID} percent",
+    Stepper(stringResource(R.string.sound_volume_name),
+            "${stringResource(R.string.sound_volume)} · %", volume?.toString() ?: Format.INVALID,
+            stringResource(R.string.plane_spoken_percent, volume ?: Format.INVALID),
             canDecrease = volume != null && volume > 0,
             canIncrease = volume != null && volume < 100,
             onDecrease = { volume?.let { onSet(SoundOption.VARIO_VOLUME, step5(it, -1)) } },
             onIncrease = { volume?.let { onSet(SoundOption.VARIO_VOLUME, step5(it, +1)) } },
             modifier = Modifier.fillMaxWidth())
-    Explanation("The phone's media volume applies on top.")
+    Explanation(stringResource(R.string.sound_volume_hint))
 
-    Caption("Tone", Modifier.padding(start = 4.dp, top = 8.dp))
-    Segmented(listOf("Vario", "Auto"),
+    Caption(stringResource(R.string.sound_tone), Modifier.padding(start = 4.dp, top = 8.dp))
+    Segmented(listOf(stringResource(R.string.sound_tone_vario),
+                         stringResource(R.string.auto)),
               selected = values?.get(SoundOption.VARIO_SWITCHING) ?: -1,
               onSelect = { onSet(SoundOption.VARIO_SWITCHING, it) },
               modifier = Modifier.fillMaxWidth())
-    Explanation("Auto plays speed to fly in cruise. It needs an airspeed sensor; " +
-                    "without one, it stays on the vario.")
+    Explanation(stringResource(R.string.sound_tone_hint))
 
-    Caption("Quiet around zero", Modifier.padding(start = 4.dp, top = 8.dp))
+    Caption(stringResource(R.string.sound_quiet), Modifier.padding(start = 4.dp, top = 8.dp))
     val deadBand = values?.get(SoundOption.VARIO_DEAD_BAND)?.let { it != 0 }
     SettingsGroup {
-        SwitchRow("Dead band", "Silent while the lift is between the two values below",
+        SwitchRow(stringResource(R.string.sound_dead_band),
+                  stringResource(R.string.sound_dead_band_detail),
                   deadBand) {
             onSet(SoundOption.VARIO_DEAD_BAND, if (it) 1 else 0)
         }
     }
     val enabled = deadBand == true
-    DeadBandStepper("lower edge", "From", values?.get(SoundOption.VARIO_DEAD_BAND_MIN),
+    DeadBandStepper(stringResource(R.string.sound_lower_name),
+                    stringResource(R.string.sound_from), values?.get(SoundOption.VARIO_DEAD_BAND_MIN),
                     -500, 0, enabled) {
         onSet(SoundOption.VARIO_DEAD_BAND_MIN, it)
     }
-    DeadBandStepper("upper edge", "To", values?.get(SoundOption.VARIO_DEAD_BAND_MAX),
+    DeadBandStepper(stringResource(R.string.sound_upper_name),
+                    stringResource(R.string.sound_to), values?.get(SoundOption.VARIO_DEAD_BAND_MAX),
                     0, 200, enabled) {
         onSet(SoundOption.VARIO_DEAD_BAND_MAX, it)
     }

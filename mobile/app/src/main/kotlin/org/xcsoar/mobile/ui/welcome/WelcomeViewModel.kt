@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.GeoPosition
 import org.xcsoar.mobile.core.PlaneInfo
 import org.xcsoar.mobile.core.RegionFiles
@@ -19,6 +20,10 @@ import org.xcsoar.mobile.core.RepositoryFile
 import org.xcsoar.mobile.core.UnitSettings
 import org.xcsoar.mobile.core.XcsoarCore
 import org.xcsoar.mobile.ui.Format
+import org.xcsoar.mobile.ui.MessageException
+import org.xcsoar.mobile.ui.UiText
+import org.xcsoar.mobile.ui.text
+import org.xcsoar.mobile.ui.toText
 
 /** The first start's steps, in order. */
 enum class WelcomeStep { UNITS, CREW, DATA }
@@ -30,7 +35,7 @@ data class RegionFileState(
     /** 0..1 while downloading, -1 when the size is unknown; null otherwise. */
     val progress: Float? = null,
     val done: Boolean = false,
-    val error: String? = null,
+    val error: UiText? = null,
 )
 
 data class WelcomeState(
@@ -46,7 +51,7 @@ data class WelcomeState(
     val plane: String? = null,
     /** XCSoar's repository; null while it loads. */
     val repository: List<RepositoryFile>? = null,
-    val repositoryError: String? = null,
+    val repositoryError: UiText? = null,
     /** Lower case country code; null if none could be guessed. */
     val country: String? = null,
     val files: List<RegionFileState> = emptyList(),
@@ -199,7 +204,8 @@ class WelcomeViewModel(
         viewModelScope.launch {
             try {
                 val files = core.repositoryFiles(index())
-                    ?: error("downloads need the native core")
+                    ?: throw MessageException(text(R.string.download_needs_core),
+                        "downloads need the native core")
                 val here = position()
                 val country = RegionFiles.country(files, here, regionHints())
                 stateFlow.update {
@@ -209,7 +215,7 @@ class WelcomeViewModel(
                 }
             } catch (e: Exception) {
                 stateFlow.update {
-                    it.copy(repositoryError = e.message ?: e.toString())
+                    it.copy(repositoryError = e.toText())
                 }
             }
         }
@@ -258,7 +264,7 @@ class WelcomeViewModel(
                     change { it.copy(progress = null) }
                     throw e
                 } catch (e: Exception) {
-                    change { it.copy(progress = null, error = e.message ?: e.toString()) }
+                    change { it.copy(progress = null, error = e.toText()) }
                 }
             }
         }

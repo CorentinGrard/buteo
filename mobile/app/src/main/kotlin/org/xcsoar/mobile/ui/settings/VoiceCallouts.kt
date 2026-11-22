@@ -9,8 +9,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.xcsoar.mobile.R
 import org.xcsoar.mobile.ui.ActionButton
 import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.SwitchRow
@@ -32,37 +34,35 @@ fun VoiceCallouts(
     onSample: () -> Unit,
 ) {
     val colors = XcsTheme.colors
-    Text("Short callouts in flight through the phone's voice, so your eyes stay " +
-             "outside; the screen may be off.",
+    Text(stringResource(R.string.voice_intro),
          color = colors.textSecondary, fontSize = 16.sp,
          modifier = Modifier.padding(horizontal = 4.dp))
     if (available == false)
-        Text("This phone has no text-to-speech voice: Android's settings install one " +
-                 "(Text-to-speech output).",
+        Text(stringResource(R.string.voice_none),
              color = colors.caution, fontSize = 16.sp,
              modifier = Modifier.padding(horizontal = 4.dp))
     SettingsGroup {
-        SwitchRow("Airspace", "Ahead and inside: “Airspace ahead: Grenoble CTR, " +
-                      "in 40 seconds”", settings.airspace) {
+        SwitchRow(stringResource(R.string.airspace), stringResource(R.string.voice_airspace),
+                  settings.airspace) {
             onChange(settings.copy(airspace = it))
         }
         Divider()
-        SwitchRow("Final glide", "Above it, and dropped below: “Above final glide " +
-                      "by 120 metres”", settings.finalGlide) {
+        SwitchRow(stringResource(R.string.voice_final_glide_title),
+                  stringResource(R.string.voice_final_glide), settings.finalGlide) {
             onChange(settings.copy(finalGlide = it))
         }
         Divider()
-        SwitchRow("Task points", "Start, each turn point and the finish, with the " +
-                      "next point", settings.taskPoints) {
+        SwitchRow(stringResource(R.string.voice_task_points_title),
+                  stringResource(R.string.voice_task_points), settings.taskPoints) {
             onChange(settings.copy(taskPoints = it))
         }
         Divider()
-        SwitchRow("Climbs", "Leaving a climb, its average and the height gained: " +
-                      "“Climb 2.1, gained 450”", settings.climbs) {
+        SwitchRow(stringResource(R.string.voice_climbs_title),
+                  stringResource(R.string.voice_climbs), settings.climbs) {
             onChange(settings.copy(climbs = it))
         }
     }
-    ActionButton("Say a callout", outlined = true, enabled = available == true,
+    ActionButton(stringResource(R.string.voice_say), outlined = true, enabled = available == true,
                  modifier = Modifier.fillMaxWidth(), onClick = onSample)
 }
 

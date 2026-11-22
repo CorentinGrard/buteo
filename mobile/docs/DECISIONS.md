@@ -501,6 +501,20 @@ on a French phone, "Européen" sat under "Welcome".
 - French is complete, the pilot's language, and a test keeps it so.
   Other languages get XCSoar's translations and English for the rest
   until someone translates `mobile/po/<lang>.po`.
+- A message the logic makes (a failed save, "The task is full") is a
+  `UiText` (`ui/UiText.kt`) in the state: the string resource and its
+  arguments, resolved when the screen shows it, so it follows the
+  phone's language, and the logic tests need no Android resources.  What
+  the core or the network said stays as it came (`UiText.Plain`).  Code
+  with no `Context` (the downloader) throws a `MessageException` that
+  carries one.
+- No plurals: Android's `<plurals>` are not in the pipeline, so a count
+  is worded "Airspaces loaded: 812" and not "812 airspaces loaded".  A
+  text with a literal percent is formatted with arguments
+  (`%1$d %%`): aapt2 reads "% d" as a placeholder.
+- The spoken callouts stay English: aviation English, a voice the phone
+  may not have in the pilot's language, and a changed wording in flight
+  is no small thing.  The Sound page quotes them as they are said.
 - ICAO abbreviations and names stay as they are (`doc/i18n.rst`):
   "METAR, TAF, RASP", "ETE", "Cloud, SkyLines, LiveTrack24" are not in
   the resources.  Chips and tags are stored in sentence case ("No GPS",

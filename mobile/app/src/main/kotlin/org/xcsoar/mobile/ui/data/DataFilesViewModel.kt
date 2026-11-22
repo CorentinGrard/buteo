@@ -13,13 +13,15 @@ import kotlinx.coroutines.launch
 import org.xcsoar.mobile.core.DataFile
 import org.xcsoar.mobile.core.DataStatus
 import org.xcsoar.mobile.core.XcsoarCore
+import org.xcsoar.mobile.ui.UiText
+import org.xcsoar.mobile.ui.toText
 
 data class DataFilesState(
     /** null until the core has answered. */
     val status: DataStatus? = null,
     /** The kind being copied and loaded, if any. */
     val busy: DataFile? = null,
-    val error: String? = null,
+    val error: UiText? = null,
 )
 
 /**
@@ -58,7 +60,7 @@ class DataFilesViewModel(
                 action()
                 null
             } catch (e: Exception) {
-                e.message ?: e.toString()
+                e.toText()
             }
             val status = try {
                 core.dataStatus()

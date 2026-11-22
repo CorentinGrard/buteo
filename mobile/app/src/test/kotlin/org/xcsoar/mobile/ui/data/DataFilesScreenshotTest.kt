@@ -12,6 +12,7 @@ import org.robolectric.annotation.GraphicsMode
 import org.xcsoar.mobile.core.DataStatus
 import org.xcsoar.mobile.core.FileStatus
 import org.xcsoar.mobile.core.MapStatus
+import org.xcsoar.mobile.ui.asText
 import org.xcsoar.mobile.ui.theme.XcsTheme
 
 /** L4: the data files screen (mobile/docs/ARCHITECTURE.md §6). */
@@ -28,7 +29,7 @@ class DataFilesScreenshotTest {
                         MapStatus(listOf("/data/XCSoarData/maps/alps_hd.xcm"), terrain = true),
                         FileStatus(emptyList(), 0),
                         FileStatus(listOf("/data/XCSoarData/waypoints/alps.cup"), 1250)),
-                    error = "Airspace: unknown file format"),
+                    error = "Airspace: unknown file format".asText()),
                 {}, {}, {}, onDownload = {})
         }
     }
