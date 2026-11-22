@@ -72,7 +72,8 @@ RequestAction(const char *action, const char *page = nullptr) noexcept;
 std::string
 ThermalAssistant() noexcept;
 
-/** Forget the content objects (on shutdown). */
+/** Forget the content objects (on shutdown, or after a language change:
+    the next Update() creates them again, with their titles). */
 void
 Clear() noexcept;
 

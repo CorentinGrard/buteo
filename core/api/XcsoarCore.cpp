@@ -906,6 +906,22 @@ xcs_units_preset(xcs_core *core, uint32_t index)
 }
 
 xcs_status
+xcs_reload_language(xcs_core *core)
+{
+  if (core == nullptr)
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+  /* texts are looked up when shown (status pages, tile values), so
+     they follow at their next refresh; a tile's title is set with its
+     content, which the next refresh creates again */
+  return RunOnMain(*core, []{
+    ReadLanguageFile();
+    CoreInfoBoxes::Clear();
+    return XCS_OK;
+  });
+}
+
+xcs_status
 xcs_sound_set_option(xcs_core *core, uint32_t option, int32_t value)
 {
   if (core == nullptr)

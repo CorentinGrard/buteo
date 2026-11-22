@@ -1347,4 +1347,11 @@ Java_org_xcsoar_mobile_NativeCore_nativeUnitsPreset(JNIEnv *, jclass,
   return xcs_units_preset(ToCore(core), index);
 }
 
+JNIEXPORT jint JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeReloadLanguage(JNIEnv *, jclass,
+                                                       jlong core)
+{
+  return xcs_reload_language(ToCore(core));
+}
+
 } // extern "C"

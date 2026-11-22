@@ -632,7 +632,7 @@ the core already links but that has never run in this app:
       Checked on a Pixel 7: settings, download and airspace rebuild
 - [x] File manager: download waypoints, airspace, maps from the XCSoar repository
       (Data files → Download, M2)
-- [~] Translations (D28): `values/strings.xml` in English, translated
+- [x] Translations (D28): `values/strings.xml` in English, translated
       at build time from XCSoar's `po/` (the same English) and Buteo's
       own `mobile/po/` by `mobile/tools/po2strings.py`; a translation
       with other placeholders is left out.  `TranslationsTest` formats
@@ -654,8 +654,9 @@ the core already links but that has never run in this app:
       `MessageException`).  French in XCSoar's words where it has them
       ("circuit" for a task).  Left in English: the spoken callouts (the
       voice is English on purpose) and what the core or the network says
-      (an error's cause, airspace class names).  Next: Android's
-      per-app language list (`localeConfig`)
+      (an error's cause, airspace class names).  Android's per-app
+      language list offers English and French (2026-11-22), and the
+      core's texts follow a change without a restart
 
 ### Not done: weather and tracking
 

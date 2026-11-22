@@ -357,6 +357,9 @@ interface XcsoarCore {
     /** Load XCSoar's unit preset [index] (see [UnitSettings.presets]). */
     suspend fun applyUnitPreset(index: Int) {}
 
+    /** The app's language changed: the core's own texts follow. */
+    suspend fun reloadLanguage() {}
+
     /** A sound option (saved in the profile); null without audio output. */
     suspend fun soundOption(option: SoundOption): Int? = null
 

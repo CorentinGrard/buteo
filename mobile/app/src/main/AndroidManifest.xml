@@ -30,7 +30,8 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:theme="@android:style/Theme.Material.NoActionBar"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:localeConfig="@xml/locales_config">
 
         <!-- release builds can be measured (simpleperf, Perfetto) -->
         <profileable android:shell="true" />

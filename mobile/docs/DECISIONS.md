@@ -501,6 +501,12 @@ on a French phone, "Européen" sat under "Welcome".
 - French is complete, the pilot's language, and a test keeps it so.
   Other languages get XCSoar's translations and English for the rest
   until someone translates `mobile/po/<lang>.po`.
+- Android's own language choice for the app (Settings → Apps → Buteo →
+  Language, Android 13+) lists the complete languages only, English and
+  French (`res/xml/locales_config.xml`): a mostly English "Deutsch"
+  would mislead.  A phone in another language still gets what is
+  translated.  The process goes on when the pilot changes it, so the
+  core loads its catalogue again (`xcs_reload_language`).
 - A message the logic makes (a failed save, "The task is full") is a
   `UiText` (`ui/UiText.kt`) in the state: the string resource and its
   arguments, resolved when the screen shows it, so it follows the

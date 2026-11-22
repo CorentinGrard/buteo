@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<!-- The languages Android offers for Buteo (Settings → Apps → Buteo →
+     Language): the complete ones only (mobile/docs/DECISIONS.md D28).
+     Other phones' languages still get what is translated. -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="fr" />
+</locale-config>

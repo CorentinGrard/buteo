@@ -6,6 +6,7 @@ package org.xcsoar.mobile
 import android.Manifest
 import android.app.Application
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.location.LocationManager
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -15,6 +16,7 @@ import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.xcsoar.AppPermissionManager
 import org.xcsoar.CoreBattery
@@ -77,6 +79,29 @@ class XcsoarApp : Application() {
     override fun onCreate() {
         super.onCreate()
         WeatherUpdates(this, appScope)
+    }
+
+    /* the language the core read its translations in (at start) */
+    private var coreLanguage = Locale.getDefault().language
+
+    /**
+     * The pilot gave Buteo another language (Android's per-app language,
+     * res/xml/locales_config.xml): the process goes on, so the core's
+     * texts (tiles, status pages) must follow by themselves.
+     */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val language = newConfig.locales[0].language
+        if (language == coreLanguage) return
+        coreLanguage = language
+        val core = core ?: return
+        appScope.launch {
+            try {
+                core.reloadLanguage()
+            } catch (e: IllegalStateException) {
+                Log.w(TAG, "core texts stay in the old language", e)
+            }
+        }
     }
 
     private val uiPreferences by lazy { getSharedPreferences("ui", MODE_PRIVATE) }

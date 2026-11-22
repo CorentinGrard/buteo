@@ -554,6 +554,9 @@ class NativeXcsoarCore(
     override suspend fun applyUnitPreset(index: Int) =
         command { NativeCore.nativeUnitsPreset(it, index) }
 
+    override suspend fun reloadLanguage() =
+        command { NativeCore.nativeReloadLanguage(it) }
+
     override suspend fun soundOption(option: SoundOption): Int? = lock.withLock {
         if (handle == 0L) return@withLock null
         withContext(Dispatchers.IO) { NativeCore.nativeSoundGetOption(handle, option.code) }

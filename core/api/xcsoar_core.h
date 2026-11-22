@@ -419,6 +419,12 @@ xcs_units_set(xcs_core *core, uint32_t group, uint32_t unit);
 XCS_EXPORT xcs_status
 xcs_units_preset(xcs_core *core, uint32_t index);
 
+/** Load the translations again, as at start: the profile's language,
+    else the platform's (on Android, the app's own language, which the
+    pilot can change while the core runs). */
+XCS_EXPORT xcs_status
+xcs_reload_language(xcs_core *core);
+
 /** Sound options (XCSoar's profile keys in brackets). */
 typedef enum xcs_sound_option {
   /** 0/1: the vario sound, XCSoar's synthesiser [AudioVario2] */
