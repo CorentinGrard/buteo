@@ -802,7 +802,7 @@ the core already links but that has never run in this app:
 - [ ] Crash reporting (opt-in, privacy-friendly) + native crash symbolication
 - [~] Distribution: GitHub releases signed with Buteo's key (D24,
       `.github/workflows/mobile-release.yml`, v1.0.0 2026-11-20,
-      v1.1.0 2026-11-22);
+      v1.1.0 2026-11-22, v1.2.0 2026-11-23);
       Obtainium links in the README; Google Play: internal test, the
       workflow uploads drafts (D26, `mobile/docs/PLAY.md`); F-Droid: open
 - [x] User docs: migration guide from XCSoar (`mobile/docs/MIGRATING.md`,
@@ -946,6 +946,15 @@ caution).  From a fresh install tested on a Redmi 5 and the Pixel 7.
 ---
 
 ## Log
+
+- 2026-11-23 — Buteo 1.2.0.  Checked on the Pixel 7 before it: an
+  area task's targets (a tap in the area, the steppers, the next area,
+  Done), terrain behind the task map and a flight's page, and the task
+  back after a restart.  The 2026-11-22 "Done did not commit" was not
+  the app: Default.tsk was written at that tap, with the finish; the
+  uiautomator dump after it took about 12 s and showed the page from
+  before.  The same sequence (built on the map, areas enlarged from
+  the list, Done) commits and shows the task within 0.4 s.
 
 - 2026-11-22 (night) — Translations (D28): every page of the menu in
   the phone's language, French complete (about 450 more texts).

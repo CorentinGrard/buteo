@@ -1,0 +1,5 @@
+- Buteo in French, and a language of its own on Android 13+
+- Build the task on the map; move an area task's targets
+- Task rules, zone shapes and other starts
+- The map in Buteo's colours; terrain behind the analysis maps
+- A task set before a flight comes back if Android restarts Buteo
