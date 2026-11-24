@@ -33,6 +33,7 @@
 #include "ui/canvas/opengl/Init.hpp"
 #include "ui/canvas/opengl/Globals.hpp"
 #include "Topography/TopographyStore.hpp"
+#include "Topography/TopographyFile.hpp"
 #include "Topography/TopographyGlue.hpp"
 #include "Computer/GlideComputer.hpp"
 #include "Task/ProtectedTaskManager.hpp"
@@ -186,6 +187,89 @@ ApplyButeoSettings(MapSettings &settings) noexcept
   settings.waypoint.landable_style =
     WaypointRendererSettings::LandableStyle::TRAFFIC_LIGHTS;
   settings.waypoint.vector_landable_rendering = true;
+
+  /* labels where they help: the task and the places to land (XCSoar
+     labels every turn point, each with its file's short code) */
+  if (settings.waypoint.label_selection ==
+      WaypointRendererSettings::LabelSelection::ALL)
+    settings.waypoint.label_selection =
+      WaypointRendererSettings::LabelSelection::TASK_AND_LANDABLE;
+
+  /* the glider is the first thing to find on the map: XCSoar's simple
+     symbol is drawn with pens as thin as the roads' */
+  if (settings.aircraft_symbol == AircraftSymbol::SIMPLE)
+    settings.aircraft_symbol = AircraftSymbol::SIMPLE_LARGE;
+}
+
+/*
+ * XCSoar's map files give every topography layer the map generator's
+ * colours (topology.tpl): red roads, which read as airspace, and
+ * yellow towns.  Buteo draws them in warm greys, thinner, under the
+ * airspace, the task and the glider; water stays blue.
+ */
+constexpr BGRA8Color LOOK_ROAD_MAJOR{0x7d, 0x76, 0x6c, 0xd0};
+constexpr BGRA8Color LOOK_ROAD{0x9a, 0x93, 0x88, 0xb0};
+constexpr BGRA8Color LOOK_RAILWAY{0x6b, 0x67, 0x60, 0xa0};
+constexpr BGRA8Color LOOK_TOWN{0xc9, 0xc0, 0xae, 0x90};
+
+constexpr bool
+IsRGB(BGRA8Color c, uint8_t r, uint8_t g, uint8_t b) noexcept
+{
+  return c.Red() == r && c.Green() == g && c.Blue() == b;
+}
+
+void
+ToneTopography(TopographyStore &store) noexcept
+{
+  for (auto &file : store) {
+    const auto color = file.GetColor();
+    const unsigned width = file.GetPenWidth();
+    if (IsRGB(color, 240, 64, 64))
+      file.SetStyle(width >= 3 ? LOOK_ROAD_MAJOR : LOOK_ROAD,
+                    std::max(width, 2u) - 1);
+    else if (IsRGB(color, 223, 223, 0))
+      file.SetStyle(LOOK_TOWN, width);
+    else if (IsRGB(color, 64, 64, 64))
+      file.SetStyle(LOOK_RAILWAY, width);
+  }
+}
+
+void
+LoadButeoTopography(TopographyStore &store) noexcept
+{
+  LoadConfiguredTopography(store);
+  ToneTopography(store);
+}
+
+/**
+ * The trail in the app's vario colours: sink neutral grey, lift green,
+ * darker the stronger (XCSoar's default goes from blue in sink to
+ * yellow and red in lift, and red means a warning here).
+ */
+void
+ApplyButeoTrail(TrailLook &trail) noexcept
+{
+  constexpr unsigned n = TrailLook::NUMSNAILCOLORS;
+  constexpr RGB8Color sink_strong{0x6b, 0x70, 0x6d}, sink_weak{0xb5, 0xb9, 0xb6};
+  constexpr RGB8Color lift_weak{0x8f, 0xd6, 0xb3}, lift_strong{0x05, 0x5c, 0x44};
+
+  const auto mix = [](RGB8Color a, RGB8Color b, double t) noexcept {
+    const auto c = [t](uint8_t x, uint8_t y) noexcept {
+      return uint8_t(x + (y - x) * t + 0.5);
+    };
+    return Color(c(a.Red(), b.Red()), c(a.Green(), b.Green()),
+                 c(a.Blue(), b.Blue()));
+  };
+
+  const unsigned width = Layout::ScalePenWidth(2);
+  for (unsigned i = 0; i < n; ++i) {
+    const Color color = i < n / 2
+      ? mix(sink_strong, sink_weak, double(i) / (n / 2 - 1))
+      : mix(lift_weak, lift_strong, double(i - n / 2) / (n - 1 - n / 2));
+    trail.trail_brushes[i].Create(color);
+    trail.trail_pens[i].Create(width, color);
+    trail.scaled_trail_pens[i].Create(trail.trail_widths[i], color);
+  }
 }
 
 void
@@ -223,6 +307,8 @@ ApplyButeoLook(MapLook &look) noexcept
   task.arrow_inactive_pen.Create(Layout::ScalePenWidth(1), light);
   task.bearing_pen.Create(Layout::ScalePenWidth(3), task_color);
   task.isoline_pen.Create(Pen::DASH2, Layout::ScalePenWidth(1), task_color);
+
+  ApplyButeoTrail(look.trail);
 }
 
 /**
@@ -302,7 +388,7 @@ struct Graphics {
 
     if (data.topography == nullptr) {
       data.topography = std::make_unique<TopographyStore>();
-      LoadConfiguredTopography(*data.topography);
+      LoadButeoTopography(*data.topography);
     }
 
     map->SetWaypoints(data.waypoints.get());
@@ -1100,7 +1186,7 @@ CoreMap::OnDataChanged() noexcept
   graphics->map->SetTopography(nullptr);
   auto &topography = *data_components->topography;
   topography.Reset();
-  LoadConfiguredTopography(topography);
+  LoadButeoTopography(topography);
 
   graphics->ConnectData();
   graphics->map->FlushCaches();
