@@ -190,6 +190,25 @@ DataCount(const std::string &status, const char *section)
   return std::strtol(status.c_str() + count + 8, nullptr, 10);
 }
 
+/** xcs_map_features(), or "" on error. */
+static std::string
+Features(xcs_core *core, uint32_t which)
+{
+  std::string buffer(4096, '\0');
+  size_t length = 0;
+  auto status = xcs_map_features(core, which, buffer.data(), buffer.size(),
+                                 &length);
+  if (status == XCS_ERROR_INVALID_ARGUMENT && length >= buffer.size()) {
+    buffer.resize(length + 1);
+    status = xcs_map_features(core, which, buffer.data(), buffer.size(),
+                              &length);
+  }
+  if (status != XCS_OK)
+    return {};
+  buffer.resize(length);
+  return buffer;
+}
+
 static void
 TestDataFiles(xcs_core *core)
 {
@@ -216,6 +235,31 @@ TestDataFiles(xcs_core *core)
   status = DataStatus(core);
   ok1(status.find("\"terrain\":true") != std::string::npos);
   ok1(DataCount(status, "waypoints") > 0);
+
+  /* the same data as GeoJSON, for a map the app draws itself */
+  const auto airspaces = Features(core, XCS_FEATURES_AIRSPACE);
+  ok1(airspaces.starts_with("{\"type\":\"FeatureCollection\"") &&
+      airspaces.find("\"type\":\"Polygon\"") != std::string::npos &&
+      airspaces.find("\"base_m\":") != std::string::npos);
+  const auto waypoints = Features(core, XCS_FEATURES_WAYPOINTS);
+  ok1(waypoints.find("\"type\":\"Point\"") != std::string::npos &&
+      waypoints.find("\"landable\":true") != std::string::npos);
+  /* no fix now: no warning, no task; the trail is the earlier
+     replay's */
+  ok1(Features(core, XCS_FEATURES_AIRSPACE_STATE) == "[]");
+  ok1(Features(core, XCS_FEATURES_TASK).find("\"features\":[]") !=
+      std::string::npos);
+  ok1(Features(core, XCS_FEATURES_TRAIL).starts_with(
+        "{\"type\":\"FeatureCollection\""));
+  {
+    char small[8];
+    size_t length = 0;
+    ok1(xcs_map_features(core, XCS_FEATURES_AIRSPACE, small, sizeof(small),
+                         &length) == XCS_ERROR_INVALID_ARGUMENT &&
+        length == airspaces.size());
+    ok1(xcs_map_features(core, 99, small, sizeof(small), &length) ==
+        XCS_ERROR_INVALID_ARGUMENT);
+  }
 
   /* removing the files unloads their data */
   ok1(xcs_set_data_file(core, XCS_DATA_AIRSPACE, nullptr) == XCS_OK);
@@ -1713,7 +1757,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7);
 
   Recorder recorder;
   TestCreateArguments(recorder);

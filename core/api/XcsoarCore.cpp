@@ -39,6 +39,7 @@
 #include "CoreReceive.hpp"
 #include "CoreTask.hpp"
 #include "CoreAnalysis.hpp"
+#include "CoreFeatures.hpp"
 #include "CoreFlightFile.hpp"
 #include "Computer/Settings.hpp"
 #include "CoreStatus.hpp"
@@ -1414,6 +1415,33 @@ xcs_thermal_assistant_get(xcs_core *core, char *buffer, size_t size,
 {
   return GetJsonOnMain(core, buffer, size, length_r,
                        CoreInfoBoxes::ThermalAssistant);
+}
+
+xcs_status
+xcs_map_features(xcs_core *core, uint32_t which, char *buffer, size_t size,
+                 size_t *length_r)
+{
+  std::string (*describe)() noexcept;
+  switch (which) {
+  case XCS_FEATURES_AIRSPACE:
+    describe = CoreFeatures::Airspaces;
+    break;
+  case XCS_FEATURES_AIRSPACE_STATE:
+    describe = CoreFeatures::AirspaceStates;
+    break;
+  case XCS_FEATURES_WAYPOINTS:
+    describe = CoreFeatures::Waypoints;
+    break;
+  case XCS_FEATURES_TASK:
+    describe = CoreFeatures::Task;
+    break;
+  case XCS_FEATURES_TRAIL:
+    describe = CoreFeatures::Trail;
+    break;
+  default:
+    return XCS_ERROR_INVALID_ARGUMENT;
+  }
+  return GetJsonOnMain(core, buffer, size, length_r, describe);
 }
 
 xcs_status

@@ -798,6 +798,25 @@ Java_org_xcsoar_mobile_NativeCore_nativeWaypointsSearch(JNIEnv *env, jclass,
 }
 
 JNIEXPORT jstring JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeMapFeatures(JNIEnv *env, jclass,
+                                                    jlong core, jint which)
+{
+  /* airspace for a country is a few megabytes: then a second call with
+     the length the first one reported */
+  std::string buffer(65536, '\0');
+  size_t length;
+  xcs_status status = xcs_map_features(ToCore(core), which, buffer.data(),
+                                       buffer.size(), &length);
+  if (status == XCS_ERROR_INVALID_ARGUMENT && length >= buffer.size()) {
+    buffer.resize(length + 1);
+    status = xcs_map_features(ToCore(core), which, buffer.data(),
+                              buffer.size(), &length);
+  }
+
+  return status == XCS_OK ? env->NewStringUTF(buffer.c_str()) : nullptr;
+}
+
+JNIEXPORT jstring JNICALL
 Java_org_xcsoar_mobile_NativeCore_nativeTaskGet(JNIEnv *env, jclass,
                                                 jlong core, jint which)
 {

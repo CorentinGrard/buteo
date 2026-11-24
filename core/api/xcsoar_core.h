@@ -1430,6 +1430,48 @@ XCS_EXPORT xcs_status
 xcs_repository_list(const char *path, char *buffer, size_t size,
                     size_t *length_r);
 
+enum {
+  /** Airspace outlines (GeoJSON FeatureCollection of polygons). */
+  XCS_FEATURES_AIRSPACE = 0,
+  /** The airspaces with a warning: [[id, "near"|"inside", acked], ...]. */
+  XCS_FEATURES_AIRSPACE_STATE = 1,
+  /** Every waypoint (points). */
+  XCS_FEATURES_WAYPOINTS = 2,
+  /** The ordered task: legs, zones and points. */
+  XCS_FEATURES_TASK = 3,
+  /** The last 20 minutes of the flight, by climb. */
+  XCS_FEATURES_TRAIL = 4,
+};
+
+/**
+ * What XCSoar's moving map draws over the terrain, for a map the app
+ * draws itself, as GeoJSON ([longitude, latitude], degrees):
+ *
+ * - XCS_FEATURES_AIRSPACE: one polygon per airspace of a class the
+ *   pilot shows, properties "id" (stable until the airspace file
+ *   changes), "name", "class", "kind" (controlled, restricted, gliding
+ *   or other), "base" and "top" as XCSoar writes them ("FL65",
+ *   "1067 m"), "base_m" and "top_m" above sea level (XCSoar's estimate
+ *   for ground and flight level limits) and "ground".
+ * - XCS_FEATURES_AIRSPACE_STATE: not GeoJSON; each warned airspace's
+ *   id, whether the glider is near or inside, and whether the warning
+ *   is acknowledged.
+ * - XCS_FEATURES_WAYPOINTS: "id", "name", "code" (the file's short
+ *   name), "label" (the name without a leading code), "landable",
+ *   "airport", "elevation", "runway" (degrees) and "frequency" when
+ *   known.
+ * - XCS_FEATURES_TASK: "layer" is "leg" (with "done"), "zone" (the
+ *   observation zone's outline) or "point" (the target, with "name");
+ *   each has "index" and "active".
+ * - XCS_FEATURES_TRAIL: lines with "climb", the netto vario's class
+ *   from -2 (sink over 1.5 m/s) to 3 (lift over 3 m/s).
+ *
+ * Buffer rules as for xcs_get_data_status().
+ */
+XCS_EXPORT xcs_status
+xcs_map_features(xcs_core *core, uint32_t which, char *buffer, size_t size,
+                 size_t *length_r);
+
 /*
  * Moving map: XCSoar's map drawn by the core with OpenGL ES into a
  * surface of the app.  Android only for now; elsewhere these return
