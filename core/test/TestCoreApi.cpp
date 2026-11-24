@@ -337,6 +337,15 @@ TestTask(xcs_core *core)
     }
     ok1(zones);
   }
+  {
+    /* a task without a GPS fix: the next point by name, no distance
+       (the app showed "0.00 m", bearing 000°) */
+    xcs_flight_snapshot s{};
+    s.struct_size = sizeof(s);
+    ok1(xcs_get_snapshot(core, &s) == XCS_OK &&
+        (s.valid & XCS_VALID_TASK) != 0 &&
+        (s.valid & (XCS_VALID_NEXT_WAYPOINT | XCS_VALID_NEXT_ARRIVAL)) == 0);
+  }
 
   /* zones and task type */
   ok1(xcs_task_edit(core, XCS_TASK_BEGIN, 0, 0) == XCS_OK);
@@ -1704,7 +1713,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1);
 
   Recorder recorder;
   TestCreateArguments(recorder);

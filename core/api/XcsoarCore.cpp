@@ -433,13 +433,17 @@ FillSnapshot(xcs_flight_snapshot &s) noexcept
       valid |= XCS_VALID_TASK_SPEED;
       s.task_speed = task_stats.total.travelled.GetSpeed();
     }
-    /* where the next point is needs a fix; the arrival a polar too */
-    if (leg.vector_remaining.IsValid()) {
+    /* where the next point is needs a fix; the arrival a polar too.
+       A task restored at start had a vector before any fix: 0 m,
+       bearing 000° */
+    const bool located = basic.location_available &&
+      leg.vector_remaining.IsValid();
+    if (located) {
       valid |= XCS_VALID_NEXT_WAYPOINT;
       s.next_distance = leg.vector_remaining.distance;
       s.next_bearing = leg.vector_remaining.bearing.Degrees();
     }
-    if (leg.vector_remaining.IsValid() && leg.solution_remaining.IsOk()) {
+    if (located && leg.solution_remaining.IsOk()) {
       valid |= XCS_VALID_NEXT_ARRIVAL;
       s.next_altitude_difference = leg.solution_remaining.altitude_difference;
     }
