@@ -13,6 +13,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.xcsoar.mobile.core.FakeXcsoarCore
+import org.xcsoar.mobile.core.FinalGlide
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.core.NextWaypoint
 import org.xcsoar.mobile.core.ThermalBandInfo
@@ -271,6 +272,17 @@ class FlightScreenScreenshotTest {
             FlightContent(FakeXcsoarCore.syntheticState(320).copy(replay = true), null,
                           circling = true, {},
                           replay = ReplayControls(ReplaySpeed(10.0, paused = false)))
+        }
+    }
+
+    /** Far below final glide: the bar shows every digit, smaller. */
+    @Test
+    @Config(qualifiers = "w360dp-h720dp-xhdpi")
+    fun finalGlideFarBelow() = capture("final_glide_far_below") {
+        XcsTheme(dark = false) {
+            val state = FakeXcsoarCore.syntheticState(120)
+            FlightContent(state.copy(finalGlide = FinalGlide(480_000.0, -12277.0)), null,
+                          circling = false, {})
         }
     }
 

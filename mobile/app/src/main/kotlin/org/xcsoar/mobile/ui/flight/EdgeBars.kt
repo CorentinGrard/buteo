@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -136,12 +137,17 @@ private fun EdgeCard(modifier: Modifier, content: @Composable ColumnScope.() -> 
     )
 }
 
-/** The number over its unit, both centred in the narrow card. */
+/**
+ * The number over its unit, both centred in the narrow card.  A long
+ * number (-12277 m below final glide) shrinks to fit: cut, it read as
+ * -1227.
+ */
 @Composable
 private fun BarValue(value: Format.Value, color: Color, size: Int) {
     val colors = XcsTheme.colors
     Text(value.text, color = color, style = XcsTheme.numberStyle, fontWeight = FontWeight.Bold,
-         fontSize = size.sp, maxLines = 1)
+         autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = size.sp),
+         maxLines = 1, modifier = Modifier.padding(horizontal = 4.dp))
     Text(value.unit, color = colors.textSecondary, fontSize = 11.sp,
          fontWeight = FontWeight.SemiBold, maxLines = 1)
 }
