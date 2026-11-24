@@ -267,6 +267,7 @@ class MainActivity : ComponentActivity() {
             var theme by remember { mutableStateOf(app.theme) }
             val terrain = remember { terrainLoader() }
             var tileRows by remember { mutableStateOf(app.tileRows) }
+            var vectorMap by remember { mutableStateOf(app.vectorMap) }
             val dark = when (theme) {
                 ThemeChoice.WHITE -> false
                 ThemeChoice.DARK -> true
@@ -581,6 +582,11 @@ class MainActivity : ComponentActivity() {
                         onTileRows = {
                             tileRows = it
                             app.tileRows = it
+                        },
+                        vectorMap = vectorMap,
+                        onVectorMap = {
+                            vectorMap = it
+                            app.vectorMap = it
                         },
                         theme = theme,
                         onTheme = {

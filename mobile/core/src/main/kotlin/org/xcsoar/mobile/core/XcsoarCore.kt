@@ -230,6 +230,12 @@ interface XcsoarCore {
      */
     suspend fun thermalAssistant(): TileGraphic? = null
 
+    /**
+     * What XCSoar's map draws over the terrain, as GeoJSON for a map
+     * the app draws itself (`xcs_map_features`); null without the core.
+     */
+    suspend fun mapFeatures(which: MapFeatures): String? = null
+
     /** The plane files; null if the core has not started. */
     suspend fun planes(): PlaneList? = null
 

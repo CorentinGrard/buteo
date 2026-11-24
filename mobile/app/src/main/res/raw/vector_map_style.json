@@ -1,0 +1,191 @@
+{
+  "version": 8,
+  "name": "Buteo vector map (prototype)",
+  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "sources": {
+    "osm": {
+      "type": "vector",
+      "url": "https://tiles.openfreemap.org/planet",
+      "attribution": "© OpenStreetMap contributors, OpenFreeMap"
+    },
+    "dem": {
+      "type": "raster-dem",
+      "tiles": ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+      "encoding": "terrarium",
+      "tileSize": 256,
+      "maxzoom": 12,
+      "attribution": "Terrain Tiles, Mapzen / AWS Open Data"
+    },
+    "airspace": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
+    "waypoints": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
+    "task": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
+    "trail": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}}
+  },
+  "layers": [
+    {"id": "background", "type": "background", "paint": {"background-color": "#eef0ea"}},
+
+    {"id": "landcover-wood", "type": "fill", "source": "osm", "source-layer": "landcover",
+     "filter": ["==", ["get", "class"], "wood"],
+     "paint": {"fill-color": "#d6e2cc", "fill-opacity": 0.7}},
+    {"id": "landcover-ice", "type": "fill", "source": "osm", "source-layer": "landcover",
+     "filter": ["==", ["get", "subclass"], "glacier"],
+     "paint": {"fill-color": "#f7fafb"}},
+    {"id": "landuse-town", "type": "fill", "source": "osm", "source-layer": "landuse",
+     "minzoom": 8,
+     "filter": ["match", ["get", "class"], ["residential", "suburb", "neighbourhood"], true, false],
+     "paint": {"fill-color": "#e2ded5", "fill-opacity": 0.8}},
+
+    {"id": "hillshade", "type": "hillshade", "source": "dem",
+     "paint": {
+       "hillshade-shadow-color": "#3c463e",
+       "hillshade-highlight-color": "#ffffff",
+       "hillshade-accent-color": "#56635a",
+       "hillshade-exaggeration": 0.4,
+       "hillshade-illumination-direction": 315
+     }},
+
+    {"id": "water", "type": "fill", "source": "osm", "source-layer": "water",
+     "filter": ["!=", ["get", "brunnel"], "tunnel"],
+     "paint": {"fill-color": "#b3d0ea"}},
+    {"id": "waterway", "type": "line", "source": "osm", "source-layer": "waterway",
+     "filter": ["any", ["==", ["get", "class"], "river"], [">=", ["zoom"], 11]],
+     "paint": {"line-color": "#8cb9df",
+               "line-width": ["interpolate", ["linear"], ["zoom"], 7, 0.6, 12, 1.6, 14, 2.4]}},
+
+    {"id": "road-minor", "type": "line", "source": "osm", "source-layer": "transportation",
+     "minzoom": 10,
+     "filter": ["match", ["get", "class"], ["secondary", "tertiary"], true, false],
+     "paint": {"line-color": "#c9c3b8",
+               "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 14, 1.6]}},
+    {"id": "road-major", "type": "line", "source": "osm", "source-layer": "transportation",
+     "minzoom": 7,
+     "filter": ["match", ["get", "class"], ["trunk", "primary"], true, false],
+     "paint": {"line-color": "#bab3a7",
+               "line-width": ["interpolate", ["linear"], ["zoom"], 7, 0.5, 12, 1.4, 14, 2.2]}},
+    {"id": "road-motorway", "type": "line", "source": "osm", "source-layer": "transportation",
+     "minzoom": 5,
+     "filter": ["==", ["get", "class"], "motorway"],
+     "paint": {"line-color": "#a19a8d",
+               "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.6, 10, 1.4, 14, 2.8]}},
+    {"id": "railway", "type": "line", "source": "osm", "source-layer": "transportation",
+     "minzoom": 10,
+     "filter": ["==", ["get", "class"], "rail"],
+     "paint": {"line-color": "#aaa59c", "line-width": 0.8, "line-dasharray": [3, 2]}},
+    {"id": "border", "type": "line", "source": "osm", "source-layer": "boundary",
+     "filter": ["all", ["==", ["get", "admin_level"], 2], ["!=", ["get", "maritime"], 1]],
+     "paint": {"line-color": "#8a857c", "line-width": 1.2, "line-dasharray": [4, 2]}},
+
+    {"id": "airspace-fill", "type": "fill", "source": "airspace",
+     "paint": {
+       "fill-color": ["match", ["get", "kind"],
+                      "controlled", "#1f5bd6", "restricted", "#b42a30",
+                      "gliding", "#0b7a5c", "#6d3fa0"],
+       "fill-opacity": 0.035
+     }},
+    {"id": "airspace-line", "type": "line", "source": "airspace",
+     "paint": {
+       "line-color": ["match", ["get", "kind"],
+                      "controlled", "#1f5bd6", "restricted", "#b42a30",
+                      "gliding", "#0b7a5c", "#6d3fa0"],
+       "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.8, 10, 1.6, 13, 2.2],
+       "line-opacity": 0.9
+     }},
+    {"id": "airspace-near", "type": "fill", "source": "airspace",
+     "filter": ["in", ["get", "id"], ["literal", []]],
+     "paint": {"fill-color": "#c2410c", "fill-opacity": 0.16}},
+    {"id": "airspace-near-line", "type": "line", "source": "airspace",
+     "filter": ["in", ["get", "id"], ["literal", []]],
+     "paint": {"line-color": "#c2410c", "line-width": 3}},
+    {"id": "airspace-inside", "type": "fill", "source": "airspace",
+     "filter": ["in", ["get", "id"], ["literal", []]],
+     "paint": {"fill-color": "#b42a30", "fill-opacity": 0.16}},
+    {"id": "airspace-inside-line", "type": "line", "source": "airspace",
+     "filter": ["in", ["get", "id"], ["literal", []]],
+     "paint": {"line-color": "#b42a30", "line-width": 3}},
+
+    {"id": "trail", "type": "line", "source": "trail",
+     "layout": {"line-cap": "round", "line-join": "round"},
+     "paint": {
+       "line-color": ["match", ["get", "climb"],
+                      -2, "#6b706d", -1, "#8f9491", 0, "#b5b9b6",
+                      1, "#8fd6b3", 2, "#2f9d77", "#055c44"],
+       "line-width": ["match", ["get", "climb"], 1, 3, 2, 4.5, 3, 6, 2]
+     }},
+
+    {"id": "task-zone", "type": "line", "source": "task",
+     "filter": ["==", ["get", "layer"], "zone"],
+     "paint": {"line-color": "#b5179e",
+               "line-width": ["case", ["get", "active"], 3, 1.5],
+               "line-opacity": ["case", ["get", "active"], 1, 0.6]}},
+    {"id": "task-leg", "type": "line", "source": "task",
+     "filter": ["==", ["get", "layer"], "leg"],
+     "layout": {"line-cap": "round"},
+     "paint": {"line-color": ["case", ["get", "done"], "#da8bce", "#b5179e"],
+               "line-width": ["case", ["get", "active"], 3.5, 2],
+               "line-opacity": ["case", ["get", "active"], 1, 0.55]}},
+
+    {"id": "place-label", "type": "symbol", "source": "osm", "source-layer": "place",
+     "minzoom": 6,
+     "filter": ["any",
+                ["==", ["get", "class"], "city"],
+                ["all", ["==", ["get", "class"], "town"], [">=", ["zoom"], 8]],
+                ["all", ["==", ["get", "class"], "village"], [">=", ["zoom"], 11]]],
+     "layout": {
+       "text-field": ["coalesce", ["get", "name:latin"], ["get", "name"]],
+       "text-font": ["Noto Sans Regular"],
+       "text-size": ["match", ["get", "class"], "city", 14, "town", 12, 11],
+       "text-padding": 6,
+       "text-max-width": 8
+     },
+     "paint": {"text-color": "#5b625d", "text-halo-color": "#f3f5f0", "text-halo-width": 1.4}},
+
+    {"id": "airspace-label", "type": "symbol", "source": "airspace",
+     "minzoom": 8,
+     "layout": {
+       "symbol-placement": "line",
+       "symbol-spacing": 320,
+       "text-field": ["concat", ["get", "name"], "  ", ["get", "base"], " – ", ["get", "top"]],
+       "text-font": ["Noto Sans Bold"],
+       "text-size": 10.5,
+       "text-max-angle": 30,
+       "text-padding": 4,
+       "text-keep-upright": true
+     },
+     "paint": {
+       "text-color": ["match", ["get", "kind"],
+                      "controlled", "#17459f", "restricted", "#8f2026",
+                      "gliding", "#085c45", "#55307d"],
+       "text-halo-color": "#ffffff", "text-halo-width": 1.6
+     }},
+
+    {"id": "task-point", "type": "circle", "source": "task",
+     "filter": ["==", ["get", "layer"], "point"],
+     "paint": {"circle-radius": ["case", ["get", "active"], 6, 4],
+               "circle-color": "#b5179e",
+               "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.5}},
+
+    {"id": "landable-circle", "type": "circle", "source": "waypoints",
+     "minzoom": 6,
+     "filter": ["get", "landable"],
+     "paint": {
+       "circle-radius": ["interpolate", ["linear"], ["zoom"], 6, 2.5, 9, 4.5, 12, 7],
+       "circle-color": "#8a8f8c",
+       "circle-stroke-color": "#ffffff",
+       "circle-stroke-width": 1.5
+     }},
+    {"id": "landable-label", "type": "symbol", "source": "waypoints",
+     "minzoom": 8,
+     "filter": ["get", "landable"],
+     "layout": {
+       "text-field": ["get", "label"],
+       "text-font": ["Noto Sans Bold"],
+       "text-size": 12,
+       "text-anchor": "top",
+       "text-offset": [0, 0.7],
+       "text-max-width": 9,
+       "text-padding": 3,
+       "symbol-sort-key": ["case", ["get", "airport"], 0, 1]
+     },
+     "paint": {"text-color": "#0e1210", "text-halo-color": "#ffffff", "text-halo-width": 1.6}}
+  ]
+}

@@ -97,6 +97,10 @@
     <string name="menu_rows">Rows</string>
     <string name="menu_map_up">Map up</string>
     <string name="menu_theme">Theme</string>
+    <!-- the map MapLibre draws, a prototype beside XCSoar's (map review, 2026-11-24) -->
+    <string name="menu_map_engine">Map</string>
+    <string name="menu_map_xcsoar" translatable="false">XCSoar</string>
+    <string name="menu_map_vector">Vector</string>
     <string name="theme_system">System</string>
     <string name="theme_white">White</string>
     <string name="theme_dark">Dark</string>

@@ -36,6 +36,9 @@ import org.xcsoar.mobile.core.CoreEvent
 import org.xcsoar.mobile.core.FlightState
 import org.xcsoar.mobile.core.GlideComputerEvent
 import org.xcsoar.mobile.core.MapItemInfo
+import org.xcsoar.mobile.core.WaypointFilter
+import org.xcsoar.mobile.core.WaypointInfo
+import org.xcsoar.mobile.core.MapFeatures
 import org.xcsoar.mobile.core.MapOption
 import org.xcsoar.mobile.core.MapMode
 import org.xcsoar.mobile.core.MapOrientation
@@ -613,6 +616,18 @@ class FlightViewModel(
 
     fun hideMapItems() {
         mapItemsFlow.value = null
+    }
+
+    /** The vector map's layers (prototype): the core's data as GeoJSON. */
+    suspend fun mapFeatures(which: MapFeatures): String? = core.mapFeatures(which)
+
+    /** The landables the vector map colours by reach (prototype). */
+    suspend fun nearbyLandables(): List<WaypointInfo> =
+        core.searchWaypoints("", WaypointFilter.LANDABLE, 150)
+
+    /** What the pilot held on the vector map (prototype). */
+    fun showFeatureItems(items: List<MapItemInfo>) {
+        mapItemsFlow.value = items.ifEmpty { null }
     }
 
     /**

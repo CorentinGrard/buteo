@@ -112,6 +112,9 @@ class FlightMenu(
     val onVarioSound: (Boolean) -> Unit = {},
     val theme: ThemeChoice = ThemeChoice.SYSTEM,
     val onTheme: (ThemeChoice) -> Unit = {},
+    /** the vector map instead of XCSoar's (prototype); null hides the choice */
+    val vectorMap: Boolean? = null,
+    val onVectorMap: (Boolean) -> Unit = {},
 )
 
 /** The orientations the menu offers, in its order. */
@@ -214,6 +217,13 @@ fun FlightMenuSheet(visible: Boolean, menu: FlightMenu, onClose: () -> Unit,
                                       ThemeChoice.entries.map { stringResource(it.label) },
                                       selected = menu.theme.ordinal,
                                       onSelect = { menu.onTheme(ThemeChoice.entries[it]) })
+                    menu.vectorMap?.let { vector ->
+                        LabelledSegmented(stringResource(R.string.menu_map_engine),
+                                          listOf(stringResource(R.string.menu_map_xcsoar),
+                                                 stringResource(R.string.menu_map_vector)),
+                                          selected = if (vector) 1 else 0,
+                                          onSelect = { menu.onVectorMap(it == 1) })
+                    }
                     menu.varioSound?.let { on ->
                         SettingsGroup {
                             SwitchRow(stringResource(R.string.menu_vario_sound),

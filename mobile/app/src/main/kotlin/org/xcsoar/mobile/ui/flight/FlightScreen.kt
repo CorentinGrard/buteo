@@ -106,6 +106,9 @@ fun FlightScreen(
     /** rows of three tiles ([TILE_ROWS]) */
     tileRows: Int = TILE_ROWS.first,
     onTileRows: (Int) -> Unit = {},
+    /** the map MapLibre draws instead of the core's (prototype) */
+    vectorMap: Boolean = false,
+    onVectorMap: (Boolean) -> Unit = {},
     onEditTile: (TileLayout, Int) -> Unit = { _, _ -> },
     /** A tile was tapped: the page its InfoBox opens. */
     onTileAction: (TileAction) -> Unit = {},
@@ -138,6 +141,7 @@ fun FlightScreen(
     val airspaceAlerts by viewModel.airspaceAlerts.collectAsStateWithLifecycle()
     val replaySpeed by viewModel.replaySpeed.collectAsStateWithLifecycle()
     val thermalAssistant by viewModel.thermalAssistant.collectAsStateWithLifecycle()
+    val vectorState = remember { VectorMapState() }
     // back from a page: the airspace alerts or the vario sound may have changed
     LaunchedEffect(covered) {
         if (!covered) {
@@ -195,8 +199,27 @@ fun FlightScreen(
             onVarioSound = viewModel::setVarioSound,
             theme = theme,
             onTheme = onTheme,
+            vectorMap = vectorMap.takeIf { taskPanel == null },
+            onVectorMap = onVectorMap,
         ),
-        map = if (viewModel.hasMap) MapSlot(
+        map = if (vectorMap && taskPanel == null) MapSlot(
+            content = { modifier ->
+                VectorMap(vectorState, viewModel::mapFeatures, viewModel::nearbyLandables,
+                          viewModel.liveState, mapOrientation, viewModel::showFeatureItems,
+                          modifier)
+            },
+            onAircraftPosition = { _, y -> vectorState.setFocus(y) },
+            onZoom = vectorState::zoom,
+            follows = vectorState.follows,
+            onFollow = vectorState::follow,
+            orientation = mapOrientation,
+            items = mapItems,
+            onCloseItems = viewModel::hideMapItems,
+            onGoto = viewModel::gotoWaypoint,
+            thermalAssistant = thermalAssistant,
+            liveState = viewModel.liveState,
+            handlesGestures = true,
+        ) else if (viewModel.hasMap) MapSlot(
             content = { modifier ->
                 CoreMapView(viewModel::attachMap, viewModel::detachMap, modifier)
             },
@@ -260,6 +283,8 @@ class MapSlot(
     val liveState: StateFlow<FlightState?>? = null,
     /** A tap on the map (pixels), instead of the hold's card; null: holds. */
     val onTap: ((x: Int, y: Int) -> Unit)? = null,
+    /** The map pans, pinches and holds itself (the vector map). */
+    val handlesGestures: Boolean = false,
 )
 
 /**
@@ -446,7 +471,7 @@ private fun MapArea(
             val onHold by rememberUpdatedState(map.onHold)
             var holdPoint by remember { mutableStateOf<Offset?>(null) }
             val onTap = map.onTap
-            Box(Modifier
+            if (!map.handlesGestures) Box(Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) {
                     detectTransformGestures { _, pan, zoom, _ ->
@@ -901,6 +926,8 @@ fun flightMenu(
     onVarioSound: (Boolean) -> Unit = {},
     theme: ThemeChoice = ThemeChoice.SYSTEM,
     onTheme: (ThemeChoice) -> Unit = {},
+    vectorMap: Boolean? = null,
+    onVectorMap: (Boolean) -> Unit = {},
 ) = FlightMenu(
     inFlight = listOf(
         menuAction(R.string.menu_go_to, R.string.menu_go_to_detail, onOpenWaypoints),
@@ -946,6 +973,8 @@ fun flightMenu(
     onVarioSound = onVarioSound,
     theme = theme,
     onTheme = onTheme,
+    vectorMap = vectorMap,
+    onVectorMap = onVectorMap,
 )
 
 @Composable

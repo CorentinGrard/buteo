@@ -113,6 +113,11 @@ class XcsoarApp : Application() {
         } ?: ThemeChoice.SYSTEM
         set(value) = uiPreferences.edit().putString("theme", value.name).apply()
 
+    /** The vector map instead of XCSoar's (prototype); on the phone, like the theme. */
+    var vectorMap: Boolean
+        get() = uiPreferences.getBoolean("vectorMap", false)
+        set(value) = uiPreferences.edit().putBoolean("vectorMap", value).apply()
+
     /** Rows of tiles on the flight screen ([TILE_ROWS]); on the phone, like the theme. */
     var tileRows: Int
         get() = uiPreferences.getInt("tileRows", TILE_ROWS.first).coerceIn(TILE_ROWS)

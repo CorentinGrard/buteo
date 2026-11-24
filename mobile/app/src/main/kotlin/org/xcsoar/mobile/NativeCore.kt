@@ -96,6 +96,8 @@ internal object NativeCore {
     @JvmStatic external fun nativeAirspaceDetailsAcknowledge(core: Long, ack: Int): Int
     @JvmStatic external fun nativeTilesTypes(core: Long): String?
     @JvmStatic external fun nativeThermalAssistantGet(core: Long): String?
+    /** @return the GeoJSON of `xcs_map_features`, or null on error */
+    @JvmStatic external fun nativeMapFeatures(core: Long, which: Int): String?
     @JvmStatic external fun nativeTilesLayouts(core: Long): String?
     @JvmStatic external fun nativeTilesSet(core: Long, layout: Int, tile: Int, type: Int): Int
     @JvmStatic external fun nativeTilesUpdate(core: Long, layout: Int): String?

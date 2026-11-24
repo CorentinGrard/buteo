@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 import org.xcsoar.mobile.core.AirspaceWarningInfo
 import org.xcsoar.mobile.core.Analysis
 import org.xcsoar.mobile.core.Crew
+import org.xcsoar.mobile.core.MapFeatures
 import org.xcsoar.mobile.core.PlaneEdit
 import org.xcsoar.mobile.core.PlaneList
 import org.xcsoar.mobile.core.TileAction
@@ -386,6 +387,9 @@ class NativeXcsoarCore(
 
     override suspend fun thermalAssistant() =
         query(NativeCore::nativeThermalAssistantGet, TileGraphic::parse)
+
+    override suspend fun mapFeatures(which: MapFeatures) =
+        query({ NativeCore.nativeMapFeatures(it, which.code) }) { it }
 
     override suspend fun setTile(layout: TileLayout, tile: Int, type: Int) =
         command { NativeCore.nativeTilesSet(it, layout.code, tile, type) }

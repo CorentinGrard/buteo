@@ -225,6 +225,10 @@ msgstr ""
 msgid "Theme"
 msgstr ""
 
+#. menu_map_vector
+msgid "Vector"
+msgstr ""
+
 #. menu_vario_sound
 msgid "Vario sound"
 msgstr ""

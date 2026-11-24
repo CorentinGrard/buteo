@@ -226,6 +226,10 @@ msgstr "En haut"
 msgid "Theme"
 msgstr "Thème"
 
+#. menu_map_vector
+msgid "Vector"
+msgstr "Vectorielle"
+
 #. menu_vario_sound
 msgid "Vario sound"
 msgstr "Son du vario"
