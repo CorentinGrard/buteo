@@ -326,12 +326,16 @@ private fun DrawScope.barogram(g: TileGraphic, colors: XcsColors) {
 private const val PRESSED_ALPHA = 0.08f
 private const val FILL_ALPHA = 0.25f
 
+/** XCSoar's InfoBox titles are this long at most; longer ones are names. */
+private const val SHORT_TITLE = 8
+
 /**
  * The title, and the comment at the end of its line.  A comment with
  * a number (the distance to the waypoint the title names) is data: it
- * is never cut ("178…" for 1784 ft would read as another value), and
- * the title ends with an ellipsis to leave it room.  Text (a waypoint
- * name) gets what the title leaves, with an ellipsis.
+ * is never cut ("178…" for 1784 ft would read as another value).  A
+ * long title ends with an ellipsis to leave it room; beside a short one
+ * (an InfoBox's) it shows only where it fits.  Text (a waypoint name)
+ * gets what the title leaves, with an ellipsis.
  */
 @Composable
 private fun CaptionLine(title: String, comment: String, commentColor: Color) {
@@ -345,9 +349,17 @@ private fun CaptionLine(title: String, comment: String, commentColor: Color) {
         val width = constraints.maxWidth
         val t: Placeable
         val c: Placeable?
-        if (number) {
+        if (number && title.length > SHORT_TITLE) {
+            // a long title (the next waypoint's name) makes room for the
+            // number (its distance): a cut number would mislead
             c = commentText.measure(Constraints()).takeIf { it.width + gap < width }
             t = titleText.measure(Constraints(maxWidth = width - (c?.width?.plus(gap) ?: 0)))
+        } else if (number) {
+            // an InfoBox's own short title ("ALT GPS") stays whole: cut to
+            // "ALT G…" or "." beside the altitude in feet it said nothing;
+            // the number shows only where it fits whole
+            t = titleText.measure(constraints.copy(minWidth = 0))
+            c = commentText.measure(Constraints()).takeIf { t.width + gap + it.width <= width }
         } else {
             t = titleText.measure(constraints.copy(minWidth = 0))
             val space = width - t.width - gap

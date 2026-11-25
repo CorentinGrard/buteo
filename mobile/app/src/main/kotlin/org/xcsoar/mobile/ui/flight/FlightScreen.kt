@@ -37,6 +37,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
@@ -63,6 +64,7 @@ import org.xcsoar.mobile.core.AirspaceAlerts
 import org.xcsoar.mobile.core.AirspaceWarningInfo
 import org.xcsoar.mobile.core.FakeXcsoarCore
 import org.xcsoar.mobile.core.FlightState
+import org.xcsoar.mobile.core.MapCoverage
 import org.xcsoar.mobile.core.MapItemInfo
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.core.TileAction
@@ -77,6 +79,7 @@ import org.xcsoar.mobile.ui.theme.ThemeChoice
 import org.xcsoar.mobile.ui.theme.XcsColors
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import org.xcsoar.mobile.ui.upperStringResource
+import java.io.File
 
 @Composable
 fun FlightScreen(
@@ -90,6 +93,7 @@ fun FlightScreen(
     onOpenCrew: () -> Unit = {},
     onOpenAirspaceAlerts: () -> Unit = {},
     onOpenWeather: () -> Unit = {},
+    onOpenPreflight: () -> Unit = {},
     /** units, when the core draws no map (else they are on the map's page) */
     onOpenUnits: () -> Unit = {},
     /** null when the core draws no map */
@@ -106,6 +110,16 @@ fun FlightScreen(
     /** rows of three tiles ([TILE_ROWS]) */
     tileRows: Int = TILE_ROWS.first,
     onTileRows: (Int) -> Unit = {},
+    /** where the map's region files are (XCSoarData/maps) */
+    vectorMapDir: File? = null,
+    /** changes with the region files: the vector map opens them again */
+    vectorMapVersion: Int = 0,
+    /** the vector map's zooms, cruising and circling, and where to keep them */
+    vectorMapZooms: Pair<Double, Double> = VECTOR_CRUISE_ZOOM to VECTOR_CIRCLING_ZOOM,
+    onVectorMapZooms: (cruise: Double, circling: Double) -> Unit = { _, _ -> },
+    /** where the glider was last, for the vector map before a fix, and where to keep it */
+    vectorMapPlace: Pair<Double, Double>? = null,
+    onVectorMapPlace: (latitude: Double, longitude: Double) -> Unit = { _, _ -> },
     onEditTile: (TileLayout, Int) -> Unit = { _, _ -> },
     /** A tile was tapped: the page its InfoBox opens. */
     onTileAction: (TileAction) -> Unit = {},
@@ -115,11 +129,13 @@ fun FlightScreen(
     /** a page lies over the flight screen */
     covered: Boolean = false,
     /**
-     * The task on the map: this panel instead of the tiles, and a tap on
-     * the map goes to [onMapTap] (pixels) instead of a hold's card.
+     * The route on the map: this panel instead of the tiles, and a tap on
+     * the map goes to [onTaskMapTap] instead of a hold's card.
      */
     taskPanel: (@Composable () -> Unit)? = null,
-    onMapTap: (x: Int, y: Int) -> Unit = { _, _ -> },
+    /** which mode [taskPanel] is, and its taps on the map */
+    taskMapMode: TaskMapMode? = null,
+    onTaskMapTap: (latitude: Double, longitude: Double, waypointId: Int?) -> Unit = { _, _, _ -> },
 ) {
     val state by viewModel.flightState.collectAsStateWithLifecycle()
     // read where it is shown, so only the vario bar recomposes with it
@@ -127,7 +143,6 @@ fun FlightScreen(
     val lastEvent by viewModel.lastEvent.collectAsStateWithLifecycle()
     val circling by viewModel.showCircling.collectAsStateWithLifecycle()
     val tileLayout by viewModel.tileLayout.collectAsStateWithLifecycle()
-    val mapFollows by viewModel.mapFollows.collectAsStateWithLifecycle()
     val mapOrientation by viewModel.mapOrientation.collectAsStateWithLifecycle()
     val mapItems by viewModel.mapItems.collectAsStateWithLifecycle()
     val warnings by viewModel.airspaceWarnings.collectAsStateWithLifecycle()
@@ -138,11 +153,19 @@ fun FlightScreen(
     val airspaceAlerts by viewModel.airspaceAlerts.collectAsStateWithLifecycle()
     val replaySpeed by viewModel.replaySpeed.collectAsStateWithLifecycle()
     val thermalAssistant by viewModel.thermalAssistant.collectAsStateWithLifecycle()
-    // back from a page: the airspace alerts or the vario sound may have changed
+    val circlingZoom by viewModel.circlingZoom.collectAsStateWithLifecycle()
+    val relief by viewModel.relief.collectAsStateWithLifecycle()
+    val vectorState = remember {
+        VectorMapState(vectorMapZooms.first, vectorMapZooms.second, onVectorMapZooms,
+                       vectorMapPlace, onVectorMapPlace)
+    }
+    // back from a page: the airspace alerts, the vario sound or the
+    // map's settings may have changed
     LaunchedEffect(covered) {
         if (!covered) {
             viewModel.refreshAirspaceAlerts()
             viewModel.refreshVarioSound()
+            viewModel.refreshMapSettings()
         }
     }
     BackHandler(enabled = menuOpen && !covered) { onMenuOpen(false) }
@@ -177,6 +200,7 @@ fun FlightScreen(
             onOpenWaypoints, onOpenTask, onOpenFlightSetup, onOpenAnalysis, onOpenCrew,
             onOpenFlights, onOpenDataFiles, onOpenAirspaceAlerts,
             onOpenWeather = onOpenWeather,
+            onOpenPreflight = onOpenPreflight,
             onOpenUnits = onOpenUnits,
             onOpenMapSettings = onOpenMapSettings,
             onOpenSafety = onOpenSafety,
@@ -189,31 +213,38 @@ fun FlightScreen(
             onTileLayout = viewModel::selectFlightMode,
             tileRows = tileRows,
             onTileRows = onTileRows,
-            orientation = mapOrientation.takeIf { viewModel.hasMap },
+            orientation = mapOrientation,
             onOrientation = viewModel::setMapOrientation,
             varioSound = varioSound,
             onVarioSound = viewModel::setVarioSound,
             theme = theme,
             onTheme = onTheme,
+            mapCoverage = vectorState.coverage,
         ),
-        map = if (viewModel.hasMap) MapSlot(
+        map = MapSlot(
             content = { modifier ->
-                CoreMapView(viewModel::attachMap, viewModel::detachMap, modifier)
+                // new regions: their bounds and zooms go into MapLibre's style
+                key(vectorMapVersion) {
+                    VectorMap(vectorState, vectorMapDir, viewModel::mapFeatures,
+                              viewModel::terrainTile, viewModel::nearbyLandables,
+                              viewModel.liveState, mapOrientation, viewModel::showFeatureItems,
+                              modifier, circling = circling, circlingZoom = circlingZoom,
+                              relief = relief,
+                              taskMode = taskMapMode.takeIf { taskPanel != null },
+                              onTaskTap = onTaskMapTap)
+                }
             },
-            onAircraftPosition = viewModel::setMapAircraftPosition,
-            onZoom = viewModel::zoomMap,
-            onGesture = viewModel::mapGesture,
-            follows = mapFollows,
-            onFollow = viewModel::followMap,
+            onAircraftPosition = { _, y -> vectorState.setFocus(y) },
+            onZoom = vectorState::zoom,
+            follows = vectorState.follows,
+            onFollow = vectorState::follow,
             orientation = mapOrientation,
-            onHold = viewModel::showMapItems,
             items = mapItems,
             onCloseItems = viewModel::hideMapItems,
             onGoto = viewModel::gotoWaypoint,
             thermalAssistant = thermalAssistant,
             liveState = viewModel.liveState,
-            onTap = if (taskPanel != null) onMapTap else null,
-        ) else null,
+        ),
         taskPanel = taskPanel,
     )
 }
@@ -228,16 +259,15 @@ class ReplayControls(
 )
 
 /**
- * XCSoar's moving map, when the core draws one.
+ * The moving map (MapLibre's, [VectorMap]): it pans, pinches and holds
+ * itself.
  *
  * @param onAircraftPosition where to draw the aircraft, in pixels: the
  * middle of the part of the map the cards leave free
- * @param onZoom steps of XCSoar's scale list (negative = in)
- * @param onGesture finger pan in pixels and pinch factor (> 1 = in)
+ * @param onZoom zoom steps (negative = in)
  * @param follows whether the map follows the aircraft
  * @param onFollow centre on the aircraft again
  * @param orientation which way is up, for the north mark; null hides it
- * @param onHold the pilot held this point (pixels): show what is there
  * @param items what is at the held point; null when not shown
  * @param onGoto fly directly to a waypoint of [items]
  * @param thermalAssistant drawn around the glider while circling
@@ -248,18 +278,14 @@ class MapSlot(
     val content: @Composable (Modifier) -> Unit,
     val onAircraftPosition: (x: Int, y: Int) -> Unit,
     val onZoom: (steps: Int) -> Unit,
-    val onGesture: (dx: Float, dy: Float, zoom: Float) -> Unit = { _, _, _ -> },
     val follows: Boolean = true,
     val onFollow: () -> Unit = {},
     val orientation: MapOrientation? = null,
-    val onHold: (x: Int, y: Int) -> Unit = { _, _ -> },
     val items: List<MapItemInfo>? = null,
     val onCloseItems: () -> Unit = {},
     val onGoto: (waypointId: Int) -> Unit = {},
     val thermalAssistant: TileGraphic? = null,
     val liveState: StateFlow<FlightState?>? = null,
-    /** A tap on the map (pixels), instead of the hold's card; null: holds. */
-    val onTap: ((x: Int, y: Int) -> Unit)? = null,
 )
 
 /**
@@ -438,34 +464,6 @@ private fun MapArea(
             val assistant = map.thermalAssistant
             if (assistant != null && circling && map.follows && mapSize != IntSize.Zero)
                 ThermalAssistantSlot(assistant, map, state, cardsBottom, mapSize)
-            // pan and pinch; Compose waits for the touch slop, so a tap
-            // is never a drag (doc/architecture.rst, "Touch interaction")
-            // a recomposition (e.g. "follows" turning false) must not
-            // restart the gesture under the finger
-            val onGesture by rememberUpdatedState(map.onGesture)
-            val onHold by rememberUpdatedState(map.onHold)
-            var holdPoint by remember { mutableStateOf<Offset?>(null) }
-            val onTap = map.onTap
-            Box(Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTransformGestures { _, pan, zoom, _ ->
-                        onGesture(pan.x, pan.y, zoom)
-                    }
-                }
-                .then(if (onTap != null) Modifier.pointerInput(onTap) {
-                    // the task on the map: a tap adds a waypoint or moves a
-                    // target, on lift-off; a pan is never a tap
-                    detectTapGestures(onTap = { onTap(it.x.toInt(), it.y.toInt()) })
-                } else Modifier.pointerInput(Unit) {
-                    detectHoldRelease(
-                        onArmed = { holdPoint = it },
-                        onRelease = { p, commit ->
-                            holdPoint = null
-                            if (commit) onHold(p.x.toInt(), p.y.toInt())
-                        })
-                }))
-            holdPoint?.let { HoldMarker(it) }
         } else
             MapPlaceholder(state?.track, cardsBottom, Modifier.fillMaxSize())
 
@@ -704,13 +702,19 @@ private fun Instruments(
  */
 @Composable
 private fun TileGrid(spans: List<Int>, modifier: Modifier, content: @Composable () -> Unit) {
+    // the tiles' height at a width: every tile has a caption and a value
+    // line, so it changes with the layout only; each child's intrinsic
+    // height lays its text out once more, 7 % of the UI thread every second
+    val heights = remember(spans) { HashMap<Int, Int>() }
     Layout(content, modifier) { measurables, constraints ->
         val gap = 8.dp.roundToPx()
         val cell = (constraints.maxWidth - gap * (TILE_COLUMNS - 1)) / TILE_COLUMNS
         fun width(span: Int) = cell * span + gap * (span - 1)
 
-        val height = measurables.withIndex()
-            .maxOfOrNull { (i, m) -> m.minIntrinsicHeight(width(spans[i])) } ?: 0
+        val height = heights.getOrPut(constraints.maxWidth) {
+            measurables.withIndex()
+                .maxOfOrNull { (i, m) -> m.minIntrinsicHeight(width(spans[i])) } ?: 0
+        }
         // the column and row of each child
         var column = 0
         var row = 0
@@ -881,6 +885,7 @@ fun flightMenu(
     onOpenDataFiles: () -> Unit = {},
     onOpenAirspaceAlerts: () -> Unit = {},
     onOpenWeather: () -> Unit = {},
+    onOpenPreflight: () -> Unit = {},
     /** without a map: the units have no map page to be on */
     onOpenUnits: () -> Unit = {},
     /** null when the core draws no map */
@@ -901,6 +906,7 @@ fun flightMenu(
     onVarioSound: (Boolean) -> Unit = {},
     theme: ThemeChoice = ThemeChoice.SYSTEM,
     onTheme: (ThemeChoice) -> Unit = {},
+    mapCoverage: MapCoverage? = null,
 ) = FlightMenu(
     inFlight = listOf(
         menuAction(R.string.menu_go_to, R.string.menu_go_to_detail, onOpenWaypoints),
@@ -911,6 +917,7 @@ fun flightMenu(
     ),
     sections = listOf(
         MenuSection(stringResource(R.string.menu_ground), listOf(
+            menuAction(R.string.menu_preflight, R.string.menu_preflight_detail, onOpenPreflight),
             menuAction(R.string.menu_crew, R.string.menu_crew_detail, onOpenCrew),
             // ICAO's abbreviations and names stay as they are
             MenuAction(stringResource(R.string.menu_weather), "METAR, TAF, RASP",
@@ -946,6 +953,7 @@ fun flightMenu(
     onVarioSound = onVarioSound,
     theme = theme,
     onTheme = onTheme,
+    mapCoverage = mapCoverage,
 )
 
 @Composable

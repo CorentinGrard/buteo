@@ -51,9 +51,9 @@ class TopographyFile {
 
   const ResourceId icon, mdpi_icon, xhdpi_icon, xxhdpi_icon;
 
-  const unsigned pen_width;
+  unsigned pen_width;
 
-  const BGRA8Color color;
+  BGRA8Color color;
 
   /**
    * The threshold value for the visibility check. If the current scale
@@ -216,6 +216,16 @@ public:
 
   unsigned GetPenWidth() const noexcept {
     return pen_width;
+  }
+
+  /**
+   * Draw this file in another colour and pen width than its
+   * topology.tpl line gives.  Call before a renderer is created for
+   * it: the renderer makes its pen and brush once.
+   */
+  void SetStyle(BGRA8Color _color, unsigned _pen_width) noexcept {
+    color = _color;
+    pen_width = _pen_width;
   }
 
   const_iterator begin() const noexcept {

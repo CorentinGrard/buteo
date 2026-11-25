@@ -57,8 +57,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.xcsoar.mobile.R
+import org.xcsoar.mobile.core.MapCoverage
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.ui.Chevron
+import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.SwitchRow
 import org.xcsoar.mobile.ui.theme.ThemeChoice
@@ -112,6 +114,8 @@ class FlightMenu(
     val onVarioSound: (Boolean) -> Unit = {},
     val theme: ThemeChoice = ThemeChoice.SYSTEM,
     val onTheme: (ThemeChoice) -> Unit = {},
+    /** what the phone has of the map for this flight; null hides it */
+    val mapCoverage: MapCoverage? = null,
 )
 
 /** The orientations the menu offers, in its order. */
@@ -214,6 +218,7 @@ fun FlightMenuSheet(visible: Boolean, menu: FlightMenu, onClose: () -> Unit,
                                       ThemeChoice.entries.map { stringResource(it.label) },
                                       selected = menu.theme.ordinal,
                                       onSelect = { menu.onTheme(ThemeChoice.entries[it]) })
+                    menu.mapCoverage?.let { MapCoverageNote(it) }
                     menu.varioSound?.let { on ->
                         SettingsGroup {
                             SwitchRow(stringResource(R.string.menu_vario_sound),
@@ -269,6 +274,40 @@ private fun LabelledSegmented(label: String, options: List<String>, selected: In
         Text(label, color = colors.text, fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
              maxLines = 1, modifier = Modifier.width(72.dp).padding(start = 4.dp))
         Segmented(options, selected, onSelect, Modifier.weight(1f))
+    }
+}
+
+/**
+ * Under the map choice: whether the vector map has this flight on the
+ * phone (its region files, and the day of their data), a caution when
+ * the glider is beyond them or the task runs through a hole in them.
+ */
+@Composable
+private fun MapCoverageNote(coverage: MapCoverage) {
+    val colors = XcsTheme.colors
+    val gapNear = coverage.gapNear
+    val text = when {
+        coverage.regions.isEmpty() -> stringResource(R.string.menu_map_none)
+        coverage.gliderOutside -> stringResource(R.string.menu_map_glider_outside)
+        gapNear != null -> stringResource(R.string.menu_map_task_gap, gapNear)
+        else -> stringResource(R.string.menu_map_offline,
+                               // a few by name ("france-rhone-alpes"), else how many
+                               if (coverage.regions.size <= 2) coverage.regions.joinToString(" + ")
+                               else stringResource(R.string.menu_map_regions, coverage.regions.size),
+                               coverage.date?.let(Format::day) ?: "?")
+    }
+    val caution = coverage.regions.isNotEmpty() && !coverage.complete
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(stringResource(R.string.menu_map_engine), color = colors.text, fontSize = 16.sp,
+             fontWeight = FontWeight.SemiBold, maxLines = 1,
+             modifier = Modifier.width(72.dp).padding(start = 4.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(text, color = if (caution) colors.caution else colors.textSecondary,
+                 fontSize = 14.sp)
+            // the licence's credit, here rather than an "i" on the map
+            Text(stringResource(R.string.menu_map_credit), color = colors.textSecondary,
+                 fontSize = 12.sp)
+        }
     }
 }
 

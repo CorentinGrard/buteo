@@ -225,6 +225,150 @@ msgstr ""
 msgid "Theme"
 msgstr ""
 
+#. menu_map_credit
+msgid "Map data © OpenStreetMap contributors, Protomaps"
+msgstr ""
+
+#. menu_map_offline
+msgid "Offline map: %1$s, %2$s"
+msgstr ""
+
+#. menu_map_regions
+msgid "%1$d regions"
+msgstr ""
+
+#. menu_map_glider_outside
+msgid "The glider is beyond the stored map"
+msgstr ""
+
+#. menu_map_task_gap
+msgid "The stored map lacks part of the route, near %1$s"
+msgstr ""
+
+#. menu_map_none
+msgid "No map stored for the flight yet: it downloads on Wi-Fi"
+msgstr ""
+
+#. preflight_along_task
+msgid "Along the route: %1$s"
+msgstr ""
+
+#. preflight_around
+msgid "No route: within %1$s of the glider"
+msgstr ""
+
+#. preflight_no_area
+msgid "No route and no position: the files alone"
+msgstr ""
+
+#. preflight_vector_map
+msgid "Vector map"
+msgstr ""
+
+#. preflight_covers_task
+msgid "Covers the route"
+msgstr ""
+
+#. preflight_covers_around
+msgid "Covers %1$s around"
+msgstr ""
+
+#. preflight_loaded
+msgid "Loaded"
+msgstr ""
+
+#. preflight_no_terrain
+msgid "No terrain"
+msgstr ""
+
+#. preflight_stops_near
+msgid "Ends before the route does, near %1$s"
+msgstr ""
+
+#. preflight_stops_around
+msgid "Ends within %1$s"
+msgstr ""
+
+#. preflight_no_regions
+msgid "None on the phone yet: downloads on Wi-Fi"
+msgstr ""
+
+#. preflight_data_of
+msgid "Data of %1$s"
+msgstr ""
+
+#. preflight_no_airspace
+msgid "No airspace"
+msgstr ""
+
+#. preflight_no_waypoints
+msgid "No waypoints"
+msgstr ""
+
+#. preflight_airspace_near_task
+msgid "Airspaces near the route: %1$d"
+msgstr ""
+
+#. preflight_airspace_around
+msgid "Airspaces within %1$s: %2$d"
+msgstr ""
+
+#. preflight_airspace_none
+msgid "None near the flight: does the file cover this region?"
+msgstr ""
+
+#. preflight_landables_near_task
+msgid "Landables near the route: %1$d"
+msgstr ""
+
+#. preflight_landables_around
+msgid "Landables within %1$s: %2$d"
+msgstr ""
+
+#. preflight_landables_none
+msgid "No landable near the flight: does the file cover this region?"
+msgstr ""
+
+#. preflight_update
+msgid "Newer file of %1$s: downloads by itself on Wi-Fi"
+msgstr ""
+
+#. preflight_regions_to_get
+msgid "To download, by itself on Wi-Fi: %1$s"
+msgstr ""
+
+#. preflight_download_now
+msgid "Download now"
+msgstr ""
+
+#. preflight_suggestion
+msgid "%1$s covers the flight"
+msgstr ""
+
+#. preflight_download_all
+msgid "Download all (%1$d)"
+msgstr ""
+
+#. preflight_check_again
+msgid "Check again"
+msgstr ""
+
+#. preflight_checking
+msgid "Checking…"
+msgstr ""
+
+#. preflight_downloading
+msgid "Downloading %1$s…"
+msgstr ""
+
+#. preflight_automatic
+msgid "On Wi-Fi and on the ground, Buteo downloads newer files and the map for the route by itself while it is open."
+msgstr ""
+
+#. preflight_last_check
+msgid "Last looked at %1$s"
+msgstr ""
+
 #. menu_vario_sound
 msgid "Vario sound"
 msgstr ""
@@ -241,8 +385,13 @@ msgstr ""
 msgid "Nearest landable first"
 msgstr ""
 
+#. menu_task
+msgctxt "Flight route"
+msgid "Route"
+msgstr ""
+
 #. menu_task_detail
-msgid "Edit, next, previous"
+msgid "Plan it on the map, next point"
 msgstr ""
 
 #. menu_flight_setup
@@ -259,6 +408,14 @@ msgstr ""
 
 #. menu_ground
 msgid "Before and after the flight"
+msgstr ""
+
+#. menu_preflight
+msgid "Pre-flight check"
+msgstr ""
+
+#. menu_preflight_detail
+msgid "Map, terrain, airspace, waypoints for the route"
 msgstr ""
 
 #. menu_crew
@@ -306,7 +463,7 @@ msgid "Map & units"
 msgstr ""
 
 #. menu_map_units_detail
-msgid "Terrain, topography, trail, units"
+msgid "Circling zoom, trail, units"
 msgstr ""
 
 #. menu_units_detail
@@ -490,15 +647,7 @@ msgid "Task speed"
 msgstr ""
 
 #. map_terrain_detail
-msgid "Shaded relief from the map file"
-msgstr ""
-
-#. map_topography
-msgid "Topography"
-msgstr ""
-
-#. map_topography_detail
-msgid "Roads, rivers, lakes and towns"
+msgid "Shaded relief from the terrain file"
 msgstr ""
 
 #. map_zoom
@@ -511,22 +660,6 @@ msgstr ""
 
 #. map_thermal_assistant_detail
 msgid "The lift around the circle, on the glider"
-msgstr ""
-
-#. map_terrain_colours
-msgid "Terrain colours"
-msgstr ""
-
-#. ramp_french_sia
-msgid "French SIA VFR chart"
-msgstr ""
-
-#. ramp_german_dfs
-msgid "German DFS VFR chart"
-msgstr ""
-
-#. ramp_high_contrast
-msgid "High contrast"
 msgstr ""
 
 #. download_damaged
@@ -1030,7 +1163,7 @@ msgid "Above it, and dropped below: “Above final glide by 120 metres”"
 msgstr ""
 
 #. voice_task_points_title
-msgid "Task points"
+msgid "Route points"
 msgstr ""
 
 #. voice_task_points
@@ -1662,11 +1795,11 @@ msgid "The average climb, then on final glide the highest MacCready that still g
 msgstr ""
 
 #. task_not_possible
-msgid "Not possible for this task type"
+msgid "Not possible for this type of route"
 msgstr ""
 
 #. task_cannot_edit
-msgid "Cannot edit the task"
+msgid "Cannot edit the route"
 msgstr ""
 
 #. task_no_next
@@ -1678,11 +1811,11 @@ msgid "No previous point"
 msgstr ""
 
 #. task_invalid
-msgid "The task is not valid"
+msgid "The route is not valid"
 msgstr ""
 
 #. task_full
-msgid "The task is full"
+msgid "The route is full"
 msgstr ""
 
 #. task_weglide_silent
@@ -1694,7 +1827,7 @@ msgid "%1$s: not loaded"
 msgstr ""
 
 #. task_cannot_load
-msgid "%1$s: cannot load the task"
+msgid "%1$s: cannot load the route"
 msgstr ""
 
 #. task_not_file_name
@@ -1710,7 +1843,7 @@ msgid "Saved as %1$s"
 msgstr ""
 
 #. task_edit_title
-msgid "Edit task"
+msgid "Edit route"
 msgstr ""
 
 #. task_empty_editing
@@ -1718,7 +1851,7 @@ msgid "Add the start, the turn points and the finish, in order."
 msgstr ""
 
 #. task_empty
-msgid "No task. Edit to build one from waypoints, or load a task file."
+msgid "No route. Build one from waypoints, or load a task file."
 msgstr ""
 
 #. task_save_dots
@@ -1731,6 +1864,10 @@ msgstr ""
 
 #. task_previous
 msgid "Previous"
+msgstr ""
+
+#. task_type
+msgid "Type of route"
 msgstr ""
 
 #. task_nominal
@@ -1766,7 +1903,7 @@ msgid "Half width"
 msgstr ""
 
 #. task_save_title
-msgid "Save task"
+msgid "Save route"
 msgstr ""
 
 #. task_save_hint
@@ -1774,23 +1911,27 @@ msgid "In XCSoarData/tasks, as a .tsk file XCSoar reads too."
 msgstr ""
 
 #. task_load_title
-msgid "Load task"
+msgid "Load a route"
 msgstr ""
 
 #. task_looking
-msgid "Looking for tasks…"
+msgid "Looking for routes…"
 msgstr ""
 
 #. task_no_files
-msgid "No task files. Saved tasks go to XCSoarData/tasks; tasks in SeeYou .cup files there are found too."
+msgid "No route files. Saved routes go to XCSoarData/tasks; tasks in SeeYou .cup files there are found too."
 msgstr ""
 
 #. task_load_name
 msgid "Load %1$s"
 msgstr ""
 
+#. task_no_tasks
+msgid "No routes"
+msgstr ""
+
 #. task_numbered
-msgid "Task %1$d"
+msgid "Route %1$d"
 msgstr ""
 
 #. task_turnpoints
@@ -1902,6 +2043,62 @@ msgstr ""
 msgid "Speed achieved"
 msgstr ""
 
+#. route_paused
+msgid "Route paused"
+msgstr ""
+
+#. route_going_to
+msgid "Flying to %1$s (Go to waypoint)"
+msgstr ""
+
+#. route_resume
+msgid "Resume the route"
+msgstr ""
+
+#. route_finish_at
+msgid "Finish at %1$s"
+msgstr ""
+
+#. route_current
+msgid "Current route"
+msgstr ""
+
+#. route_none
+msgid "No route. Fly one of yours below, or make a new one."
+msgstr ""
+
+#. route_stop_confirm
+msgid "Stop?"
+msgstr ""
+
+#. route_new
+msgid "New route"
+msgstr ""
+
+#. route_yours
+msgid "Your routes"
+msgstr ""
+
+#. route_yours_empty
+msgid "The routes you fly are kept here."
+msgstr ""
+
+#. route_flown
+msgid "Flying"
+msgstr ""
+
+#. route_delete
+msgid "Delete"
+msgstr ""
+
+#. route_delete_confirm
+msgid "Delete?"
+msgstr ""
+
+#. route_more
+msgid "WeGlide and other files…"
+msgstr ""
+
 #. flights_cannot_delete
 msgid "Could not delete %1$s"
 msgstr ""
@@ -1988,10 +2185,6 @@ msgstr ""
 
 #. flights_upload
 msgid "Upload to WeGlide"
-msgstr ""
-
-#. flights_delete
-msgid "Delete"
 msgstr ""
 
 #. flights_ground
@@ -2175,7 +2368,7 @@ msgid "Task speed over the flight"
 msgstr ""
 
 #. ana_speed_needs_task
-msgid "Needs a task: the chart starts once the task has started."
+msgid "Needs a route: the chart starts once the route has started."
 msgstr ""
 
 #. ana_speed_hint
@@ -2279,11 +2472,15 @@ msgid "Black: air temperature; dashed red: the dry adiabat; dashed blue: dew poi
 msgstr ""
 
 #. ana_task_description
-msgid "Task: its points and the flight"
+msgid "Route: its points and the flight"
+msgstr ""
+
+#. ana_no_task
+msgid "No route"
 msgstr ""
 
 #. ana_make_task
-msgid "Load or make a task in %1$s."
+msgid "Load or make a route in %1$s."
 msgstr ""
 
 #. ana_xs_not_moving
@@ -2339,11 +2536,15 @@ msgid "Take-off"
 msgstr ""
 
 #. event_task_started
-msgid "Task started"
+msgid "Route started"
 msgstr ""
 
 #. event_next_turnpoint
 msgid "Next turnpoint"
+msgstr ""
+
+#. event_task_finished
+msgid "Route finished"
 msgstr ""
 
 #. event_no_landable

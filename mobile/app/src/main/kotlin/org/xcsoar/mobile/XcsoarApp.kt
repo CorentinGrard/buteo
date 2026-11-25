@@ -33,6 +33,8 @@ import org.xcsoar.mobile.ui.flights.FlightLog
 import org.xcsoar.mobile.ui.flight.CalloutSettings
 import org.xcsoar.mobile.ui.flights.UploadStore
 import org.xcsoar.mobile.ui.flight.TILE_ROWS
+import org.xcsoar.mobile.ui.flight.VECTOR_CIRCLING_ZOOM
+import org.xcsoar.mobile.ui.flight.VECTOR_CRUISE_ZOOM
 import org.xcsoar.mobile.ui.text
 import org.xcsoar.mobile.ui.theme.ThemeChoice
 import java.io.File
@@ -76,9 +78,14 @@ class XcsoarApp : Application() {
     /** The core every screen shares: the native one, else the fake one. */
     val anyCore: XcsoarCore by lazy { core ?: FakeXcsoarCore(appScope) }
 
+    /** The data a flight needs: its check and its downloads (D31). */
+    lateinit var flightData: FlightData
+        private set
+
     override fun onCreate() {
         super.onCreate()
         WeatherUpdates(this, appScope)
+        flightData = FlightData(this, appScope)
     }
 
     /* the language the core read its translations in (at start) */
@@ -112,6 +119,32 @@ class XcsoarApp : Application() {
             it.name == uiPreferences.getString("theme", null)
         } ?: ThemeChoice.SYSTEM
         set(value) = uiPreferences.edit().putString("theme", value.name).apply()
+
+    /** The vector map's zooms, cruising and circling; on the phone, like the theme. */
+    var vectorMapZooms: Pair<Double, Double>
+        get() = uiPreferences.getFloat("vectorCruiseZoom", VECTOR_CRUISE_ZOOM.toFloat()).toDouble() to
+            uiPreferences.getFloat("vectorCirclingZoom", VECTOR_CIRCLING_ZOOM.toFloat()).toDouble()
+        set(value) = uiPreferences.edit()
+            .putFloat("vectorCruiseZoom", value.first.toFloat())
+            .putFloat("vectorCirclingZoom", value.second.toFloat())
+            .apply()
+
+    /**
+     * Where the glider was last (latitude, longitude): the vector map
+     * starts there before a fix.  On the phone, like the theme.
+     */
+    var vectorMapPlace: Pair<Double, Double>?
+        get() = if (uiPreferences.contains("vectorLatitude"))
+            uiPreferences.getFloat("vectorLatitude", 0f).toDouble() to
+                uiPreferences.getFloat("vectorLongitude", 0f).toDouble()
+        else null
+        set(value) {
+            if (value == null) return
+            uiPreferences.edit()
+                .putFloat("vectorLatitude", value.first.toFloat())
+                .putFloat("vectorLongitude", value.second.toFloat())
+                .apply()
+        }
 
     /** Rows of tiles on the flight screen ([TILE_ROWS]); on the phone, like the theme. */
     var tileRows: Int

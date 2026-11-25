@@ -5,7 +5,8 @@
      The pilot's app is unchanged. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <application>
+    <!-- a test server on the computer, through adb reverse (D31) -->
+    <application android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"
             android:showWhenLocked="true"

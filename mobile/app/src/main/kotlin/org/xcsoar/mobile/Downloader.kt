@@ -16,18 +16,22 @@ import org.xcsoar.mobile.ui.MessageException
 import org.xcsoar.mobile.ui.text
 
 /**
- * Downloads files from XCSoar's repository.  The platform does the I/O;
- * the core parses the index (D1).
+ * Downloads files from XCSoar's repository and the vector map's
+ * server.  The platform does the I/O; the core parses XCSoar's index
+ * (D1).
  */
 class Downloader(private val cacheDir: File) {
     /**
-     * The repository index, downloaded again when older than a day.
+     * An index of files, downloaded again when older than a day, or
+     * when [fresh].
      *
+     * @param name the local copy's, one for each index
      * @return the local copy
      */
-    suspend fun index(uri: String): File = withContext(Dispatchers.IO) {
-        val file = File(cacheDir, "repository")
-        if (!file.exists() || System.currentTimeMillis() - file.lastModified() > DAY_MS)
+    suspend fun index(uri: String, name: String = "repository",
+                      fresh: Boolean = false): File = withContext(Dispatchers.IO) {
+        val file = File(cacheDir, name)
+        if (fresh || !file.exists() || System.currentTimeMillis() - file.lastModified() > DAY_MS)
             fetch(uri, file, null) {}
         file
     }
@@ -81,10 +85,13 @@ class Downloader(private val cacheDir: File) {
     /**
      * Opens [uri], following redirects (also from http to https, which
      * [HttpURLConnection] does not).  Plain http is upgraded to https:
-     * Android blocks clear-text traffic.
+     * Android blocks clear-text traffic.  Not to the phone itself: a
+     * test server through `adb reverse`, which only the test app (l5)
+     * may reach in clear text.
      */
     private fun open(uri: String): HttpURLConnection {
-        var url = URL(uri.replaceFirst(Regex("^http://"), "https://"))
+        var url = URL(if (uri.startsWith("http://127.0.0.1:")) uri
+                      else uri.replaceFirst(Regex("^http://"), "https://"))
         repeat(MAX_REDIRECTS) {
             val connection = url.openConnection() as HttpURLConnection
             connection.instanceFollowRedirects = false

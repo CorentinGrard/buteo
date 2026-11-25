@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import org.xcsoar.mobile.R
@@ -36,8 +37,10 @@ import org.xcsoar.mobile.core.CoreEvent
 import org.xcsoar.mobile.core.FlightState
 import org.xcsoar.mobile.core.GlideComputerEvent
 import org.xcsoar.mobile.core.MapItemInfo
+import org.xcsoar.mobile.core.WaypointFilter
+import org.xcsoar.mobile.core.WaypointInfo
+import org.xcsoar.mobile.core.MapFeatures
 import org.xcsoar.mobile.core.MapOption
-import org.xcsoar.mobile.core.MapMode
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.core.SoundOption
 import org.xcsoar.mobile.core.Thermal
@@ -134,13 +137,20 @@ class FlightViewModel(
     /* bumped when the pilot changes a tile */
     private val tilesChanged = MutableStateFlow(0)
 
-    /* once per second, like XCSoar's InfoBoxes (the GPS rate) */
-    private val tilesTicker = flow {
-        while (true) {
-            emit(Unit)
-            delay(TILES_INTERVAL_MS)
-        }
-    }
+    /*
+     * once per second, like XCSoar's InfoBoxes (the GPS rate): with each
+     * state the screen shows, so that both are drawn in one frame (apart,
+     * the whole screen was laid out and drawn twice a second), and every
+     * few seconds when no state comes (the clock tiles)
+     */
+    private val tilesTicker = merge(
+        flightState.map { },
+        flow {
+            while (true) {
+                delay(TILES_IDLE_MS)
+                emit(Unit)
+            }
+        })
 
     /**
      * The tiles of the layout shown, XCSoar's InfoBoxes computed by the
@@ -364,6 +374,7 @@ class FlightViewModel(
             try {
                 core.start()
                 varioSoundFlow.value = readVarioSound()
+                readMapSettings()
                 airspaceAlertsFlow.value = core.airspaceAlerts()
                 core.units()?.let { Format.units = it }
             } catch (e: Exception) {
@@ -485,93 +496,36 @@ class FlightViewModel(
         modeOverride.value = circling
     }
 
-    /** Whether the core draws XCSoar's map (else the screen shows a placeholder). */
-    val hasMap: Boolean get() = core.hasMap
-
-    private var mapAttach: Job? = null
-
-    fun attachMap(surface: Any, width: Int, height: Int, dpi: Int) {
-        mapAttach?.cancel()
-        mapAttach = viewModelScope.launch {
-            try {
-                core.attachMap(surface, width, height, dpi)
-                mapOrientationFlow.value = core.mapOrientation()
-            } catch (e: CancellationException) {
-                // a newer surface replaced this one: not a failure
-                throw e
-            } catch (e: Exception) {
-                lastEventFlow.value = text(R.string.event_map_failed, e.message.orEmpty())
-            }
-        }
-    }
-
-    /** Blocks until the core stopped drawing (the surface goes away next). */
-    fun detachMap() {
-        mapAttach?.cancel()
-        mapAttach = null
-        core.detachMap()
-    }
-
-    fun setMapAircraftPosition(x: Int, y: Int) {
-        viewModelScope.launch {
-            try {
-                core.setMapAircraftPosition(x, y)
-            } catch (_: Exception) {
-                // not attached yet; the core keeps the centre
-            }
-        }
-    }
-
-    fun zoomMap(steps: Int) {
-        viewModelScope.launch {
-            try {
-                core.zoomMap(steps)
-            } catch (_: Exception) {
-            }
-        }
-    }
-
-    private val mapFollowsFlow = MutableStateFlow(true)
-    /** Whether the map follows the aircraft (false after the pilot panned it). */
-    val mapFollows: StateFlow<Boolean> = mapFollowsFlow.asStateFlow()
-
-    /* finger movement not yet sent to the core: events arrive faster
-       than the core draws, so they are added up and sent in one go */
-    private var pendingDx = 0f
-    private var pendingDy = 0f
-    private var pendingScale = 1f
-    private var gestureJob: Job? = null
-
-    /** A pan ([dx], [dy] pixels) and pinch ([zoom] > 1 = in) on the map. */
-    fun mapGesture(dx: Float, dy: Float, zoom: Float) {
-        pendingDx += dx
-        pendingDy += dy
-        pendingScale *= zoom
-        if (dx != 0f || dy != 0f)
-            mapFollowsFlow.value = false
-        if (gestureJob?.isActive == true)
-            return
-        gestureJob = viewModelScope.launch {
-            while (pendingDx != 0f || pendingDy != 0f || pendingScale != 1f) {
-                val x = pendingDx
-                val y = pendingDy
-                val z = pendingScale
-                pendingDx = 0f
-                pendingDy = 0f
-                pendingScale = 1f
-                try {
-                    if (z != 1f) core.scaleMap(z)
-                    if (x != 0f || y != 0f) core.panMap(x, y)
-                } catch (_: Exception) {
-                    // not attached (yet): nothing to move
-                }
-            }
-        }
-    }
-
     private val mapOrientationFlow = MutableStateFlow<MapOrientation?>(null)
     /** The map orientation; null until the core answered. */
     val mapOrientation: StateFlow<MapOrientation?> = mapOrientationFlow.asStateFlow()
+
+    private val circlingZoomFlow = MutableStateFlow(true)
+    /** A zoom of its own while circling (Map & units). */
+    val circlingZoom: StateFlow<Boolean> = circlingZoomFlow.asStateFlow()
+
+    private val reliefFlow = MutableStateFlow(true)
+    /** The shaded relief on the map (Map & units, XCSoar's terrain switch). */
+    val relief: StateFlow<Boolean> = reliefFlow.asStateFlow()
+
+    /**
+     * The map's orientation and circling zoom from the profile: at the
+     * start and back from a page (Map & units).
+     */
+    fun refreshMapSettings() {
+        viewModelScope.launch { readMapSettings() }
+    }
+
+    private suspend fun readMapSettings() {
+        try {
+            core.mapOrientation()?.let { mapOrientationFlow.value = it }
+            core.mapOption(MapOption.CIRCLING_ZOOM)?.let { circlingZoomFlow.value = it != 0 }
+            core.mapOption(MapOption.TERRAIN)?.let { reliefFlow.value = it != 0 }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+        }
+    }
 
     fun setMapOrientation(next: MapOrientation) {
         mapOrientationFlow.value = next
@@ -586,18 +540,6 @@ class FlightViewModel(
     private val mapItemsFlow = MutableStateFlow<List<MapItemInfo>?>(null)
     /** The items at the last held point of the map; null when none is shown. */
     val mapItems: StateFlow<List<MapItemInfo>?> = mapItemsFlow.asStateFlow()
-
-    /** The pilot held a point of the map (pixels). */
-    fun showMapItems(x: Int, y: Int) {
-        viewModelScope.launch {
-            mapItemsFlow.value = try {
-                core.mapItemsAt(x, y)
-            } catch (e: Exception) {
-                lastEventFlow.value = text(R.string.event_map_items, e.message.orEmpty())
-                null
-            }
-        }
-    }
 
     /** "Go to" from the map items; closes them. */
     fun gotoWaypoint(id: Int) {
@@ -615,29 +557,20 @@ class FlightViewModel(
         mapItemsFlow.value = null
     }
 
-    /**
-     * The map shows the edited task or an area of the active one
-     * (framed, not following), or the flight again (following).
-     */
-    fun setMapMode(mode: MapMode, index: Int = 0) {
-        mapFollowsFlow.value = mode == MapMode.FLIGHT
-        mapItemsFlow.value = null
-        viewModelScope.launch {
-            try {
-                core.setMapMode(mode, index)
-            } catch (_: Exception) {
-            }
-        }
-    }
+    /** The map's layers: the core's data as GeoJSON. */
+    suspend fun mapFeatures(which: MapFeatures): String? = core.mapFeatures(which)
 
-    fun followMap() {
-        mapFollowsFlow.value = true
-        viewModelScope.launch {
-            try {
-                core.followMap()
-            } catch (_: Exception) {
-            }
-        }
+    /** The map's relief: the core's terrain heights. */
+    suspend fun terrainTile(zoom: Int, x: Int, y: Int, size: Int): ShortArray? =
+        core.terrainTile(zoom, x, y, size)
+
+    /** The landables the map colours by reach. */
+    suspend fun nearbyLandables(): List<WaypointInfo> =
+        core.searchWaypoints("", WaypointFilter.LANDABLE, 150)
+
+    /** What the pilot held on the map. */
+    fun showFeatureItems(items: List<MapItemInfo>) {
+        mapItemsFlow.value = items.ifEmpty { null }
     }
 
     /* the pilot's MacCready until a snapshot has it */
@@ -702,6 +635,7 @@ data class ReplaySpeed(val timeScale: Double = 10.0, val paused: Boolean = false
 }
 private const val VARIO_INTERVAL_MS = 200L
 private const val TILES_INTERVAL_MS = 1000L
+private const val TILES_IDLE_MS = 3000L
 
 private const val WARNING_POLL_MS = 1000L
 

@@ -29,7 +29,6 @@
 #include "AndroidGraphics.hpp"
 #include "LogFile.hpp"
 
-#include <android/native_window_jni.h>
 
 #include <jni.h>
 
@@ -340,71 +339,6 @@ Java_org_xcsoar_mobile_NativeCore_nativeGetDataStatus(JNIEnv *env, jclass,
   return env->NewStringUTF(buffer.c_str());
 }
 
-JNIEXPORT jint JNICALL
-Java_org_xcsoar_mobile_NativeCore_nativeMapAttach(JNIEnv *env, jclass,
-                                                  jlong core, jobject surface,
-                                                  jint width, jint height,
-                                                  jint dpi)
-{
-  ANativeWindow *window = ANativeWindow_fromSurface(env, surface);
-  if (window == nullptr)
-    return XCS_ERROR_INVALID_ARGUMENT;
-
-  /* xcs_map_attach() takes its own reference */
-  const auto status = xcs_map_attach(ToCore(core), window, width, height, dpi);
-  ANativeWindow_release(window);
-  return status;
-}
-
-JNIEXPORT jint JNICALL
-Java_org_xcsoar_mobile_NativeCore_nativeMapDetach(JNIEnv *, jclass, jlong core)
-{
-  return xcs_map_detach(ToCore(core));
-}
-
-JNIEXPORT jint JNICALL
-Java_org_xcsoar_mobile_NativeCore_nativeMapSetAircraftPosition(JNIEnv *, jclass,
-                                                               jlong core,
-                                                               jint x, jint y)
-{
-  return xcs_map_set_aircraft_position(ToCore(core), x, y);
-}
-
-JNIEXPORT jint JNICALL
-Java_org_xcsoar_mobile_NativeCore_nativeMapZoom(JNIEnv *, jclass, jlong core,
-                                                jint steps)
-{
-  return xcs_map_zoom(ToCore(core), steps);
-}
-
-JNIEXPORT jint JNICALL
-Java_org_xcsoar_mobile_NativeCore_nativeMapPan(JNIEnv *, jclass, jlong core,
-                                               jfloat dx, jfloat dy)
-{
-  return xcs_map_pan(ToCore(core), dx, dy);
-}
-
-JNIEXPORT jint JNICALL
-Java_org_xcsoar_mobile_NativeCore_nativeMapScale(JNIEnv *, jclass, jlong core,
-                                                 jfloat factor)
-{
-  return xcs_map_scale(ToCore(core), factor);
-}
-
-JNIEXPORT jint JNICALL
-Java_org_xcsoar_mobile_NativeCore_nativeMapFollow(JNIEnv *, jclass, jlong core)
-{
-  return xcs_map_follow(ToCore(core));
-}
-
-JNIEXPORT jint JNICALL
-Java_org_xcsoar_mobile_NativeCore_nativeMapSetMode(JNIEnv *, jclass,
-                                                   jlong core, jint mode,
-                                                   jint index)
-{
-  return xcs_map_set_mode(ToCore(core), mode, index);
-}
-
 /** @return RGBA rows from the top, or null (no map or terrain) */
 JNIEXPORT jbyteArray JNICALL
 Java_org_xcsoar_mobile_NativeCore_nativeMapTerrainImage(JNIEnv *env, jclass,
@@ -432,22 +366,6 @@ Java_org_xcsoar_mobile_NativeCore_nativeMapTerrainImage(JNIEnv *env, jclass,
 }
 
 /** @return {latitude, longitude}, or null without a map */
-JNIEXPORT jdoubleArray JNICALL
-Java_org_xcsoar_mobile_NativeCore_nativeMapLocationAt(JNIEnv *env, jclass,
-                                                      jlong core, jint x,
-                                                      jint y)
-{
-  double location[2];
-  if (xcs_map_location_at(ToCore(core), x, y, &location[0],
-                          &location[1]) != XCS_OK)
-    return nullptr;
-
-  jdoubleArray array = env->NewDoubleArray(2);
-  if (array != nullptr)
-    env->SetDoubleArrayRegion(array, 0, 2, location);
-  return array;
-}
-
 JNIEXPORT jint JNICALL
 Java_org_xcsoar_mobile_NativeCore_nativeMapSetOrientation(JNIEnv *, jclass,
                                                           jlong core,
@@ -465,23 +383,6 @@ Java_org_xcsoar_mobile_NativeCore_nativeMapGetOrientation(JNIEnv *, jclass,
   return xcs_map_get_orientation(ToCore(core), &orientation) == XCS_OK
     ? jint(orientation)
     : -1;
-}
-
-JNIEXPORT jstring JNICALL
-Java_org_xcsoar_mobile_NativeCore_nativeMapItemsAt(JNIEnv *env, jclass,
-                                                   jlong core, jint x, jint y)
-{
-  std::string buffer(8192, '\0');
-  size_t length;
-  xcs_status status = xcs_map_items_at(ToCore(core), x, y, buffer.data(),
-                                       buffer.size(), &length);
-  if (status == XCS_ERROR_INVALID_ARGUMENT && length >= buffer.size()) {
-    buffer.resize(length + 1);
-    status = xcs_map_items_at(ToCore(core), x, y, buffer.data(),
-                              buffer.size(), &length);
-  }
-
-  return status == XCS_OK ? env->NewStringUTF(buffer.c_str()) : nullptr;
 }
 
 JNIEXPORT jint JNICALL
@@ -795,6 +696,58 @@ Java_org_xcsoar_mobile_NativeCore_nativeWaypointsSearch(JNIEnv *env, jclass,
   }
 
   return status == XCS_OK ? env->NewStringUTF(buffer.c_str()) : nullptr;
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeMapFeatures(JNIEnv *env, jclass,
+                                                    jlong core, jint which)
+{
+  /* airspace for a country is a few megabytes: then a second call with
+     the length the first one reported */
+  std::string buffer(65536, '\0');
+  size_t length;
+  xcs_status status = xcs_map_features(ToCore(core), which, buffer.data(),
+                                       buffer.size(), &length);
+  if (status == XCS_ERROR_INVALID_ARGUMENT && length >= buffer.size()) {
+    buffer.resize(length + 1);
+    status = xcs_map_features(ToCore(core), which, buffer.data(),
+                              buffer.size(), &length);
+  }
+
+  return status == XCS_OK ? env->NewStringUTF(buffer.c_str()) : nullptr;
+}
+
+/** @return the JSON of xcs_data_coverage(), or null for bad lines */
+JNIEXPORT jstring JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeDataCoverage(JNIEnv *env, jclass,
+                                                     jlong core, jstring lines,
+                                                     jdouble margin)
+{
+  const auto l = Java::String::GetUTFChars(env, lines);
+  return GetJson(env, [&](char *buffer, size_t size, size_t *length){
+    return xcs_data_coverage(ToCore(core), l.c_str(), margin, buffer, size,
+                             length);
+  });
+}
+
+/** @return size * size heights (m) from the north-west, or null */
+JNIEXPORT jshortArray JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeTerrainTile(JNIEnv *env, jclass,
+                                                    jlong core, jint zoom,
+                                                    jint x, jint y, jint size)
+{
+  if (zoom < 0 || x < 0 || y < 0 || size <= 0 || size > 512)
+    return nullptr;
+
+  std::vector<int16_t> heights(std::size_t(size) * size);
+  if (xcs_terrain_tile(ToCore(core), zoom, x, y, size, heights.data())
+      != XCS_OK)
+    return nullptr;
+
+  jshortArray array = env->NewShortArray(jsize(heights.size()));
+  if (array != nullptr)
+    env->SetShortArrayRegion(array, 0, jsize(heights.size()), heights.data());
+  return array;
 }
 
 JNIEXPORT jstring JNICALL

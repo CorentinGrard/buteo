@@ -9,6 +9,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.xcsoar.mobile.core.GotoTarget
 import org.xcsoar.mobile.core.TaskFileInfo
 import org.xcsoar.mobile.core.TaskInfo
 import org.xcsoar.mobile.core.WeGlideTask
@@ -72,8 +73,26 @@ class TaskScreenshotTest {
     @Test
     fun activeRacingTask() = captureRoboImage("src/test/screenshots/task_active.png") {
         XcsTheme(dark = false) {
+            // flown from the pilot's list of routes
+            TaskContent(TaskState(TaskInfo(4, "Racing", name = "Le Versoud - Dent de Crolles",
+                                           valid = true, distance = 64_700.0,
+                                           active = 2, points = points),
+                                  files = listOf(
+                                      TaskFileInfo("Le Versoud - Dent de Crolles",
+                                                   "/x/tasks/Le Versoud - Dent de Crolles.tsk"),
+                                      TaskFileInfo("Vercors 300", "/x/tasks/Vercors 300.tsk"),
+                                      TaskFileInfo("Chartreuse triangle",
+                                                   "/x/tasks/Chartreuse triangle.tsk"))), {})
+        }
+    }
+
+    /** "Go to" flies elsewhere: the route says it waits, and resumes. */
+    @Test
+    fun pausedByGoTo() = captureRoboImage("src/test/screenshots/task_paused.png") {
+        XcsTheme(dark = false) {
             TaskContent(TaskState(TaskInfo(4, "Racing", valid = true, distance = 64_700.0,
-                                           active = 2, points = points)), {})
+                                           active = 1, points = points, mode = "goto",
+                                           goto = GotoTarget(9, "Saint-Hilaire"))), {})
         }
     }
 

@@ -81,6 +81,8 @@ class TranslationsTest {
         /** Texts French writes as English does. */
         val SAME_IN_FRENCH = setOf(
             "app_name", "auto", "mac_cready", "netto", "menu", "flight_mc_auto",
+            // a brand name
+            "menu_map_xcsoar",
             // the same word, or XCSoar's own (po/fr.po) is the same
             "airalerts_vibration", "airdetails_base", "airdetails_station", "airdetails_type",
             "atc_east", "crew_solo", "data_waypoints", "map_trail_long", "notam_permanent",

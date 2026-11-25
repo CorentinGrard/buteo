@@ -45,6 +45,13 @@ interface XcsoarCore {
     /** The configured data files and what was loaded from them. */
     suspend fun dataStatus(): DataStatus
 
+    /**
+     * What the data files hold within [margin] metres of [lines] (a
+     * task's legs and zones, the glider): `xcs_data_coverage`; null
+     * without the core.
+     */
+    suspend fun dataCoverage(lines: List<List<GeoPosition>>, margin: Double): DataCoverage? = null
+
     /** Parse a downloaded repository index ([REPOSITORY_URI]); null if unsupported. */
     suspend fun repositoryFiles(indexPath: String): List<RepositoryFile>? = null
 
@@ -104,40 +111,6 @@ interface XcsoarCore {
     /** Draw and warn of one airspace class; saved in the profile. */
     suspend fun setAirspaceClass(code: Int, display: Boolean, warning: Boolean) {}
 
-    /** Whether this core draws XCSoar's moving map ([attachMap]). */
-    val hasMap: Boolean get() = false
-
-    /**
-     * Draw the map into [surface] (an `android.view.Surface` on Android),
-     * [width] × [height] pixels.  Call again when the size changes.
-     */
-    suspend fun attachMap(surface: Any, width: Int, height: Int, dpi: Int) {}
-
-    /** Stop drawing; blocks until done, so the surface may be destroyed. */
-    fun detachMap() {}
-
-    /** Where the aircraft is drawn on the map, in pixels. */
-    suspend fun setMapAircraftPosition(x: Int, y: Int) {}
-
-    /** Zoom in (negative) or out (positive) along XCSoar's scale list. */
-    suspend fun zoomMap(steps: Int) {}
-
-    /** Move the map with the finger (pixels); it stops following the aircraft. */
-    suspend fun panMap(dx: Float, dy: Float) {}
-
-    /** Zoom continuously; [factor] > 1 zooms in. */
-    suspend fun scaleMap(factor: Float) {}
-
-    /** Centre on the aircraft again and follow it. */
-    suspend fun followMap() {}
-
-    /**
-     * What the map shows: the flight, the edited task (to build it on
-     * the map) or area [index] of the active task (to move its target).
-     * The last two are framed, north up, and the map stops following.
-     */
-    suspend fun setMapMode(mode: MapMode, index: Int = 0) {}
-
     /**
      * The map's terrain for the box [north]..[south], [west]..[east]
      * (degrees), north up, on the flat projection of the app's charts:
@@ -146,9 +119,6 @@ interface XcsoarCore {
      */
     suspend fun terrainImage(north: Double, west: Double, south: Double, east: Double,
                              width: Int, height: Int): ByteArray? = null
-
-    /** The place under pixel ([x], [y]) of the map; null without a map. */
-    suspend fun mapLocationAt(x: Int, y: Int): GeoPosition? = null
 
     /** The map orientation (saved in the profile); null without a map. */
     suspend fun mapOrientation(): MapOrientation? = null
@@ -229,6 +199,20 @@ interface XcsoarCore {
      * [TileGraphic.THERMAL_ASSISTANT]; null without the core.
      */
     suspend fun thermalAssistant(): TileGraphic? = null
+
+    /**
+     * What XCSoar's map draws over the terrain, as GeoJSON for a map
+     * the app draws itself (`xcs_map_features`); null without the core.
+     */
+    suspend fun mapFeatures(which: MapFeatures): String? = null
+
+    /**
+     * The terrain's heights (metres) over Web Mercator tile ([zoom],
+     * [x], [y]), [size] by [size] from the north-west, for the vector
+     * map's relief (`xcs_terrain_tile`); null without terrain there.
+     * Blocks while the core loads the detailed terrain.
+     */
+    suspend fun terrainTile(zoom: Int, x: Int, y: Int, size: Int): ShortArray? = null
 
     /** The plane files; null if the core has not started. */
     suspend fun planes(): PlaneList? = null
@@ -396,9 +380,6 @@ interface XcsoarCore {
     /** Set a display option (saved in the profile). */
     suspend fun setMapOption(option: MapOption, value: Int) {}
 
-    /** What is on the map around pixel ([x], [y]), nearest first. */
-    suspend fun mapItemsAt(x: Int, y: Int): List<MapItemInfo> = emptyList()
-
     /** Replay an IGC or NMEA file; [timeScale] 1 = real time. */
     suspend fun startReplay(path: String, timeScale: Double = 1.0)
     suspend fun stopReplay()
@@ -468,13 +449,6 @@ enum class GlideComputerEvent(val code: Int) {
         /** Unknown codes (from a newer core) map to [OTHER]. */
         fun fromCode(code: Int): GlideComputerEvent = byCode[code] ?: OTHER
     }
-}
-
-/** Values of `xcs_map_mode` (core/api/xcsoar_core.h). */
-enum class MapMode(val code: Int) {
-    FLIGHT(0),
-    TASK(1),
-    TARGET(2),
 }
 
 /** Values of `xcs_map_orientation` (core/api/xcsoar_core.h). */

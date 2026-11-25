@@ -44,6 +44,14 @@ public:
     return files.end();
   }
 
+  auto begin() noexcept {
+    return files.begin();
+  }
+
+  auto end() noexcept {
+    return files.end();
+  }
+
   /**
    * @see TopographyFile::GetNextScaleThreshold()
    */

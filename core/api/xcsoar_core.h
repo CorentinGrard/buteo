@@ -802,6 +802,10 @@ enum {
  * (the index of the point flown to) only for the active task.  "errors"
  * is XCSoar's validation message for an invalid task.
  *
+ * The active task has the "mode" XCSoar flies: "ordered" (this task),
+ * "goto" (a waypoint of xcs_goto_waypoint() meanwhile, the task kept:
+ * "goto": {"id": 42, "name": "Anduze"}), "abort" or "none".
+ *
  * A point's "zone" has its "shape" ("cylinder", "line", "sector",
  * "annular_sector", "symmetric_sector", "keyhole", "fai_sector", …)
  * and the sizes the pilot may change, as upstream's zone editors:
@@ -884,6 +888,9 @@ typedef enum xcs_task_op {
   /** Active area task: lock (`value` 1) the target of point `index`, or
       let XCSoar's optimiser move it (0). */
   XCS_TASK_LOCK_TARGET = 23,
+  /** Fly the task again after xcs_goto_waypoint(); not without a
+      task. */
+  XCS_TASK_RESUME = 24,
 } xcs_task_op;
 
 /** The task's rules, XCS_TASK_SET_RULE's `index`. */
@@ -1395,6 +1402,30 @@ xcs_get_data_status(xcs_core *core, char *buffer, size_t size,
                     size_t *length_r);
 
 /**
+ * What the data files hold along a flight, for a check before it:
+ * @p lines lists lines as GeoJSON positions, [[[lon, lat], ...], ...]
+ * (a task's legs and zones; a line of one point is that point, such
+ * as the glider's position).  JSON (UTF-8, null-terminated):
+ *
+ *   {"terrain": {"bounds": [w, s, e, n], "gap": [lon, lat]},
+ *    "airspace": 12, "waypoints": 40, "landables": 9}
+ *
+ * "terrain" is null without terrain.  "gap" is the first place along
+ * the lines where the terrain does not reach @p margin metres around,
+ * left out when it reaches everywhere.  "airspace", "waypoints" and
+ * "landables" count those within @p margin metres of the lines.
+ * Buffer rules as for xcs_get_data_status().
+ *
+ * @param margin metres, up to 1000 km
+ * @return XCS_ERROR_INVALID_ARGUMENT also for @p lines that are not
+ * such a list, or too long a list (a few thousand kilometres sampled
+ * every kilometre)
+ */
+XCS_EXPORT xcs_status
+xcs_data_coverage(xcs_core *core, const char *lines, double margin,
+                  char *buffer, size_t size, size_t *length_r);
+
+/**
  * The thermal assistant's data (upstream's ThermalAssistantRenderer),
  * JSON:
  *
@@ -1429,6 +1460,68 @@ xcs_thermal_assistant_get(xcs_core *core, char *buffer, size_t size,
 XCS_EXPORT xcs_status
 xcs_repository_list(const char *path, char *buffer, size_t size,
                     size_t *length_r);
+
+enum {
+  /** Airspace outlines (GeoJSON FeatureCollection of polygons). */
+  XCS_FEATURES_AIRSPACE = 0,
+  /** The airspaces with a warning: [[id, "near"|"inside", acked], ...]. */
+  XCS_FEATURES_AIRSPACE_STATE = 1,
+  /** Every waypoint (points). */
+  XCS_FEATURES_WAYPOINTS = 2,
+  /** The ordered task: legs, zones and points. */
+  XCS_FEATURES_TASK = 3,
+  /** The flight's trail by climb, as long as the trail option says
+      (none, 10 minutes, an hour, all). */
+  XCS_FEATURES_TRAIL = 4,
+  /** The task being edited (XCS_TASK_BEGIN): as XCS_FEATURES_TASK. */
+  XCS_FEATURES_TASK_EDITED = 5,
+};
+
+/**
+ * What XCSoar's moving map draws over the terrain, for a map the app
+ * draws itself, as GeoJSON ([longitude, latitude], degrees):
+ *
+ * - XCS_FEATURES_AIRSPACE: one polygon per airspace of a class the
+ *   pilot shows, properties "id" (stable until the airspace file
+ *   changes), "name", "class", "kind" (controlled, restricted, gliding
+ *   or other), "base" and "top" as XCSoar writes them ("FL65",
+ *   "1067 m"), "base_m" and "top_m" above sea level (XCSoar's estimate
+ *   for ground and flight level limits) and "ground".
+ * - XCS_FEATURES_AIRSPACE_STATE: not GeoJSON; each warned airspace's
+ *   id, whether the glider is near or inside, and whether the warning
+ *   is acknowledged.
+ * - XCS_FEATURES_WAYPOINTS: "id", "name", "code" (the file's short
+ *   name), "label" (the name without a leading code), "landable",
+ *   "airport", "elevation", "runway" (degrees) and "frequency" when
+ *   known.
+ * - XCS_FEATURES_TASK: "layer" is "leg" (with "done"), "zone" (the
+ *   observation zone's outline) or "point" (the target, with "name");
+ *   each has "index" and "active".
+ * - XCS_FEATURES_TRAIL: lines with "climb", the netto vario's class
+ *   from -2 (sink over 1.5 m/s) to 3 (lift over 3 m/s).
+ * - XCS_FEATURES_TASK_EDITED: the task being edited as the map draws
+ *   it in XCS_MAP_MODE_TASK (its last point a finish, as on "Done"),
+ *   none "active"; no features without an edit in progress.
+ *
+ * Buffer rules as for xcs_get_data_status().
+ */
+XCS_EXPORT xcs_status
+xcs_map_features(xcs_core *core, uint32_t which, char *buffer, size_t size,
+                 size_t *length_r);
+
+/**
+ * The terrain's heights for a map the app draws itself (its relief,
+ * from the same terrain the glide computer uses): tile (zoom, x, y) of
+ * the Web Mercator grid of OpenStreetMap's tiles, `size` by `size`
+ * heights in metres at the pixels' centres, row by row from the north.
+ * Water and the area outside the terrain take the height beside them.
+ * From zoom 9, loads the detailed terrain there first.  zoom 0..20,
+ * x and y below 2^zoom, size 1..512; XCS_ERROR_FAILED without terrain
+ * or for a tile outside it.
+ */
+XCS_EXPORT xcs_status
+xcs_terrain_tile(xcs_core *core, uint32_t zoom, uint32_t x, uint32_t y,
+                 uint32_t size, int16_t *heights);
 
 /*
  * Moving map: XCSoar's map drawn by the core with OpenGL ES into a

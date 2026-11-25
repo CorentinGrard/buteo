@@ -12,6 +12,7 @@
 #include "InfoBoxes/Content/Type.hpp"
 #include "TestUtil.hpp"
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstdio>
@@ -190,6 +191,47 @@ DataCount(const std::string &status, const char *section)
   return std::strtol(status.c_str() + count + 8, nullptr, 10);
 }
 
+/** xcs_data_coverage(), or "" on error. */
+static std::string
+Coverage(xcs_core *core, const char *lines, double margin)
+{
+  char buffer[1024];
+  size_t length = 0;
+  if (xcs_data_coverage(core, lines, margin, buffer, sizeof(buffer),
+                        &length) != XCS_OK || length != std::strlen(buffer))
+    return {};
+  return buffer;
+}
+
+/** The number after "key": in @p json, or -1. */
+static long
+JsonNumber(const std::string &json, const char *key)
+{
+  const std::string k = std::string{"\""} + key + "\":";
+  const auto i = json.find(k);
+  return i == std::string::npos ? -1
+    : std::strtol(json.c_str() + i + k.size(), nullptr, 10);
+}
+
+/** xcs_map_features(), or "" on error. */
+static std::string
+Features(xcs_core *core, uint32_t which)
+{
+  std::string buffer(4096, '\0');
+  size_t length = 0;
+  auto status = xcs_map_features(core, which, buffer.data(), buffer.size(),
+                                 &length);
+  if (status == XCS_ERROR_INVALID_ARGUMENT && length >= buffer.size()) {
+    buffer.resize(length + 1);
+    status = xcs_map_features(core, which, buffer.data(), buffer.size(),
+                              &length);
+  }
+  if (status != XCS_OK)
+    return {};
+  buffer.resize(length);
+  return buffer;
+}
+
 static void
 TestDataFiles(xcs_core *core)
 {
@@ -217,12 +259,104 @@ TestDataFiles(xcs_core *core)
   ok1(status.find("\"terrain\":true") != std::string::npos);
   ok1(DataCount(status, "waypoints") > 0);
 
+  /* the same data as GeoJSON, for a map the app draws itself */
+  const auto airspaces = Features(core, XCS_FEATURES_AIRSPACE);
+  ok1(airspaces.starts_with("{\"type\":\"FeatureCollection\"") &&
+      airspaces.find("\"type\":\"Polygon\"") != std::string::npos &&
+      airspaces.find("\"base_m\":") != std::string::npos);
+  const auto waypoints = Features(core, XCS_FEATURES_WAYPOINTS);
+  ok1(waypoints.find("\"type\":\"Point\"") != std::string::npos &&
+      waypoints.find("\"landable\":true") != std::string::npos);
+  /* no fix now: no warning, no task; the trail is the earlier
+     replay's */
+  ok1(Features(core, XCS_FEATURES_AIRSPACE_STATE) == "[]");
+  ok1(Features(core, XCS_FEATURES_TASK).find("\"features\":[]") !=
+      std::string::npos);
+  ok1(Features(core, XCS_FEATURES_TRAIL).starts_with(
+        "{\"type\":\"FeatureCollection\""));
+  {
+    char small[8];
+    size_t length = 0;
+    ok1(xcs_map_features(core, XCS_FEATURES_AIRSPACE, small, sizeof(small),
+                         &length) == XCS_ERROR_INVALID_ARGUMENT &&
+        length == airspaces.size());
+    ok1(xcs_map_features(core, 99, small, sizeof(small), &length) ==
+        XCS_ERROR_INVALID_ARGUMENT);
+  }
+
+  /* the terrain's heights for the map's relief: the tile of zoom 10
+     around Benalla (-36.55, 146.0), from about 150 m in the plain to
+     the hills; the whole terrain at zoom 5; none in the Atlantic */
+  {
+    std::vector<int16_t> heights(64 * 64);
+    ok1(xcs_terrain_tile(core, 21, 0, 0, 64, heights.data()) ==
+        XCS_ERROR_INVALID_ARGUMENT &&
+        xcs_terrain_tile(core, 10, 1024, 0, 64, heights.data()) ==
+        XCS_ERROR_INVALID_ARGUMENT &&
+        xcs_terrain_tile(core, 10, 927, 623, 0, heights.data()) ==
+        XCS_ERROR_INVALID_ARGUMENT &&
+        xcs_terrain_tile(core, 10, 927, 623, 513, heights.data()) ==
+        XCS_ERROR_INVALID_ARGUMENT &&
+        xcs_terrain_tile(core, 10, 927, 623, 64, nullptr) ==
+        XCS_ERROR_INVALID_ARGUMENT);
+    ok1(xcs_terrain_tile(core, 10, 927, 623, 64, heights.data()) == XCS_OK);
+    const auto [low, high] = std::minmax_element(heights.begin(), heights.end());
+    ok1(*low > 100 && *high < 2000 && *high - *low > 50);
+    ok1(xcs_terrain_tile(core, 5, 28, 19, 64, heights.data()) == XCS_OK);
+    ok1(xcs_terrain_tile(core, 10, 0, 0, 64, heights.data()) ==
+        XCS_ERROR_FAILED);
+  }
+
+  /* the data along a flight, for the check before it: Benalla to the
+     north-east within the terrain (143.8..147.7 E, 37.3..33.7 S), then
+     out to sea, where it ends 10 km before its southern edge */
+  {
+    const char *const inside = "[[[146.0,-36.55],[146.3,-36.4]]]";
+    const auto a = Coverage(core, inside, 10000);
+    ok1(a.find("\"bounds\":[") != std::string::npos &&
+        a.find("\"gap\"") == std::string::npos);
+    ok1(JsonNumber(a, "airspace") > 0);
+    ok1(JsonNumber(a, "landables") >= 1 &&
+        JsonNumber(a, "waypoints") > JsonNumber(a, "landables"));
+    ok1(JsonNumber(Coverage(core, inside, 30000), "waypoints") >
+        JsonNumber(a, "waypoints"));
+
+    const auto b = Coverage(core, "[[[146.0,-36.55],[150.0,-40.0]]]", 10000);
+    ok1(b.find("\"gap\":[1.468") != std::string::npos &&
+        b.find(",-3.727") != std::string::npos);
+    /* a point alone */
+    ok1(JsonNumber(Coverage(core, "[[[146.0,-36.55]]]", 10000), "waypoints") > 0);
+
+    char buffer[256];
+    size_t length = 99;
+    bool refused = true;
+    for (const char *lines : {"{}", "[[[146.0]]]", "[[[200,-36]]]", "[[\"x\"]]",
+                              "[[[146,-36],[146,", "\xff"})
+      refused = refused &&
+        xcs_data_coverage(core, lines, 10000, buffer, sizeof(buffer),
+                          &length) == XCS_ERROR_INVALID_ARGUMENT &&
+        length == 0;
+    ok1(refused &&
+        xcs_data_coverage(core, inside, -1, buffer, sizeof(buffer),
+                          &length) == XCS_ERROR_INVALID_ARGUMENT &&
+        xcs_data_coverage(core, inside, 2e6, buffer, sizeof(buffer),
+                          &length) == XCS_ERROR_INVALID_ARGUMENT &&
+        xcs_data_coverage(core, nullptr, 10000, buffer, sizeof(buffer),
+                          &length) == XCS_ERROR_INVALID_ARGUMENT);
+  }
+
   /* removing the files unloads their data */
   ok1(xcs_set_data_file(core, XCS_DATA_AIRSPACE, nullptr) == XCS_OK);
   ok1(xcs_set_data_file(core, XCS_DATA_MAP, "") == XCS_OK);
   status = DataStatus(core);
   ok1(status.find("\"terrain\":false") != std::string::npos);
   ok1(DataCount(status, "airspace") == 0);
+  {
+    int16_t height;
+    ok1(xcs_terrain_tile(core, 0, 0, 0, 1, &height) == XCS_ERROR_FAILED);
+  }
+  ok1(Coverage(core, "[[[146.0,-36.55]]]", 10000) ==
+      "{\"terrain\":null,\"airspace\":0,\"waypoints\":0,\"landables\":0}");
 }
 
 static std::string
@@ -278,7 +412,7 @@ TestTask(xcs_core *core)
   const auto ids = WaypointIds(core, 3);
   ok1(ids.size() == 3);
   if (ids.size() != 3) {
-    skip(36 + 24, 0, "no waypoints");
+    skip(36 + 24 + 5, 0, "no waypoints");
     return;
   }
 
@@ -296,9 +430,18 @@ TestTask(xcs_core *core)
     }
     ok1(named && (s.valid & (XCS_VALID_NEXT_WAYPOINT | XCS_VALID_NEXT_ARRIVAL)) == 0);
   }
+  /* the task says it is not flown meanwhile, and to where; without a
+     task there is nothing to resume */
+  {
+    const auto active = TaskJson(core, XCS_TASK_ACTIVE);
+    ok1(Has(active, "\"mode\":\"goto\"") &&
+        Has(active, "\"goto\":{\"id\":"));
+  }
+  ok1(xcs_task_edit(core, XCS_TASK_RESUME, 0, 0) == XCS_ERROR_INVALID_ARGUMENT);
 
   /* editing needs XCS_TASK_BEGIN */
   ok1(TaskJson(core, XCS_TASK_EDITED).empty());
+  ok1(Features(core, XCS_FEATURES_TASK_EDITED).find("\"features\":[]") != std::string::npos);
   ok1(xcs_task_edit(core, XCS_TASK_APPEND, 0, ids[0]) == XCS_ERROR_INVALID_ARGUMENT);
   ok1(xcs_task_edit(core, 99, 0, 0) == XCS_ERROR_INVALID_ARGUMENT);
 
@@ -315,15 +458,35 @@ TestTask(xcs_core *core)
   ok1(Count(edited, "\"waypoint_id\"") == 3);
   ok1(edited.find("\"editing\":true") != std::string::npos);
 
+  /* the edited task for a map the app draws: its points and zones,
+     none active or done; the active task has none yet */
+  {
+    const auto features = Features(core, XCS_FEATURES_TASK_EDITED);
+    ok1(Count(features, "\"layer\":\"point\"") == 3 &&
+        Count(features, "\"layer\":\"leg\"") == 2 &&
+        features.find("\"layer\":\"zone\"") != std::string::npos);
+    ok1(features.find("\"active\":true") == std::string::npos &&
+        features.find("\"done\":true") == std::string::npos);
+    ok1(Count(Features(core, XCS_FEATURES_TASK), "\"layer\":\"point\"") == 0);
+  }
+
   /* the active task is untouched until the commit, which adds the
      finish */
   ok1(Count(TaskJson(core, XCS_TASK_ACTIVE), "\"waypoint_id\"") == 0);
   ok1(xcs_task_edit(core, XCS_TASK_COMMIT, 0, 0) == XCS_OK);
   auto active = TaskJson(core, XCS_TASK_ACTIVE);
   ok1(Count(active, "\"waypoint_id\"") == 3);
+  /* the new task is flown, not the "Go to" before it; another "Go to"
+     pauses it, XCS_TASK_RESUME flies it again */
+  ok1(Has(active, "\"mode\":\"ordered\""));
+  ok1(xcs_goto_waypoint(core, ids[2]) == XCS_OK &&
+      Has(TaskJson(core, XCS_TASK_ACTIVE), "\"mode\":\"goto\"") &&
+      xcs_task_edit(core, XCS_TASK_RESUME, 0, 0) == XCS_OK &&
+      Has(TaskJson(core, XCS_TASK_ACTIVE), "\"mode\":\"ordered\""));
   ok1(active.find("\"kind\":\"finish\"") != std::string::npos);
   ok1(active.find("\"active\":0") != std::string::npos);
   ok1(TaskJson(core, XCS_TASK_EDITED).empty());
+  ok1(Features(core, XCS_FEATURES_TASK_EDITED).find("\"features\":[]") != std::string::npos);
   {
     /* the analysis task page draws each point's zone */
     std::string analysis(1 << 20, '\0');
@@ -402,8 +565,10 @@ TestTask(xcs_core *core)
   ok1(xcs_task_edit(core, XCS_TASK_CANCEL, 0, 0) == XCS_OK);
   ok1(xcs_task_load(core, saved.c_str(), 0) == XCS_OK &&
       TaskJson(core, XCS_TASK_EDITED).rfind("{\"type\":5,", 0) == 0);
-  /* the rules and the other start are in the file */
+  /* the rules and the other start are in the file; the route has its
+     name */
   edited = TaskJson(core, XCS_TASK_EDITED);
+  ok1(Has(edited, "\"name\":\"core-api-test\""));
   ok1(Has(edited, "\"start_open\":750,") &&
       Has(edited, "\"optional_starts\":[{\"waypoint_id\":"));
   ok1(xcs_task_edit(core, XCS_TASK_CANCEL, 0, 0) == XCS_OK);
@@ -1713,7 +1878,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5);
 
   Recorder recorder;
   TestCreateArguments(recorder);

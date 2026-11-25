@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -173,14 +174,16 @@ fun WindChip(wind: Wind?, modifier: Modifier = Modifier, onClick: (() -> Unit)? 
     FloatingCard(modifier, RoundedCornerShape(12.dp), onClick = onClick,
                  onClickLabel = stringResource(R.string.flight_set_wind),
                  description = stringResource(R.string.flight_wind_from, text)) {
-        Row(Modifier.padding(start = 6.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
+        // without a wind, no arrow and no empty square where it goes
+        Row(Modifier.padding(start = if (wind != null) 6.dp else 10.dp, end = 10.dp,
+                             top = 6.dp, bottom = 6.dp).heightIn(min = 32.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.size(32.dp).background(colors.panel, RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center) {
-                if (wind != null)
+            if (wind != null)
+                Box(Modifier.size(32.dp).background(colors.panel, RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center) {
                     DirectionArrow(wind.bearing + 180, colors.text, Modifier.size(20.dp))
-            }
+                }
             Text(text, color = colors.text, style = XcsTheme.numberStyle, fontSize = 18.sp,
                  maxLines = 1)
         }

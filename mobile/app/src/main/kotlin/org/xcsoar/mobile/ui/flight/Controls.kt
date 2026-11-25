@@ -29,6 +29,10 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.modifiers.TextAutoSizeLayoutScope
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -221,7 +225,7 @@ fun Segmented(
                 // a long label shrinks to fit its segment (a word is never
                 // broken), and only then is cut with an ellipsis
                 Text(label, color = if (isSelected) colors.onSelected else colors.text,
-                     autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = 16.sp),
+                     autoSize = ShrinkToFit(11.sp, 16.sp),
                      fontWeight = FontWeight.SemiBold, maxLines = 1, textAlign = TextAlign.Center,
                      overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 4.dp))
             }
@@ -382,4 +386,25 @@ fun SetMacCreadyButton(lift: Double, onClick: () -> Unit, modifier: Modifier = M
         Text(value.text, color = colors.onSelected, style = XcsTheme.numberStyle,
              fontWeight = FontWeight.Bold, fontSize = 22.sp, maxLines = 1)
     }
+}
+
+/**
+ * Text as large as [max] when it fits on its line, else smaller in
+ * proportion, not below [min]: one layout at [max] to measure, one at the
+ * size that fits.  Compose's step-based size laid the edge bars' numbers
+ * out six or seven times at each value, 13 % of the UI thread of a
+ * Redmi 5 in flight.
+ */
+class ShrinkToFit(private val min: TextUnit, private val max: TextUnit) : TextAutoSize {
+    override fun TextAutoSizeLayoutScope.getFontSize(constraints: Constraints,
+                                                     text: AnnotatedString): TextUnit {
+        val width = performLayout(constraints, text, max).multiParagraph.maxIntrinsicWidth
+        if (width <= constraints.maxWidth || width <= 0f) return max
+        // the width grows with the size; a little under, for the rounding
+        val fits = max.value * constraints.maxWidth / width * 0.98f
+        return maxOf(min.value, fits).sp
+    }
+
+    override fun equals(other: Any?) = other is ShrinkToFit && other.min == min && other.max == max
+    override fun hashCode() = 31 * min.hashCode() + max.hashCode()
 }

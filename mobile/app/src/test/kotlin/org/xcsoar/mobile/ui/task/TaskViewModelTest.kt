@@ -20,13 +20,12 @@ import org.junit.Before
 import org.junit.Test
 import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.FakeXcsoarCore
-import org.xcsoar.mobile.core.GeoPosition
-import org.xcsoar.mobile.core.MapItemInfo
 import org.xcsoar.mobile.core.TaskInfo
 import org.xcsoar.mobile.core.TaskOp
 import org.xcsoar.mobile.core.TaskPointInfo
 import org.xcsoar.mobile.core.ZoneInfo
 import org.xcsoar.mobile.core.XcsoarCore
+import org.xcsoar.mobile.ui.asText
 import org.xcsoar.mobile.ui.text
 
 /** The task on the map: the refresh the screens share, taps on the map. */
@@ -45,8 +44,6 @@ class TaskViewModelTest {
         val edits = mutableListOf<Triple<TaskOp, Int, Double>>()
         val targets = mutableListOf<Triple<Int, Double, Double>>()
         var reads = 0
-        var items = listOf(MapItemInfo("location"),
-                           MapItemInfo("waypoint", id = 42, name = "Gordes"))
 
         override suspend fun task(edited: Boolean): TaskInfo {
             reads++
@@ -56,10 +53,6 @@ class TaskViewModelTest {
         override suspend fun editTask(op: TaskOp, index: Int, value: Double) {
             edits += Triple(op, index, value)
         }
-
-        override suspend fun mapItemsAt(x: Int, y: Int) = items
-
-        override suspend fun mapLocationAt(x: Int, y: Int) = GeoPosition(44.5, 5.25)
 
         override suspend fun setTaskTarget(index: Int, latitude: Double, longitude: Double) {
             targets += Triple(index, latitude, longitude)
@@ -99,17 +92,90 @@ class TaskViewModelTest {
     fun tapAddsTheWaypointThere() = runTest(dispatcher) {
         val core = Core(this)
         val viewModel = TaskViewModel(core)
-        viewModel.addAt(100, 200)
+        viewModel.addWaypoint(42)
         runCurrent()
         assertEquals(listOf(Triple(TaskOp.APPEND, 0, 42.0)), core.edits)
         assertNull(viewModel.state.value.message)
 
         // beside the waypoints: nothing added, and why
-        core.items = listOf(MapItemInfo("location"))
-        viewModel.addAt(10, 20)
+        viewModel.addWaypoint(null)
         runCurrent()
         assertEquals(1, core.edits.size)
         assertEquals(text(R.string.task_map_no_waypoint), viewModel.state.value.message)
+    }
+
+    @Test
+    fun leavingAppliesTheChangesOnly() = runTest(dispatcher) {
+        val core = Core(this)
+        val viewModel = TaskViewModel(core)
+        var left = 0
+        // nothing changed: the edit goes, the active route stays
+        viewModel.beginEdit()
+        runCurrent()
+        viewModel.leave { left++ }
+        runCurrent()
+        assertEquals(listOf(TaskOp.BEGIN, TaskOp.CANCEL), core.edits.map { it.first })
+        assertEquals(1, left)
+        assertEquals(false, viewModel.state.value.task?.editing)
+
+        // a waypoint added: applied on the way out, no "Done" needed
+        core.edits.clear()
+        viewModel.beginEdit()
+        runCurrent()
+        viewModel.addWaypoint(42)
+        runCurrent()
+        viewModel.leave { left++ }
+        runCurrent()
+        assertEquals(listOf(TaskOp.BEGIN, TaskOp.APPEND, TaskOp.COMMIT),
+                     core.edits.map { it.first })
+        assertEquals(2, left)
+    }
+
+    @Test
+    fun anInvalidRouteKeepsThePilotOnThePage() = runTest(dispatcher) {
+        val core = object : XcsoarCore by Core(this) {
+            override suspend fun task(edited: Boolean) =
+                TaskInfo(4, "Racing", editing = edited, errors = "No finish")
+            override suspend fun editTask(op: TaskOp, index: Int, value: Double) {
+                check(op != TaskOp.COMMIT) { "not valid" }
+            }
+        }
+        val viewModel = TaskViewModel(core)
+        var left = false
+        viewModel.beginEdit()
+        runCurrent()
+        viewModel.addWaypoint(42)
+        runCurrent()
+        viewModel.leave { left = true }
+        runCurrent()
+        assertEquals(false, left)
+        assertEquals("No finish".asText(), viewModel.state.value.message)
+    }
+
+    @Test
+    fun routesAreNamedByTheirPoints() {
+        fun point(id: Int, name: String) = TaskPointInfo(id, name, "turn", 0, "", null)
+        // back home: the finish is the start, said once
+        assertEquals("Montelimar Ancone - Sagy - Grenoble Isere",
+                     routeName(listOf(point(1, "LFLQ Montelimar Ancone"), point(2, "LF7121 Sagy"),
+                                      point(3, "LFLS Grenoble Isere"),
+                                      point(1, "LFLQ Montelimar Ancone"))))
+        assertEquals("Remoulins - Tarascon",
+                     routeName(listOf(point(4, "110: Remoulins – ULM LF3025"),
+                                      point(5, "111: Tarascon – ULM LF1351"))))
+        // short names keep their capitals; nothing a file name cannot hold
+        assertEquals("ST AUBAN - Gap-Tallard", routeName(listOf(point(6, "ST AUBAN"),
+                                                                 point(7, "Gap-Tallard"))))
+        assertEquals("A-B", routeName(listOf(point(8, "A/B"))))
+    }
+
+    @Test
+    fun resumeFliesTheRouteAgain() = runTest(dispatcher) {
+        val core = Core(this)
+        val viewModel = TaskViewModel(core)
+        viewModel.resume()
+        runCurrent()
+        assertEquals(listOf(Triple(TaskOp.RESUME, 0, 0.0)), core.edits)
     }
 
     @Test
@@ -143,7 +209,7 @@ class TaskViewModelTest {
     fun tapMovesTheTarget() = runTest(dispatcher) {
         val core = Core(this)
         val viewModel = TaskViewModel(core)
-        viewModel.targetAt(2, 100, 200)
+        viewModel.moveTarget(2, 44.5, 5.25)
         runCurrent()
         assertEquals(listOf(Triple(2, 44.5, 5.25)), core.targets)
     }

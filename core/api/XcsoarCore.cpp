@@ -39,6 +39,7 @@
 #include "CoreReceive.hpp"
 #include "CoreTask.hpp"
 #include "CoreAnalysis.hpp"
+#include "CoreFeatures.hpp"
 #include "CoreFlightFile.hpp"
 #include "Computer/Settings.hpp"
 #include "CoreStatus.hpp"
@@ -1146,6 +1147,25 @@ xcs_get_data_status(xcs_core *core, char *buffer, size_t size,
 }
 
 xcs_status
+xcs_data_coverage(xcs_core *core, const char *lines, double margin,
+                  char *buffer, size_t size, size_t *length_r)
+{
+  if (core == nullptr || lines == nullptr || buffer == nullptr ||
+      length_r == nullptr || !ValidateUTF8(lines))
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+  return RunOnMain(*core, [lines, margin, buffer, size, length_r]{
+    const auto json = CoreFeatures::Coverage(lines, margin);
+    if (json.empty()) {
+      /* not a buffer too small: nothing to retry with */
+      *length_r = 0;
+      return XCS_ERROR_INVALID_ARGUMENT;
+    }
+    return CopyJson(json, buffer, size, length_r);
+  });
+}
+
+xcs_status
 xcs_task_get(xcs_core *core, uint32_t which, char *buffer, size_t size,
              size_t *length_r)
 {
@@ -1228,6 +1248,10 @@ xcs_task_edit(xcs_core *core, uint32_t op, uint32_t index, double value)
     case XCS_TASK_RESTART:
       CoreTask::Restart();
       ok = true;
+      break;
+
+    case XCS_TASK_RESUME:
+      ok = CoreTask::Resume();
       break;
 
     case XCS_TASK_SET_INNER_RADIUS:
@@ -1414,6 +1438,50 @@ xcs_thermal_assistant_get(xcs_core *core, char *buffer, size_t size,
 {
   return GetJsonOnMain(core, buffer, size, length_r,
                        CoreInfoBoxes::ThermalAssistant);
+}
+
+xcs_status
+xcs_map_features(xcs_core *core, uint32_t which, char *buffer, size_t size,
+                 size_t *length_r)
+{
+  std::string (*describe)() noexcept;
+  switch (which) {
+  case XCS_FEATURES_AIRSPACE:
+    describe = CoreFeatures::Airspaces;
+    break;
+  case XCS_FEATURES_AIRSPACE_STATE:
+    describe = CoreFeatures::AirspaceStates;
+    break;
+  case XCS_FEATURES_WAYPOINTS:
+    describe = CoreFeatures::Waypoints;
+    break;
+  case XCS_FEATURES_TASK:
+    describe = CoreFeatures::Task;
+    break;
+  case XCS_FEATURES_TRAIL:
+    describe = CoreFeatures::Trail;
+    break;
+  case XCS_FEATURES_TASK_EDITED:
+    describe = CoreFeatures::EditedTask;
+    break;
+  default:
+    return XCS_ERROR_INVALID_ARGUMENT;
+  }
+  return GetJsonOnMain(core, buffer, size, length_r, describe);
+}
+
+xcs_status
+xcs_terrain_tile(xcs_core *core, uint32_t zoom, uint32_t x, uint32_t y,
+                 uint32_t size, int16_t *heights)
+{
+  if (core == nullptr || heights == nullptr || zoom > 20 ||
+      x >= (1u << zoom) || y >= (1u << zoom) || size == 0 || size > 512)
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+  return RunOnMain(*core, [=]{
+    return CoreFeatures::TerrainTile(zoom, x, y, size, heights)
+      ? XCS_OK : XCS_ERROR_FAILED;
+  });
 }
 
 xcs_status

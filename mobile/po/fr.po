@@ -226,6 +226,150 @@ msgstr "En haut"
 msgid "Theme"
 msgstr "Thème"
 
+#. menu_map_credit
+msgid "Map data © OpenStreetMap contributors, Protomaps"
+msgstr "Données cartographiques © contributeurs OpenStreetMap, Protomaps"
+
+#. menu_map_offline
+msgid "Offline map: %1$s, %2$s"
+msgstr "Carte hors ligne : %1$s, %2$s"
+
+#. menu_map_regions
+msgid "%1$d regions"
+msgstr "%1$d régions"
+
+#. menu_map_glider_outside
+msgid "The glider is beyond the stored map"
+msgstr "Le planeur est hors de la carte stockée"
+
+#. menu_map_task_gap
+msgid "The stored map lacks part of the route, near %1$s"
+msgstr "La carte stockée n'a pas tout le circuit, vers %1$s"
+
+#. menu_map_none
+msgid "No map stored for the flight yet: it downloads on Wi-Fi"
+msgstr "Pas encore de carte stockée pour le vol : elle se télécharge en Wi-Fi"
+
+#. preflight_along_task
+msgid "Along the route: %1$s"
+msgstr "Le long du circuit : %1$s"
+
+#. preflight_around
+msgid "No route: within %1$s of the glider"
+msgstr "Pas de circuit : à moins de %1$s du planeur"
+
+#. preflight_no_area
+msgid "No route and no position: the files alone"
+msgstr "Ni circuit ni position : les fichiers seuls"
+
+#. preflight_vector_map
+msgid "Vector map"
+msgstr "Carte vectorielle"
+
+#. preflight_covers_task
+msgid "Covers the route"
+msgstr "Couvre le circuit"
+
+#. preflight_covers_around
+msgid "Covers %1$s around"
+msgstr "Couvre %1$s autour"
+
+#. preflight_loaded
+msgid "Loaded"
+msgstr "Chargé"
+
+#. preflight_no_terrain
+msgid "No terrain"
+msgstr "Pas de relief"
+
+#. preflight_stops_near
+msgid "Ends before the route does, near %1$s"
+msgstr "S'arrête avant la fin du circuit, vers %1$s"
+
+#. preflight_stops_around
+msgid "Ends within %1$s"
+msgstr "S'arrête à moins de %1$s"
+
+#. preflight_no_regions
+msgid "None on the phone yet: downloads on Wi-Fi"
+msgstr "Aucune sur le téléphone pour l'instant : se télécharge en Wi-Fi"
+
+#. preflight_data_of
+msgid "Data of %1$s"
+msgstr "Données du %1$s"
+
+#. preflight_no_airspace
+msgid "No airspace"
+msgstr "Aucun espace aérien"
+
+#. preflight_no_waypoints
+msgid "No waypoints"
+msgstr "Aucun waypoint"
+
+#. preflight_airspace_near_task
+msgid "Airspaces near the route: %1$d"
+msgstr "Espaces aériens près du circuit : %1$d"
+
+#. preflight_airspace_around
+msgid "Airspaces within %1$s: %2$d"
+msgstr "Espaces aériens à moins de %1$s : %2$d"
+
+#. preflight_airspace_none
+msgid "None near the flight: does the file cover this region?"
+msgstr "Aucun près du vol : le fichier couvre-t-il cette région ?"
+
+#. preflight_landables_near_task
+msgid "Landables near the route: %1$d"
+msgstr "Vachables près du circuit : %1$d"
+
+#. preflight_landables_around
+msgid "Landables within %1$s: %2$d"
+msgstr "Vachables à moins de %1$s : %2$d"
+
+#. preflight_landables_none
+msgid "No landable near the flight: does the file cover this region?"
+msgstr "Aucun vachable près du vol : le fichier couvre-t-il cette région ?"
+
+#. preflight_update
+msgid "Newer file of %1$s: downloads by itself on Wi-Fi"
+msgstr "Fichier plus récent du %1$s : se télécharge seul en Wi-Fi"
+
+#. preflight_regions_to_get
+msgid "To download, by itself on Wi-Fi: %1$s"
+msgstr "À télécharger, seul en Wi-Fi : %1$s"
+
+#. preflight_download_now
+msgid "Download now"
+msgstr "Télécharger maintenant"
+
+#. preflight_suggestion
+msgid "%1$s covers the flight"
+msgstr "%1$s couvre le vol"
+
+#. preflight_download_all
+msgid "Download all (%1$d)"
+msgstr "Tout télécharger (%1$d)"
+
+#. preflight_check_again
+msgid "Check again"
+msgstr "Vérifier à nouveau"
+
+#. preflight_checking
+msgid "Checking…"
+msgstr "Vérification…"
+
+#. preflight_downloading
+msgid "Downloading %1$s…"
+msgstr "Téléchargement de %1$s…"
+
+#. preflight_automatic
+msgid "On Wi-Fi and on the ground, Buteo downloads newer files and the map for the route by itself while it is open."
+msgstr "En Wi-Fi et au sol, Buteo télécharge seul les fichiers plus récents et la carte du circuit tant qu'il est ouvert."
+
+#. preflight_last_check
+msgid "Last looked at %1$s"
+msgstr "Dernière vérification à %1$s"
+
 #. menu_vario_sound
 msgid "Vario sound"
 msgstr "Son du vario"
@@ -242,9 +386,14 @@ msgstr "Aller à une balise"
 msgid "Nearest landable first"
 msgstr "Les vachables proches d'abord"
 
+#. menu_task
+msgctxt "Flight route"
+msgid "Route"
+msgstr "Circuit"
+
 #. menu_task_detail
-msgid "Edit, next, previous"
-msgstr "Modifier, suivant, précédent"
+msgid "Plan it on the map, next point"
+msgstr "Le tracer sur la carte, point suivant"
 
 #. menu_flight_setup
 msgid "Flight setup"
@@ -261,6 +410,14 @@ msgstr "Barogramme, thermiques, polaire, vent"
 #. menu_ground
 msgid "Before and after the flight"
 msgstr "Avant et après le vol"
+
+#. menu_preflight
+msgid "Pre-flight check"
+msgstr "Vérifications avant le vol"
+
+#. menu_preflight_detail
+msgid "Map, terrain, airspace, waypoints for the route"
+msgstr "Carte, relief, espaces aériens, waypoints du circuit"
 
 #. menu_crew
 msgid "Aircraft & crew"
@@ -307,8 +464,8 @@ msgid "Map & units"
 msgstr "Carte et unités"
 
 #. menu_map_units_detail
-msgid "Terrain, topography, trail, units"
-msgstr "Relief, topographie, trace, unités"
+msgid "Circling zoom, trail, units"
+msgstr "Zoom en spirale, trace, unités"
 
 #. menu_units_detail
 msgid "Altitude, speed, lift…"
@@ -491,16 +648,8 @@ msgid "Task speed"
 msgstr "Vitesse du circuit"
 
 #. map_terrain_detail
-msgid "Shaded relief from the map file"
-msgstr "Relief ombré, tiré du fichier de carte"
-
-#. map_topography
-msgid "Topography"
-msgstr "Topographie"
-
-#. map_topography_detail
-msgid "Roads, rivers, lakes and towns"
-msgstr "Routes, rivières, lacs et villes"
+msgid "Shaded relief from the terrain file"
+msgstr "Relief ombré du fichier de terrain"
 
 #. map_zoom
 msgid "Zoom of its own"
@@ -513,22 +662,6 @@ msgstr "Plus près en ascendance, puis retour à celui de la transition"
 #. map_thermal_assistant_detail
 msgid "The lift around the circle, on the glider"
 msgstr "Le vario autour du cercle, sur le planeur"
-
-#. map_terrain_colours
-msgid "Terrain colours"
-msgstr "Couleurs du relief"
-
-#. ramp_french_sia
-msgid "French SIA VFR chart"
-msgstr "Carte VFR SIA française"
-
-#. ramp_german_dfs
-msgid "German DFS VFR chart"
-msgstr "Carte VFR DFS allemande"
-
-#. ramp_high_contrast
-msgid "High contrast"
-msgstr "Contraste élevé"
 
 #. download_damaged
 msgid "Download of %1$s is damaged (checksum)"
@@ -1031,7 +1164,7 @@ msgid "Above it, and dropped below: “Above final glide by 120 metres”"
 msgstr "Au-dessus, et passé en dessous : « Above final glide by 120 metres » (annoncé en anglais)"
 
 #. voice_task_points_title
-msgid "Task points"
+msgid "Route points"
 msgstr "Points du circuit"
 
 #. voice_task_points
@@ -1663,11 +1796,11 @@ msgid "The average climb, then on final glide the highest MacCready that still g
 msgstr "La moyenne des ascendances, puis en finale le MacCready le plus élevé qui vous ramène encore."
 
 #. task_not_possible
-msgid "Not possible for this task type"
+msgid "Not possible for this type of route"
 msgstr "Impossible pour ce type de circuit"
 
 #. task_cannot_edit
-msgid "Cannot edit the task"
+msgid "Cannot edit the route"
 msgstr "Impossible de modifier le circuit"
 
 #. task_no_next
@@ -1679,11 +1812,11 @@ msgid "No previous point"
 msgstr "Pas de point précédent"
 
 #. task_invalid
-msgid "The task is not valid"
+msgid "The route is not valid"
 msgstr "Le circuit n'est pas valide"
 
 #. task_full
-msgid "The task is full"
+msgid "The route is full"
 msgstr "Le circuit est plein"
 
 #. task_weglide_silent
@@ -1695,7 +1828,7 @@ msgid "%1$s: not loaded"
 msgstr "%1$s : non chargée"
 
 #. task_cannot_load
-msgid "%1$s: cannot load the task"
+msgid "%1$s: cannot load the route"
 msgstr "%1$s : impossible de charger le circuit"
 
 #. task_not_file_name
@@ -1711,7 +1844,7 @@ msgid "Saved as %1$s"
 msgstr "Enregistré sous %1$s"
 
 #. task_edit_title
-msgid "Edit task"
+msgid "Edit route"
 msgstr "Modifier le circuit"
 
 #. task_empty_editing
@@ -1719,8 +1852,8 @@ msgid "Add the start, the turn points and the finish, in order."
 msgstr "Ajoutez le départ, les points de virage et l'arrivée, dans l'ordre."
 
 #. task_empty
-msgid "No task. Edit to build one from waypoints, or load a task file."
-msgstr "Pas de circuit. Modifiez pour en construire un à partir de waypoints, ou chargez un fichier de circuit."
+msgid "No route. Build one from waypoints, or load a task file."
+msgstr "Pas de circuit. Construisez-en un à partir de waypoints, ou chargez un fichier de circuit."
 
 #. task_save_dots
 msgid "Save…"
@@ -1733,6 +1866,10 @@ msgstr "Charger…"
 #. task_previous
 msgid "Previous"
 msgstr "Précédent"
+
+#. task_type
+msgid "Type of route"
+msgstr "Type de circuit"
 
 #. task_nominal
 msgid "%1$s nominal"
@@ -1767,7 +1904,7 @@ msgid "Half width"
 msgstr "Demi-largeur"
 
 #. task_save_title
-msgid "Save task"
+msgid "Save route"
 msgstr "Enregistrer le circuit"
 
 #. task_save_hint
@@ -1775,23 +1912,27 @@ msgid "In XCSoarData/tasks, as a .tsk file XCSoar reads too."
 msgstr "Dans XCSoarData/tasks, en fichier .tsk que XCSoar lit aussi."
 
 #. task_load_title
-msgid "Load task"
+msgid "Load a route"
 msgstr "Charger un circuit"
 
 #. task_looking
-msgid "Looking for tasks…"
+msgid "Looking for routes…"
 msgstr "Recherche des circuits…"
 
 #. task_no_files
-msgid "No task files. Saved tasks go to XCSoarData/tasks; tasks in SeeYou .cup files there are found too."
+msgid "No route files. Saved routes go to XCSoarData/tasks; tasks in SeeYou .cup files there are found too."
 msgstr "Aucun fichier de circuit. Les circuits enregistrés vont dans XCSoarData/tasks ; les circuits des fichiers SeeYou .cup qui s'y trouvent sont trouvés aussi."
 
 #. task_load_name
 msgid "Load %1$s"
 msgstr "Charger %1$s"
 
+#. task_no_tasks
+msgid "No routes"
+msgstr "Aucun circuit"
+
 #. task_numbered
-msgid "Task %1$d"
+msgid "Route %1$d"
 msgstr "Circuit %1$d"
 
 #. task_turnpoints
@@ -1903,6 +2044,62 @@ msgstr "Durée du circuit"
 msgid "Speed achieved"
 msgstr "Vitesse réalisée"
 
+#. route_paused
+msgid "Route paused"
+msgstr "Circuit en pause"
+
+#. route_going_to
+msgid "Flying to %1$s (Go to waypoint)"
+msgstr "Vers %1$s (Aller à une balise)"
+
+#. route_resume
+msgid "Resume the route"
+msgstr "Reprendre le circuit"
+
+#. route_finish_at
+msgid "Finish at %1$s"
+msgstr "Arrivée à %1$s"
+
+#. route_current
+msgid "Current route"
+msgstr "Circuit en cours"
+
+#. route_none
+msgid "No route. Fly one of yours below, or make a new one."
+msgstr "Pas de circuit. Volez l'un des vôtres ci-dessous, ou créez-en un."
+
+#. route_stop_confirm
+msgid "Stop?"
+msgstr "Arrêter ?"
+
+#. route_new
+msgid "New route"
+msgstr "Nouveau circuit"
+
+#. route_yours
+msgid "Your routes"
+msgstr "Vos circuits"
+
+#. route_yours_empty
+msgid "The routes you fly are kept here."
+msgstr "Les circuits que vous volez sont gardés ici."
+
+#. route_flown
+msgid "Flying"
+msgstr "En cours"
+
+#. route_delete
+msgid "Delete"
+msgstr "Supprimer"
+
+#. route_delete_confirm
+msgid "Delete?"
+msgstr "Supprimer ?"
+
+#. route_more
+msgid "WeGlide and other files…"
+msgstr "WeGlide et autres fichiers…"
+
 #. flights_cannot_delete
 msgid "Could not delete %1$s"
 msgstr "Suppression de %1$s impossible"
@@ -1990,10 +2187,6 @@ msgstr "Envoi…"
 #. flights_upload
 msgid "Upload to WeGlide"
 msgstr "Envoyer à WeGlide"
-
-#. flights_delete
-msgid "Delete"
-msgstr "Supprimer"
 
 #. flights_ground
 msgid "Replay and Delete: on the ground."
@@ -2176,7 +2369,7 @@ msgid "Task speed over the flight"
 msgstr "Vitesse du circuit au cours du vol"
 
 #. ana_speed_needs_task
-msgid "Needs a task: the chart starts once the task has started."
+msgid "Needs a route: the chart starts once the route has started."
 msgstr "Il faut un circuit : le graphique commence une fois le circuit démarré."
 
 #. ana_speed_hint
@@ -2280,11 +2473,15 @@ msgid "Black: air temperature; dashed red: the dry adiabat; dashed blue: dew poi
 msgstr "Noir : température de l'air ; tirets rouges : l'adiabatique sèche ; tirets bleus : point de rosée."
 
 #. ana_task_description
-msgid "Task: its points and the flight"
+msgid "Route: its points and the flight"
 msgstr "Circuit : ses points et le vol"
 
+#. ana_no_task
+msgid "No route"
+msgstr "Pas de circuit"
+
 #. ana_make_task
-msgid "Load or make a task in %1$s."
+msgid "Load or make a route in %1$s."
 msgstr "Chargez ou créez un circuit dans %1$s."
 
 #. ana_xs_not_moving
@@ -2340,12 +2537,16 @@ msgid "Take-off"
 msgstr "Décollage"
 
 #. event_task_started
-msgid "Task started"
+msgid "Route started"
 msgstr "Circuit démarré"
 
 #. event_next_turnpoint
 msgid "Next turnpoint"
 msgstr "Point de virage suivant"
+
+#. event_task_finished
+msgid "Route finished"
+msgstr "Circuit terminé"
 
 #. event_no_landable
 msgid "No landable in reach"

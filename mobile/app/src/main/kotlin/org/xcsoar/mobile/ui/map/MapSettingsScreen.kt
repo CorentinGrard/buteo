@@ -49,7 +49,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.MapOption
-import org.xcsoar.mobile.core.TerrainRamp
 import org.xcsoar.mobile.ui.ScreenHeader
 import org.xcsoar.mobile.ui.flight.Caption
 import org.xcsoar.mobile.ui.LinkRow
@@ -95,10 +94,6 @@ fun MapSettingsContent(
                       options[MapOption.TERRAIN]?.let { it != 0 }) {
                 onSet(MapOption.TERRAIN, if (it) 1 else 0)
             }
-            SwitchRow(stringResource(R.string.map_topography), stringResource(R.string.map_topography_detail),
-                      options[MapOption.TOPOGRAPHY]?.let { it != 0 }) {
-                onSet(MapOption.TOPOGRAPHY, if (it) 1 else 0)
-            }
         }
 
         Caption(stringResource(R.string.circling), Modifier.padding(start = 4.dp))
@@ -114,13 +109,6 @@ fun MapSettingsContent(
             }
         }
 
-        Caption(stringResource(R.string.map_terrain_colours), Modifier.padding(start = 4.dp))
-        SettingsGroup(Modifier.selectableGroup()) {
-            for (ramp in TerrainRamp.entries)
-                ChoiceRow(stringResource(ramp.labelRes()), options[MapOption.TERRAIN_RAMP] == ramp.code) {
-                    onSet(MapOption.TERRAIN_RAMP, ramp.code)
-                }
-        }
 
         Caption(stringResource(R.string.map_trail), Modifier.padding(start = 4.dp))
         Row(Modifier
@@ -157,45 +145,10 @@ fun MapSettingsContent(
     }
 }
 
-/** XCSoar's names of the colour ramps. */
-@StringRes
-private fun TerrainRamp.labelRes(): Int = when (this) {
-    TerrainRamp.PASTEL -> R.string.ramp_pastel
-    TerrainRamp.LOW_LANDS -> R.string.ramp_low_lands
-    TerrainRamp.MOUNTAINOUS -> R.string.ramp_mountainous
-    TerrainRamp.IMHOF_ATLAS -> R.string.ramp_imhof
-    TerrainRamp.ICAO -> R.string.ramp_icao
-    TerrainRamp.FRENCH_SIA -> R.string.ramp_french_sia
-    TerrainRamp.GERMAN_DFS -> R.string.ramp_german_dfs
-    TerrainRamp.SANDSTONE -> R.string.ramp_sandstone
-    TerrainRamp.GREY -> R.string.ramp_grey
-    TerrainRamp.HIGH_CONTRAST -> R.string.ramp_high_contrast
-}
-
-@Composable
-private fun ChoiceRow(label: String, selected: Boolean, onClick: () -> Unit) {
-    val colors = XcsTheme.colors
-    Row(Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .selectable(selected, role = Role.RadioButton, onClick = onClick)
-            .padding(horizontal = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier
-                .size(22.dp)
-                .border(2.dp, if (selected) colors.selected else colors.textSecondary, CircleShape)
-                .padding(5.dp)
-                .background(if (selected) colors.selected else Color.Transparent, CircleShape))
-        Text(label, color = colors.text, fontSize = 17.sp)
-    }
-}
-
 @Preview(widthDp = 390, heightDp = 844)
 @Composable
 private fun MapSettingsPreview() {
     XcsTheme(dark = false) {
-        MapSettingsContent(mapOf(MapOption.TERRAIN to 1, MapOption.TERRAIN_RAMP to 11,
-                                 MapOption.TOPOGRAPHY to 1, MapOption.TRAIL to 2), { _, _ -> }, {})
+        MapSettingsContent(mapOf(MapOption.TERRAIN to 1, MapOption.TRAIL to 2), { _, _ -> }, {})
     }
 }
