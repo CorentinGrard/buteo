@@ -45,7 +45,8 @@ jobs:
       - name: Protomaps' latest planet build
         id: build
         run: |
-          key=$(curl -fsSL https://build-metadata.protomaps.dev/builds.json |
+          key=$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 15 \
+                  https://build-metadata.protomaps.dev/builds.json |
                 python3 -c 'import json, sys; print(json.load(sys.stdin)[-1]["key"])')
           echo "url=https://build.protomaps.com/$key" >> "$GITHUB_OUTPUT"
           echo "Protomaps build: $key" >> "$GITHUB_STEP_SUMMARY"
@@ -57,6 +58,17 @@ jobs:
         run: |
           areas="${AREAS:-africa asia australia-oceania central-america europe north-america russia south-america}"
           echo "json=$(python3 -c 'import json, sys; print(json.dumps(sys.argv[1].split()))' "$areas")" >> "$GITHUB_OUTPUT"
+
+      # once for all the areas: Geofabrik refused four jobs asking at once
+      - name: Geofabrik's regions
+        run: |
+          curl -fsSL --retry 5 --retry-all-errors --retry-delay 30 \
+            -o index-v1.json https://download.geofabrik.de/index-v1.json
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: geofabrik
+          path: index-v1.json
 
       - name: The release
         run: |
@@ -81,9 +93,12 @@ jobs:
           sparse-checkout: mobile/tools/map_regions.py
           sparse-checkout-cone-mode: false
 
+      - uses: actions/download-artifact@v8
+        with:
+          name: geofabrik
+
       - name: The regions' outlines
         run: |
-          curl -fsSL -o index-v1.json https://download.geofabrik.de/index-v1.json
           python3 mobile/tools/map_regions.py geofabrik index-v1.json \
             --under "${{ matrix.area }}" --out work
 
