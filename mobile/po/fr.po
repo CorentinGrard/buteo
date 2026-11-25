@@ -246,6 +246,126 @@ msgstr "La carte stockée n'a pas tout le circuit, vers %1$s"
 msgid "Online map only: none stored for the flight"
 msgstr "Carte en ligne seulement : rien de stocké pour le vol"
 
+#. preflight_along_task
+msgid "Along the task: %1$s"
+msgstr "Le long du circuit : %1$s"
+
+#. preflight_around
+msgid "No task: within %1$s of the glider"
+msgstr "Pas de circuit : à moins de %1$s du planeur"
+
+#. preflight_no_area
+msgid "No task and no position: the files alone"
+msgstr "Ni circuit ni position : les fichiers seuls"
+
+#. preflight_vector_map
+msgid "Vector map"
+msgstr "Carte vectorielle"
+
+#. preflight_covers_task
+msgid "Covers the task"
+msgstr "Couvre le circuit"
+
+#. preflight_covers_around
+msgid "Covers %1$s around"
+msgstr "Couvre %1$s autour"
+
+#. preflight_loaded
+msgid "Loaded"
+msgstr "Chargé"
+
+#. preflight_no_terrain
+msgid "No terrain"
+msgstr "Pas de relief"
+
+#. preflight_stops_near
+msgid "Ends before the task does, near %1$s"
+msgstr "S'arrête avant la fin du circuit, vers %1$s"
+
+#. preflight_stops_around
+msgid "Ends within %1$s"
+msgstr "S'arrête à moins de %1$s"
+
+#. preflight_online_only
+msgid "None on the phone: online only"
+msgstr "Aucune sur le téléphone : en ligne seulement"
+
+#. preflight_data_of
+msgid "Data of %1$s"
+msgstr "Données du %1$s"
+
+#. preflight_no_airspace
+msgid "No airspace"
+msgstr "Aucun espace aérien"
+
+#. preflight_no_waypoints
+msgid "No waypoints"
+msgstr "Aucun waypoint"
+
+#. preflight_airspace_near_task
+msgid "Airspaces near the task: %1$d"
+msgstr "Espaces aériens près du circuit : %1$d"
+
+#. preflight_airspace_around
+msgid "Airspaces within %1$s: %2$d"
+msgstr "Espaces aériens à moins de %1$s : %2$d"
+
+#. preflight_airspace_none
+msgid "None near the flight: does the file cover this region?"
+msgstr "Aucun près du vol : le fichier couvre-t-il cette région ?"
+
+#. preflight_landables_near_task
+msgid "Landables near the task: %1$d"
+msgstr "Vachables près du circuit : %1$d"
+
+#. preflight_landables_around
+msgid "Landables within %1$s: %2$d"
+msgstr "Vachables à moins de %1$s : %2$d"
+
+#. preflight_landables_none
+msgid "No landable near the flight: does the file cover this region?"
+msgstr "Aucun vachable près du vol : le fichier couvre-t-il cette région ?"
+
+#. preflight_update
+msgid "Newer file of %1$s: downloads by itself on Wi-Fi"
+msgstr "Fichier plus récent du %1$s : se télécharge seul en Wi-Fi"
+
+#. preflight_regions_to_get
+msgid "To download, by itself on Wi-Fi: %1$s"
+msgstr "À télécharger, seul en Wi-Fi : %1$s"
+
+#. preflight_download_now
+msgid "Download now"
+msgstr "Télécharger maintenant"
+
+#. preflight_suggestion
+msgid "%1$s covers the flight"
+msgstr "%1$s couvre le vol"
+
+#. preflight_download_all
+msgid "Download all (%1$d)"
+msgstr "Tout télécharger (%1$d)"
+
+#. preflight_check_again
+msgid "Check again"
+msgstr "Vérifier à nouveau"
+
+#. preflight_checking
+msgid "Checking…"
+msgstr "Vérification…"
+
+#. preflight_downloading
+msgid "Downloading %1$s…"
+msgstr "Téléchargement de %1$s…"
+
+#. preflight_automatic
+msgid "On Wi-Fi and on the ground, Buteo downloads newer files and the map for the task by itself while it is open."
+msgstr "En Wi-Fi et au sol, Buteo télécharge seul les fichiers plus récents et la carte du circuit tant qu'il est ouvert."
+
+#. preflight_last_check
+msgid "Last looked at %1$s"
+msgstr "Dernière vérification à %1$s"
+
 #. menu_vario_sound
 msgid "Vario sound"
 msgstr "Son du vario"
@@ -281,6 +401,14 @@ msgstr "Barogramme, thermiques, polaire, vent"
 #. menu_ground
 msgid "Before and after the flight"
 msgstr "Avant et après le vol"
+
+#. menu_preflight
+msgid "Pre-flight check"
+msgstr "Vérifications avant le vol"
+
+#. menu_preflight_detail
+msgid "Map, terrain, airspace, waypoints for the task"
+msgstr "Carte, relief, espaces aériens, waypoints du circuit"
 
 #. menu_crew
 msgid "Aircraft & crew"

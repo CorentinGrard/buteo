@@ -63,6 +63,8 @@ import org.xcsoar.mobile.ui.data.DataFilesScreen
 import org.xcsoar.mobile.ui.data.DownloadScreen
 import org.xcsoar.mobile.ui.data.DownloadViewModel
 import org.xcsoar.mobile.ui.data.DataFilesViewModel
+import org.xcsoar.mobile.ui.data.PreflightScreen
+import org.xcsoar.mobile.ui.data.PreflightViewModel
 import org.xcsoar.mobile.ui.analysis.AnalysisPage
 import org.xcsoar.mobile.ui.analysis.AnalysisScreen
 import org.xcsoar.mobile.ui.crew.CrewScreen
@@ -133,7 +135,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-private enum class Screen { FLIGHT, DATA_FILES, DOWNLOAD, MAP_SETTINGS, WAYPOINTS, FLIGHT_SETUP, FLIGHTS,
+private enum class Screen { FLIGHT, PREFLIGHT, DATA_FILES, DOWNLOAD, MAP_SETTINGS, WAYPOINTS, FLIGHT_SETUP, FLIGHTS,
                             TASK, TASK_FILES, TASK_ADD_POINT, TASK_ADD_START, TASK_RULES,
                             UNITS, ANALYSIS,
                             CREW, PLANE_EDIT, PILOT, TILE_PICKER,
@@ -357,6 +359,16 @@ class MainActivity : ComponentActivity() {
                     factory = viewModelFactory { initializer { TrackingViewModel(app.anyCore) } })
                 val notamViewModel: NotamViewModel = viewModel(
                     factory = viewModelFactory { initializer { NotamViewModel(app.anyCore) } })
+                val preflightViewModel: PreflightViewModel = viewModel(
+                    factory = viewModelFactory {
+                        initializer {
+                            PreflightViewModel(app.flightData::check,
+                                               app.flightData::downloadLater,
+                                               app.flightData::automaticNow,
+                                               app.flightData.state)
+                        }
+                    })
+                val flightDataState by app.flightData.state.collectAsState()
                 val weatherViewModel: WeatherViewModel = viewModel(
                     factory = viewModelFactory {
                         initializer {
@@ -519,6 +531,7 @@ class MainActivity : ComponentActivity() {
                             screen = Screen.CREW
                         },
                         onOpenWeather = { screen = Screen.WEATHER },
+                        onOpenPreflight = { screen = Screen.PREFLIGHT },
                         onOpenAirspaceAlerts = { screen = Screen.AIRSPACE_ALERTS },
                         onOpenUnits = {
                             unitsBack = Screen.FLIGHT
@@ -588,7 +601,8 @@ class MainActivity : ComponentActivity() {
                             vectorMap = it
                             app.vectorMap = it
                         },
-                        vectorMapDir = File(app.xcsoarDataDir, "maps"),
+                        vectorMapDir = app.flightData.regionDir,
+                        vectorMapVersion = flightDataState.regionsVersion,
                         theme = theme,
                         onTheme = {
                             theme = it
@@ -678,6 +692,8 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onBack = { screen = planeEditBack },
                             )
+                            Screen.PREFLIGHT -> PreflightScreen(
+                                preflightViewModel, onBack = { screen = Screen.FLIGHT })
                             Screen.WEATHER -> WeatherScreen(
                                 weatherViewModel,
                                 onDownloadRasp = {

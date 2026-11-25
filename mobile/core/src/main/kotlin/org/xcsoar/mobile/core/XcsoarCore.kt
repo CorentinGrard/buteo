@@ -45,6 +45,13 @@ interface XcsoarCore {
     /** The configured data files and what was loaded from them. */
     suspend fun dataStatus(): DataStatus
 
+    /**
+     * What the data files hold within [margin] metres of [lines] (a
+     * task's legs and zones, the glider): `xcs_data_coverage`; null
+     * without the core.
+     */
+    suspend fun dataCoverage(lines: List<List<GeoPosition>>, margin: Double): DataCoverage? = null
+
     /** Parse a downloaded repository index ([REPOSITORY_URI]); null if unsupported. */
     suspend fun repositoryFiles(indexPath: String): List<RepositoryFile>? = null
 

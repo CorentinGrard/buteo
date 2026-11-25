@@ -37,6 +37,7 @@ import org.xcsoar.mobile.core.WeatherStation
 import org.xcsoar.mobile.core.CoreEvent
 import org.xcsoar.mobile.core.CoreEventType
 import org.xcsoar.mobile.core.DataFile
+import org.xcsoar.mobile.core.DataCoverage
 import org.xcsoar.mobile.core.DataStatus
 import org.xcsoar.mobile.core.FlightState
 import org.xcsoar.mobile.core.GlideComputerEvent
@@ -390,6 +391,10 @@ class NativeXcsoarCore(
 
     override suspend fun mapFeatures(which: MapFeatures) =
         query({ NativeCore.nativeMapFeatures(it, which.code) }) { it }
+
+    override suspend fun dataCoverage(lines: List<List<GeoPosition>>, margin: Double) =
+        query({ NativeCore.nativeDataCoverage(it, DataCoverage.encode(lines), margin) },
+              DataCoverage::parse)
 
     /** Beside the commands ([networkLock]): loading the terrain may take a while. */
     override suspend fun terrainTile(zoom: Int, x: Int, y: Int, size: Int): ShortArray? =

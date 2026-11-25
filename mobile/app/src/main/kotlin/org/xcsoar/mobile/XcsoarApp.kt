@@ -76,9 +76,14 @@ class XcsoarApp : Application() {
     /** The core every screen shares: the native one, else the fake one. */
     val anyCore: XcsoarCore by lazy { core ?: FakeXcsoarCore(appScope) }
 
+    /** The data a flight needs: its check and its downloads (D31). */
+    lateinit var flightData: FlightData
+        private set
+
     override fun onCreate() {
         super.onCreate()
         WeatherUpdates(this, appScope)
+        flightData = FlightData(this, appScope)
     }
 
     /* the language the core read its translations in (at start) */

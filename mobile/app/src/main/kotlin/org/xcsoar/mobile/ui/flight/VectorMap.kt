@@ -206,7 +206,8 @@ fun VectorMap(
     DisposableEffect(offline) {
         MapNetwork.offline = offline
         onDispose {
-            MapNetwork.offline = null
+            // the map made again for new regions may have set its own already
+            if (MapNetwork.offline === offline) MapNetwork.offline = null
             offline?.close()
         }
     }

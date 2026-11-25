@@ -589,3 +589,38 @@ list and a separate target map window.  The app has one map, the core's
   to" card are off meanwhile.
 - A zone's size stays a stepper, not a drag on the map: it is precise
   with a glove in turbulence, and a drag would fight the pan.
+
+## D31 — The data for a flight: checked before it, downloaded by itself
+**Status:** Proposed (2026-11-25, on `map-lab` with the vector map)
+
+The pilot's worry from the map review (2026-11-24): "before flight we
+must be sure we have cached everything for the flight… it can be bad to
+lose the map in flight".  Nothing in the air may depend on a network.
+
+- A pre-flight page (Menu → Before and after the flight) checks each
+  kind of data against the task, else 50 km around the glider (or the
+  phone's last position): the terrain reaches 10 km around every leg and
+  zone, the vector map's regions have no hole there, and how many
+  airspaces and landables are near (none is a caution: a file for
+  another region).  The core answers from its own data and spatial
+  indexes (`xcs_data_coverage`), the same the glide computer uses; the
+  vector map's coverage is its tiles' (`OfflineMap.firstGap`).
+- On an unmetered network, on the ground, while the app runs (every 5
+  minutes, and when the page opens), what can come without a choice
+  downloads by itself: a newer file of the same name in XCSoar's
+  repository (its `updated` after the phone's copy), and the vector map's
+  regions the flight reaches.  A file that would cover what the pilot's
+  does not (a larger map, another country's airspace) is offered on the
+  page, not swapped in: that is the pilot's choice.  On a metered
+  network the page offers "Download all".
+- The vector map's regions come from Buteo's map server: PMTiles files
+  cut from one build of the map (so a tile on a border is the same in
+  both regions) and an index, regions.json, with each region's outline,
+  size, SHA-256 and the day of its OpenStreetMap data
+  (mobile/tools/map_regions.py).  The index's address is a build setting
+  (`buteo.mapRegionsUrl`); the test app may reach a server on the
+  computer through `adb reverse`, in clear text to 127.0.0.1 only.
+- Not done: running without the app open (WorkManager), deleting
+  regions no flight needs, adding a second airspace file (the core takes
+  one list per kind; with several files, an update loads at the next
+  start).

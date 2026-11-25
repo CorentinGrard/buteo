@@ -65,10 +65,12 @@ class PmTiles private constructor(
         }
     }
 
-    /** The metadata's name, else the file's. */
-    val name: String get() =
-        metadata?.get("name")?.jsonPrimitive?.contentOrNull?.ifBlank { null }
-            ?: file.nameWithoutExtension
+    /**
+     * The file's name without ".pmtiles", as the server's index names
+     * the region ([MapRegion.name]); Planetiler names every file's
+     * metadata "OpenMapTiles".
+     */
+    val name: String get() = file.nameWithoutExtension
 
     /** The day of the OpenStreetMap data ("2026-11-24"), as Planetiler writes it. */
     val date: String? get() =
@@ -375,15 +377,8 @@ data class MapCoverage(
             return MapCoverage(
                 regions = map.regions.map { it.name },
                 date = map.date,
-                gapNear = gap?.let { g -> task.points.minByOrNull { distance(it.position, g) }?.name },
+                gapNear = gap?.let { g -> task.points.minByOrNull { it.position.metresTo(g) }?.name },
                 gliderOutside = glider != null && !map.covers(glider))
-        }
-
-        /** Enough to tell the nearest point: degrees, longitude by its parallel. */
-        private fun distance(a: GeoPosition, b: GeoPosition): Double {
-            val dx = (a.longitude - b.longitude) * cos(Math.toRadians((a.latitude + b.latitude) / 2))
-            val dy = a.latitude - b.latitude
-            return dx * dx + dy * dy
         }
     }
 }

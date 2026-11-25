@@ -107,6 +107,47 @@
     <!-- the stored map has a hole on the task, near the task point %1$s -->
     <string name="menu_map_task_gap">The stored map lacks part of the task, near %1$s</string>
     <string name="menu_map_online">Online map only: none stored for the flight</string>
+    <!-- the pre-flight check: the data the flight needs (D31) -->
+    <!-- %1$s: the task's points, "Montélimar – Vienne – Sagy" -->
+    <string name="preflight_along_task">Along the task: %1$s</string>
+    <!-- %1$s: a distance, "50 km" -->
+    <string name="preflight_around">No task: within %1$s of the glider</string>
+    <string name="preflight_no_area">No task and no position: the files alone</string>
+    <string name="preflight_vector_map">Vector map</string>
+    <string name="preflight_covers_task">Covers the task</string>
+    <string name="preflight_covers_around">Covers %1$s around</string>
+    <string name="preflight_loaded">Loaded</string>
+    <string name="preflight_no_terrain">No terrain</string>
+    <!-- %1$s: the task point nearest to where the data ends -->
+    <string name="preflight_stops_near">Ends before the task does, near %1$s</string>
+    <string name="preflight_stops_around">Ends within %1$s</string>
+    <string name="preflight_online_only">None on the phone: online only</string>
+    <!-- %1$s: a date -->
+    <string name="preflight_data_of">Data of %1$s</string>
+    <string name="preflight_no_airspace">No airspace</string>
+    <string name="preflight_no_waypoints">No waypoints</string>
+    <string name="preflight_airspace_near_task">Airspaces near the task: %1$d</string>
+    <!-- %1$s: a distance, %2$d: how many -->
+    <string name="preflight_airspace_around">Airspaces within %1$s: %2$d</string>
+    <string name="preflight_airspace_none">None near the flight: does the file cover this region?</string>
+    <string name="preflight_landables_near_task">Landables near the task: %1$d</string>
+    <string name="preflight_landables_around">Landables within %1$s: %2$d</string>
+    <string name="preflight_landables_none">No landable near the flight: does the file cover this region?</string>
+    <!-- %1$s: the date of the newer file -->
+    <string name="preflight_update">Newer file of %1$s: downloads by itself on Wi-Fi</string>
+    <!-- %1$s: regions of the map and their sizes, "Bourgogne (12 MB)" -->
+    <string name="preflight_regions_to_get">To download, by itself on Wi-Fi: %1$s</string>
+    <string name="preflight_download_now">Download now</string>
+    <!-- %1$s: a file from XCSoar's repository -->
+    <string name="preflight_suggestion">%1$s covers the flight</string>
+    <!-- %1$d: how many files -->
+    <string name="preflight_download_all">Download all (%1$d)</string>
+    <string name="preflight_check_again">Check again</string>
+    <string name="preflight_checking">Checking…</string>
+    <string name="preflight_downloading">Downloading %1$s…</string>
+    <string name="preflight_automatic">On Wi-Fi and on the ground, Buteo downloads newer files and the map for the task by itself while it is open.</string>
+    <!-- %1$s: a time of day -->
+    <string name="preflight_last_check">Last looked at %1$s</string>
     <string name="theme_system">System</string>
     <string name="theme_white">White</string>
     <string name="theme_dark">Dark</string>
@@ -121,6 +162,8 @@
     <string name="menu_analysis">Analysis</string>
     <string name="menu_analysis_detail">Barograph, thermals, polar, wind</string>
     <string name="menu_ground">Before and after the flight</string>
+    <string name="menu_preflight">Pre-flight check</string>
+    <string name="menu_preflight_detail">Map, terrain, airspace, waypoints for the task</string>
     <string name="menu_crew">Aircraft &amp; crew</string>
     <string name="menu_crew_detail">Plane, co-pilot, pilot, WeGlide</string>
     <string name="menu_weather">Weather</string>

@@ -37,6 +37,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
@@ -92,6 +93,7 @@ fun FlightScreen(
     onOpenCrew: () -> Unit = {},
     onOpenAirspaceAlerts: () -> Unit = {},
     onOpenWeather: () -> Unit = {},
+    onOpenPreflight: () -> Unit = {},
     /** units, when the core draws no map (else they are on the map's page) */
     onOpenUnits: () -> Unit = {},
     /** null when the core draws no map */
@@ -113,6 +115,8 @@ fun FlightScreen(
     onVectorMap: (Boolean) -> Unit = {},
     /** where the vector map's region files are (XCSoarData/maps) */
     vectorMapDir: File? = null,
+    /** changes with the region files: the vector map opens them again */
+    vectorMapVersion: Int = 0,
     onEditTile: (TileLayout, Int) -> Unit = { _, _ -> },
     /** A tile was tapped: the page its InfoBox opens. */
     onTileAction: (TileAction) -> Unit = {},
@@ -185,6 +189,7 @@ fun FlightScreen(
             onOpenWaypoints, onOpenTask, onOpenFlightSetup, onOpenAnalysis, onOpenCrew,
             onOpenFlights, onOpenDataFiles, onOpenAirspaceAlerts,
             onOpenWeather = onOpenWeather,
+            onOpenPreflight = onOpenPreflight,
             onOpenUnits = onOpenUnits,
             onOpenMapSettings = onOpenMapSettings,
             onOpenSafety = onOpenSafety,
@@ -209,10 +214,13 @@ fun FlightScreen(
         ),
         map = if (vectorMap && taskPanel == null) MapSlot(
             content = { modifier ->
-                VectorMap(vectorState, vectorMapDir, viewModel::mapFeatures,
-                          viewModel::terrainTile, viewModel::nearbyLandables,
-                          viewModel.liveState, mapOrientation, viewModel::showFeatureItems,
-                          modifier)
+                // new regions: their bounds and zooms go into MapLibre's style
+                key(vectorMapVersion) {
+                    VectorMap(vectorState, vectorMapDir, viewModel::mapFeatures,
+                              viewModel::terrainTile, viewModel::nearbyLandables,
+                              viewModel.liveState, mapOrientation, viewModel::showFeatureItems,
+                              modifier)
+                }
             },
             onAircraftPosition = { _, y -> vectorState.setFocus(y) },
             onZoom = vectorState::zoom,
@@ -912,6 +920,7 @@ fun flightMenu(
     onOpenDataFiles: () -> Unit = {},
     onOpenAirspaceAlerts: () -> Unit = {},
     onOpenWeather: () -> Unit = {},
+    onOpenPreflight: () -> Unit = {},
     /** without a map: the units have no map page to be on */
     onOpenUnits: () -> Unit = {},
     /** null when the core draws no map */
@@ -945,6 +954,7 @@ fun flightMenu(
     ),
     sections = listOf(
         MenuSection(stringResource(R.string.menu_ground), listOf(
+            menuAction(R.string.menu_preflight, R.string.menu_preflight_detail, onOpenPreflight),
             menuAction(R.string.menu_crew, R.string.menu_crew_detail, onOpenCrew),
             // ICAO's abbreviations and names stay as they are
             MenuAction(stringResource(R.string.menu_weather), "METAR, TAF, RASP",

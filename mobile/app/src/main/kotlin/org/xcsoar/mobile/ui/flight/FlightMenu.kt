@@ -60,14 +60,11 @@ import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.MapCoverage
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.ui.Chevron
+import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.SwitchRow
 import org.xcsoar.mobile.ui.theme.ThemeChoice
 import org.xcsoar.mobile.ui.theme.XcsTheme
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
-import java.time.format.FormatStyle
 
 /** How long the menu takes to slide in or out. */
 private const val MENU_MILLIS = 250
@@ -304,18 +301,11 @@ private fun MapCoverageNote(coverage: MapCoverage) {
         coverage.gliderOutside -> stringResource(R.string.menu_map_glider_outside)
         gapNear != null -> stringResource(R.string.menu_map_task_gap, gapNear)
         else -> stringResource(R.string.menu_map_offline, coverage.regions.joinToString(" + "),
-                               coverage.date?.let(::shortDate) ?: "?")
+                               coverage.date?.let(Format::day) ?: "?")
     }
     val caution = coverage.regions.isNotEmpty() && !coverage.complete
     Text(text, color = if (caution) colors.caution else colors.textSecondary,
          fontSize = 14.sp, modifier = Modifier.padding(start = 88.dp, top = 2.dp))
-}
-
-/** "2026-11-24" as the phone writes a date, else as it is. */
-private fun shortDate(iso: String): String = try {
-    LocalDate.parse(iso).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
-} catch (e: DateTimeParseException) {
-    iso
 }
 
 /** A large in-flight button: the name, and what it holds underneath. */

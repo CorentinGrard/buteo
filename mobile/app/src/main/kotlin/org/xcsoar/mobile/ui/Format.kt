@@ -10,6 +10,10 @@ import org.xcsoar.mobile.core.UnitFormatter
 import org.xcsoar.mobile.core.UnitGroup
 import org.xcsoar.mobile.core.UnitInfo
 import org.xcsoar.mobile.core.UnitSettings
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.time.format.FormatStyle
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.round
@@ -199,6 +203,13 @@ object Format {
     /** Required glide ratio; 0 or less means no glide needed: "+++". */
     fun requiredGlideRatio(ratio: Double?) =
         if (ratio != null && ratio <= 0) Value("+++", "") else glideRatio(ratio)
+
+    /** "2026-11-24" as the phone writes a date, else as it is. */
+    fun day(iso: String): String = try {
+        LocalDate.parse(iso).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+    } catch (e: DateTimeParseException) {
+        iso
+    }
 
     /* "." as decimal separator for now, like XCSoar's Formatter */
     private fun f(format: String, vararg args: Any) = String.format(Locale.ROOT, format, *args)

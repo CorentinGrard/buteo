@@ -37,10 +37,17 @@ android {
         // made the APK and the Play bundle claim 32-bit and x86 phones,
         // where the core is missing and the app cannot start
         ndk { abiFilters += coreAbis }
+        /* the vector map's regions (D31): the index of Buteo's map server;
+           a test build may name another, e.g. a server on the computer
+           through adb reverse, -Pbuteo.mapRegionsUrl=http://127.0.0.1:8765/regions.json */
+        val mapRegionsUrl = findProperty("buteo.mapRegionsUrl") as String?
+            ?: "https://github.com/CorentinGrard/buteo/releases/download/maps/regions.json"
+        buildConfigField("String", "MAP_REGIONS_URL", "\"$mapRegionsUrl\"")
     }
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     lint {

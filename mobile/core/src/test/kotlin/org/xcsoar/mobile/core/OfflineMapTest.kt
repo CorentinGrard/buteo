@@ -62,7 +62,7 @@ class OfflineMapTest {
                     assertFalse(p.has(2, 3, 2))
                     assertEquals(0, p.minZoom)
                     assertEquals(2, p.maxZoom)
-                    assertEquals("Test", p.name)
+                    assertEquals("t-$gzip-$leaves", p.name)  // not the metadata's
                     assertEquals("2026-11-24", p.date)
                     assertEquals(4.5, p.bounds[0], 1e-7)
                     assertEquals(46.6, p.bounds[3], 1e-7)
