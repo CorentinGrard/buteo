@@ -78,6 +78,9 @@ private const val TAG = "VectorMap"
  */
 private const val FOLLOW_FPS = 5
 
+/** The closest a task mode frames: a small area's streets. */
+private const val MAX_FRAME_ZOOM = 13.0
+
 /** Zooms of a first start: about 30 km across, and 3 km around a thermal. */
 const val VECTOR_CRUISE_ZOOM = 10.0
 const val VECTOR_CIRCLING_ZOOM = 12.5
@@ -225,12 +228,19 @@ class VectorMapState(
     internal fun frameTask(bounds: LatLngBounds?) {
         lastFrame = bounds
         val map = map ?: return
-        val top = (2 * focusY - height).coerceAtLeast(0) + frameMargin
+        if (focusY < 0 || height <= 0) return
+        // the margins shrink with the free part: the target's panel is tall
+        val cards = (2 * focusY - height).coerceAtLeast(0)
+        val free = height - cards
+        val margin = frameMargin.coerceAtMost(free / 8)
+        val bottom = frameBottom.coerceAtMost(free / 3)
         val camera = if (bounds != null)
             map.getCameraForLatLngBounds(
-                bounds, intArrayOf(frameMargin, top, frameMargin, frameBottom), 0.0, 0.0)
+                bounds, intArrayOf(margin, cards + margin, margin, bottom), 0.0, 0.0)
         else null
         val position = camera?.takeIf { !it.zoom.isNaN() }
+            // a small area: not closer than the streets
+            ?.let { CameraPosition.Builder(it).zoom(it.zoom.coerceAtMost(MAX_FRAME_ZOOM)).build() }
             // nothing to frame yet: north up where the map is
             ?: CameraPosition.Builder(map.cameraPosition).bearing(0.0).build()
         ownMove { map.animateCamera(CameraUpdateFactory.newCameraPosition(position), 500) }
@@ -268,6 +278,11 @@ class VectorMapState(
     private fun applyPadding() {
         val map = map ?: return
         if (focusY < 0 || height <= 0) return
+        // a task mode frames its own (the panel's height changed)
+        if (taskMode != null) {
+            frameTask(lastFrame)
+            return
+        }
         val top = (2 * focusY - height).coerceAtLeast(0).toDouble()
         val bottom = (height - 2 * focusY).coerceAtLeast(0).toDouble()
         ownMove { map.moveCamera(CameraUpdateFactory.paddingTo(0.0, top, 0.0, bottom)) }
@@ -639,8 +654,8 @@ private fun showReach(style: Style, nearby: List<WaypointInfo>, changes: StyleCh
 
 /**
  * The bounds of the task's features (GeoJSON from `xcs_map_features`),
- * only those of point [index] if given (an area and its target); null
- * without any.
+ * only point [index]'s zone and target if given (an area); null without
+ * any.
  */
 private fun taskBounds(json: String, index: Int?): LatLngBounds? {
     val points = mutableListOf<LatLng>()
@@ -648,7 +663,10 @@ private fun taskBounds(json: String, index: Int?): LatLngBounds? {
         val features = JSONObject(json).getJSONArray("features")
         for (i in 0 until features.length()) {
             val f = features.getJSONObject(i)
-            if (index != null && f.getJSONObject("properties").optInt("index", -1) != index)
+            val properties = f.getJSONObject("properties")
+            // an area: its zone and target, not the leg ending there (same index)
+            if (index != null && (properties.optInt("index", -1) != index ||
+                                  properties.optString("layer") == "leg"))
                 continue
             val geometry = f.getJSONObject("geometry")
             val coordinates = geometry.getJSONArray("coordinates")
