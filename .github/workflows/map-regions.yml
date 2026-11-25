@@ -1,0 +1,139 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# The vector map's regions (mobile/docs/DECISIONS.md D31).  Once a month,
+# every Geofabrik region of the world (not those that join others, like
+# "alps") is cut to zoom 11 from Protomaps' latest planet build, read by
+# HTTP ranges (mobile/tools/map_regions.py), and published with its index,
+# regions.json, in the release "maps".  Buteo reads
+# https://github.com/<this repository>/releases/download/maps/regions.json.
+#
+# The release is a pre-release, never "latest": Obtainium and the like
+# must not take it for a version of the app.
+#
+# By hand: Actions -> map-regions -> Run workflow, with areas to try one
+# (e.g. "france"); the published index keeps the other regions.
+
+name: map-regions
+
+on:
+  schedule:
+    # the 2nd of each month, 03:17 UTC
+    - cron: '17 3 2 * *'
+  workflow_dispatch:
+    inputs:
+      areas:
+        description: 'Geofabrik areas, space-separated (empty: the world)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: map-regions
+  cancel-in-progress: false
+
+env:
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      build: ${{ steps.build.outputs.url }}
+      areas: ${{ steps.areas.outputs.json }}
+    steps:
+      - name: Protomaps' latest planet build
+        id: build
+        run: |
+          key=$(curl -fsSL https://build-metadata.protomaps.dev/builds.json |
+                python3 -c 'import json, sys; print(json.load(sys.stdin)[-1]["key"])')
+          echo "url=https://build.protomaps.com/$key" >> "$GITHUB_OUTPUT"
+          echo "Protomaps build: $key" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: The areas, one job each
+        id: areas
+        env:
+          AREAS: ${{ inputs.areas }}
+        run: |
+          areas="${AREAS:-africa asia australia-oceania central-america europe north-america russia south-america}"
+          echo "json=$(python3 -c 'import json, sys; print(json.dumps(sys.argv[1].split()))' "$areas")" >> "$GITHUB_OUTPUT"
+
+      - name: The release
+        run: |
+          gh release view maps --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1 ||
+            gh release create maps --repo "$GITHUB_REPOSITORY" --prerelease --latest=false \
+              --title "Vector map regions" \
+              --notes "The vector map's regions for Buteo, made each month by the map-regions workflow (mobile/docs/DECISIONS.md D31) from Protomaps' basemap (https://protomaps.com). Map data © OpenStreetMap contributors, ODbL: https://www.openstreetmap.org/copyright"
+
+  regions:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        area: ${{ fromJSON(needs.prepare.outputs.areas) }}
+    steps:
+      - name: Checkout the tool
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: mobile/tools/map_regions.py
+          sparse-checkout-cone-mode: false
+
+      - name: The regions' outlines
+        run: |
+          curl -fsSL -o index-v1.json https://download.geofabrik.de/index-v1.json
+          python3 mobile/tools/map_regions.py geofabrik index-v1.json \
+            --under "${{ matrix.area }}" --out work
+
+      - name: Cut the regions
+        env:
+          BUILD: ${{ needs.prepare.outputs.build }}
+        run: |
+          mkdir out
+          ls work/*.geojson | xargs -P 4 -I {} sh -c '
+            name=$(basename {} .geojson)
+            python3 mobile/tools/map_regions.py cut "$BUILD" {} "out/$name.pmtiles" &&
+              cp {} out/'
+
+      - name: The area's index
+        run: |
+          python3 mobile/tools/map_regions.py index out --titles work/titles.json \
+            > "index-${{ matrix.area }}.json"
+          du -sh out >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish the regions
+        run: gh release upload maps out/*.pmtiles --clobber --repo "$GITHUB_REPOSITORY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: index-${{ matrix.area }}
+          path: index-${{ matrix.area }}.json
+
+  index:
+    needs: [prepare, regions]
+    # also when an area failed: its regions stay as last published
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout the tool
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: mobile/tools/map_regions.py
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: index-*
+          merge-multiple: true
+
+      - name: Publish the index
+        run: |
+          gh release download maps --repo "$GITHUB_REPOSITORY" --pattern regions.json \
+            --output previous.json || true
+          python3 mobile/tools/map_regions.py merge index-*.json --previous previous.json \
+            > regions.json
+          python3 -c 'import json; r = json.load(open("regions.json"))["regions"]; print(len(r), "regions,", round(sum(x["size"] for x in r) / 1e9, 1), "GB")' \
+            >> "$GITHUB_STEP_SUMMARY"
+          gh release upload maps regions.json --clobber --repo "$GITHUB_REPOSITORY"
