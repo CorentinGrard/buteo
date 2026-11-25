@@ -117,6 +117,9 @@ fun FlightScreen(
     vectorMapDir: File? = null,
     /** changes with the region files: the vector map opens them again */
     vectorMapVersion: Int = 0,
+    /** the vector map's zooms, cruising and circling, and where to keep them */
+    vectorMapZooms: Pair<Double, Double> = VECTOR_CRUISE_ZOOM to VECTOR_CIRCLING_ZOOM,
+    onVectorMapZooms: (cruise: Double, circling: Double) -> Unit = { _, _ -> },
     onEditTile: (TileLayout, Int) -> Unit = { _, _ -> },
     /** A tile was tapped: the page its InfoBox opens. */
     onTileAction: (TileAction) -> Unit = {},
@@ -131,6 +134,9 @@ fun FlightScreen(
      */
     taskPanel: (@Composable () -> Unit)? = null,
     onMapTap: (x: Int, y: Int) -> Unit = { _, _ -> },
+    /** which task mode [taskPanel] is, for the vector map, and its taps there */
+    taskMapMode: TaskMapMode? = null,
+    onTaskMapTap: (latitude: Double, longitude: Double, waypointId: Int?) -> Unit = { _, _, _ -> },
 ) {
     val state by viewModel.flightState.collectAsStateWithLifecycle()
     // read where it is shown, so only the vario bar recomposes with it
@@ -149,12 +155,17 @@ fun FlightScreen(
     val airspaceAlerts by viewModel.airspaceAlerts.collectAsStateWithLifecycle()
     val replaySpeed by viewModel.replaySpeed.collectAsStateWithLifecycle()
     val thermalAssistant by viewModel.thermalAssistant.collectAsStateWithLifecycle()
-    val vectorState = remember { VectorMapState() }
-    // back from a page: the airspace alerts or the vario sound may have changed
+    val circlingZoom by viewModel.circlingZoom.collectAsStateWithLifecycle()
+    val vectorState = remember {
+        VectorMapState(vectorMapZooms.first, vectorMapZooms.second, onVectorMapZooms)
+    }
+    // back from a page: the airspace alerts, the vario sound or the
+    // map's settings may have changed
     LaunchedEffect(covered) {
         if (!covered) {
             viewModel.refreshAirspaceAlerts()
             viewModel.refreshVarioSound()
+            viewModel.refreshMapSettings()
         }
     }
     BackHandler(enabled = menuOpen && !covered) { onMenuOpen(false) }
@@ -212,14 +223,16 @@ fun FlightScreen(
             onVectorMap = onVectorMap,
             vectorMapCoverage = vectorState.coverage.takeIf { vectorMap },
         ),
-        map = if (vectorMap && taskPanel == null) MapSlot(
+        map = if (vectorMap) MapSlot(
             content = { modifier ->
                 // new regions: their bounds and zooms go into MapLibre's style
                 key(vectorMapVersion) {
                     VectorMap(vectorState, vectorMapDir, viewModel::mapFeatures,
                               viewModel::terrainTile, viewModel::nearbyLandables,
                               viewModel.liveState, mapOrientation, viewModel::showFeatureItems,
-                              modifier)
+                              modifier, circling = circling, circlingZoom = circlingZoom,
+                              taskMode = taskMapMode.takeIf { taskPanel != null },
+                              onTaskTap = onTaskMapTap)
                 }
             },
             onAircraftPosition = { _, y -> vectorState.setFocus(y) },

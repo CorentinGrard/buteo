@@ -33,6 +33,8 @@ import org.xcsoar.mobile.ui.flights.FlightLog
 import org.xcsoar.mobile.ui.flight.CalloutSettings
 import org.xcsoar.mobile.ui.flights.UploadStore
 import org.xcsoar.mobile.ui.flight.TILE_ROWS
+import org.xcsoar.mobile.ui.flight.VECTOR_CIRCLING_ZOOM
+import org.xcsoar.mobile.ui.flight.VECTOR_CRUISE_ZOOM
 import org.xcsoar.mobile.ui.text
 import org.xcsoar.mobile.ui.theme.ThemeChoice
 import java.io.File
@@ -122,6 +124,15 @@ class XcsoarApp : Application() {
     var vectorMap: Boolean
         get() = uiPreferences.getBoolean("vectorMap", false)
         set(value) = uiPreferences.edit().putBoolean("vectorMap", value).apply()
+
+    /** The vector map's zooms, cruising and circling; on the phone, like the theme. */
+    var vectorMapZooms: Pair<Double, Double>
+        get() = uiPreferences.getFloat("vectorCruiseZoom", VECTOR_CRUISE_ZOOM.toFloat()).toDouble() to
+            uiPreferences.getFloat("vectorCirclingZoom", VECTOR_CIRCLING_ZOOM.toFloat()).toDouble()
+        set(value) = uiPreferences.edit()
+            .putFloat("vectorCruiseZoom", value.first.toFloat())
+            .putFloat("vectorCirclingZoom", value.second.toFloat())
+            .apply()
 
     /** Rows of tiles on the flight screen ([TILE_ROWS]); on the phone, like the theme. */
     var tileRows: Int

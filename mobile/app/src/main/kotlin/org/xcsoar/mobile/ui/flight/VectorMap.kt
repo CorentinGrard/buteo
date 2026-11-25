@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -29,9 +30,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 import org.maplibre.android.MapLibre
+import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.location.LocationComponentActivationOptions
 import org.maplibre.android.location.LocationComponentOptions
 import org.maplibre.android.location.OnCameraTrackingChangedListener
@@ -44,6 +50,7 @@ import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.FillLayer
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.sources.GeoJsonSource
 import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.AirspaceState
@@ -71,14 +78,39 @@ private const val TAG = "VectorMap"
  */
 private const val FOLLOW_FPS = 5
 
+/** Zooms of a first start: about 30 km across, and 3 km around a thermal. */
+const val VECTOR_CRUISE_ZOOM = 10.0
+const val VECTOR_CIRCLING_ZOOM = 12.5
+
+/** The task on the map instead of the flight (D30). */
+sealed interface TaskMapMode {
+    /** Building the edited task: every waypoint shows, a tap adds the one under the finger. */
+    data object Edit : TaskMapMode
+
+    /** Moving the target of the active task's area [index]: a tap puts it there. */
+    data class Target(val index: Int) : TaskMapMode
+}
+
 /**
  * The vector map's camera and what the flight screen's buttons do to
  * it (prototype, map review 2026-11-24).
+ *
+ * @param cruiseZoom the zooms the pilot last chose, cruising and
+ *   circling (upstream's cruise and circling map scales)
+ * @param onZooms keeps them when the pilot changes one
  */
 @Stable
-class VectorMapState {
+class VectorMapState(
+    private var cruiseZoom: Double = VECTOR_CRUISE_ZOOM,
+    private var circlingZoom: Double = VECTOR_CIRCLING_ZOOM,
+    private val onZooms: (cruise: Double, circling: Double) -> Unit = { _, _ -> },
+) {
     /** Following the glider; a pan stops it, the centre button resumes. */
     var follows by mutableStateOf(true)
+        private set
+
+    /** The task on the map, else null: the flight. */
+    var taskMode by mutableStateOf<TaskMapMode?>(null)
         private set
 
     /** What the phone has of the map for this flight; null before the style. */
@@ -87,6 +119,17 @@ class VectorMapState {
 
     internal var map: MapLibreMap? = null
     internal var northUp = true
+    /** Around what the task modes frame: the sides and the map's buttons, pixels. */
+    internal var frameMargin = 0
+    internal var frameBottom = 0
+
+    /** The glider circles (the flight mode the tiles show, as upstream's display mode). */
+    private var circling = false
+    /** A zoom of its own while circling (upstream's CircleZoom). */
+    internal var circlingZoomEnabled = true
+    private val modeZoom get() = if (circling && circlingZoomEnabled) circlingZoom else cruiseZoom
+    /** The pilot zoomed or moved the map: its zoom is the mode's once it stops. */
+    private var pilotMoved = false
     /** The map's height and where in it the glider goes, pixels. */
     internal var height = 0
         set(value) {
@@ -97,6 +140,7 @@ class VectorMapState {
 
     fun zoom(steps: Int) {
         val map = map ?: return
+        pilotMoved = true
         val location = map.locationComponent
         val target = map.cameraPosition.zoom - steps
         if (follows && location.isLocationComponentActivated)
@@ -106,9 +150,90 @@ class VectorMapState {
             map.animateCamera(CameraUpdateFactory.zoomTo(target), 250)
     }
 
+    /** The centre button: the glider again, or in a task mode what it frames. */
     fun follow() {
+        if (taskMode != null) {
+            frameTask(lastFrame)
+            return
+        }
         follows = true
         applyCamera()
+    }
+
+    /** What the task mode framed last. */
+    private var lastFrame: LatLngBounds? = null
+
+    /** A pan or a pinch began. */
+    internal fun gesture() {
+        pilotMoved = true
+    }
+
+    /**
+     * The camera stopped: a zoom the pilot chose while following is the
+     * flight mode's from now on (upstream keeps a panned zoom apart).
+     */
+    internal fun idle() {
+        val map = map ?: return
+        if (!pilotMoved) return
+        pilotMoved = false
+        if (!follows || taskMode != null) return
+        val zoom = map.cameraPosition.zoom
+        if (circling && circlingZoomEnabled) circlingZoom = zoom else cruiseZoom = zoom
+        onZooms(cruiseZoom, circlingZoom)
+    }
+
+    /** Circling or cruising: the zoom of that flight mode, while following. */
+    internal fun setCircling(value: Boolean) {
+        if (value == circling) return
+        circling = value
+        if (circlingZoomEnabled && follows && taskMode == null) zoomTo(modeZoom, 600)
+    }
+
+    private fun zoomTo(zoom: Double, millis: Long) {
+        val map = map ?: return
+        val location = map.locationComponent
+        if (follows && location.isLocationComponentActivated)
+            location.zoomWhileTracking(zoom, millis)
+        else
+            map.animateCamera(CameraUpdateFactory.zoomTo(zoom), millis.toInt())
+    }
+
+    /** The first fix: there, at the flight mode's zoom. */
+    internal fun place(latitude: Double, longitude: Double) {
+        moveTo(latitude, longitude, modeZoom)
+        applyCamera()
+    }
+
+    /**
+     * The task on the map: north up, not following, framed by
+     * [frameTask]; null: the flight again, following at its zoom.
+     */
+    internal fun setTaskMode(mode: TaskMapMode?) {
+        if (mode == taskMode) return
+        taskMode = mode
+        if (mode != null) {
+            follows = false
+            track()
+        } else {
+            follows = true
+            applyCamera()
+            zoomTo(modeZoom, 400)
+        }
+    }
+
+    /** What a task mode shows, north up, in the part of the map the cards leave free. */
+    internal fun frameTask(bounds: LatLngBounds?) {
+        lastFrame = bounds
+        val map = map ?: return
+        val top = (2 * focusY - height).coerceAtLeast(0) + frameMargin
+        val camera = if (bounds != null)
+            map.getCameraForLatLngBounds(
+                bounds, intArrayOf(frameMargin, top, frameMargin, frameBottom), 0.0, 0.0)
+        else null
+        val position = camera?.takeIf { !it.zoom.isNaN() }
+            // nothing to frame yet: north up where the map is
+            ?: CameraPosition.Builder(map.cameraPosition).bearing(0.0).build()
+        ownMove { map.animateCamera(CameraUpdateFactory.newCameraPosition(position), 500) }
     }
 
     /** Our own camera moves (padding, the first fix) end tracking too. */
@@ -171,7 +296,8 @@ class VectorMapState {
  * from the region files on the phone ([OfflineMap]), the relief shaded
  * from the core's terrain, with
  * the core's airspace, landables, task and trail (`xcs_map_features`)
- * drawn over them.  Pan, pinch and rotate are MapLibre's own.
+ * drawn over them.  Pan and pinch are MapLibre's own; it turns only
+ * as the orientation says (north up unless the pilot chose otherwise).
  *
  * @param regionDir where the region files are (XCSoarData/maps), read
  *   once
@@ -180,6 +306,11 @@ class VectorMapState {
  * @param landables the nearest landables, with arrival heights
  * @param live the latest snapshot, for the glider
  * @param onItems what the pilot held, for the map's card
+ * @param circling the flight mode the tiles show: the circling zoom
+ * @param circlingZoom a zoom of its own while circling (Map & units)
+ * @param taskMode the task on the map instead of the flight
+ * @param onTaskTap a tap in a task mode: where, and the waypoint under
+ *   the finger while building the task
  */
 @Composable
 fun VectorMap(
@@ -192,6 +323,10 @@ fun VectorMap(
     orientation: MapOrientation?,
     onItems: (List<MapItemInfo>) -> Unit,
     modifier: Modifier = Modifier,
+    circling: Boolean = false,
+    circlingZoom: Boolean = true,
+    taskMode: TaskMapMode? = null,
+    onTaskTap: (latitude: Double, longitude: Double, waypointId: Int?) -> Unit = { _, _, _ -> },
 ) {
     val context = LocalContext.current
     val mapView = remember {
@@ -213,6 +348,11 @@ fun VectorMap(
     }
     var style by remember { mutableStateOf<Style?>(null) }
     val currentOnItems by rememberUpdatedState(onItems)
+    val currentOnTaskTap by rememberUpdatedState(onTaskTap)
+    val density = LocalDensity.current.density
+    state.frameMargin = (24 * density).roundToInt()
+    // the menu and zoom buttons along the map's bottom
+    state.frameBottom = (96 * density).roundToInt()
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle, mapView) {
@@ -243,18 +383,35 @@ fun VectorMap(
                 isCompassEnabled = false
                 isLogoEnabled = false
                 isTiltGesturesEnabled = false
+                // the orientation turns it, not the fingers
+                isRotateGesturesEnabled = false
                 attributionGravity = Gravity.TOP or Gravity.END
             }
             map.addOnMapLongClickListener { point ->
-                currentOnItems(itemsAt(map, map.projection.toScreenLocation(point)))
+                // the task modes have taps, not holds
+                if (state.taskMode == null)
+                    currentOnItems(itemsAt(map, map.projection.toScreenLocation(point)))
+                true
+            }
+            map.addOnMapClickListener { point ->
+                val mode = state.taskMode ?: return@addOnMapClickListener false
+                val waypoint = if (mode == TaskMapMode.Edit)
+                    waypointAt(map, map.projection.toScreenLocation(point), 24 * density)
+                else null
+                currentOnTaskTap(point.latitude, point.longitude, waypoint)
                 true
             }
             mapView.setMaximumFps(FOLLOW_FPS)
             map.addOnCameraMoveStartedListener { reason ->
-                if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE)
+                if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) {
+                    state.gesture()
                     mapView.setMaximumFps((mapView.display?.refreshRate ?: 60f).roundToInt())
+                }
             }
-            map.addOnCameraIdleListener { mapView.setMaximumFps(FOLLOW_FPS) }
+            map.addOnCameraIdleListener {
+                state.idle()
+                mapView.setMaximumFps(FOLLOW_FPS)
+            }
             val json = context.resources.openRawResource(R.raw.vector_map_style)
                 .bufferedReader().use { it.readText() }
             Log.i(TAG, "region maps: ${offline?.regions?.map { it.file.name } ?: "none"}")
@@ -272,6 +429,11 @@ fun VectorMap(
         state.applyCamera()
     }
 
+    LaunchedEffect(circling, circlingZoom) {
+        state.circlingZoomEnabled = circlingZoom
+        state.setCircling(circling)
+    }
+
     val loaded = style
     if (loaded != null) {
         // the core's data: what changes with the data files, rarely
@@ -282,25 +444,43 @@ fun VectorMap(
                 delay(5 * 60_000)
             }
         }
+        // the task on the map: every waypoint while building it
+        LaunchedEffect(loaded, taskMode) {
+            state.setTaskMode(taskMode)
+            val visibility = PropertyFactory.visibility(
+                if (taskMode == TaskMapMode.Edit) Property.VISIBLE else Property.NONE)
+            loaded.getLayer("waypoint-circle")?.setProperties(visibility)
+            loaded.getLayer("waypoint-label")?.setProperties(visibility)
+        }
         // what changes in flight
         LaunchedEffect(loaded) {
             var tick = 0
             var task: TaskOutline? = null
+            // the task mode framed last, framed once on entering it
+            var framed: TaskMapMode? = null
             val changes = StyleChanges()
             while (true) {
                 features(MapFeatures.AIRSPACE_STATE)?.let { json ->
                     changes.apply("warnings", json) { showWarnings(loaded, json) }
                 }
-                if (tick % 3 == 0) {
-                    features(MapFeatures.TASK)?.let { json ->
+                val mode = state.taskMode
+                if (mode == null) framed = null
+                // the edited task while building it, else the active one
+                val shown = if (mode == TaskMapMode.Edit) MapFeatures.TASK_EDITED else MapFeatures.TASK
+                if (tick % 3 == 0 || mode != null) {
+                    features(shown)?.let { json ->
                         changes.apply("task", json) {
                             loaded.source("task")?.setGeoJson(json)
-                            task = try {
+                            if (shown == MapFeatures.TASK) task = try {
                                 TaskOutline.parse(json)
                             } catch (e: Exception) {
                                 Log.w(TAG, "task outline", e)
                                 null
                             }
+                        }
+                        if (mode != null && mode != framed) {
+                            framed = mode
+                            state.frameTask(taskBounds(json, (mode as? TaskMapMode.Target)?.index))
                         }
                     }
                     features(MapFeatures.TRAIL)?.let { json ->
@@ -338,12 +518,11 @@ fun VectorMap(
                 val component = map?.locationComponent
                 if (component?.isLocationComponentActivated == true)
                     component.forceLocationUpdate(location)
-                if (!placed && map != null) {
-                    // the first fix: there, at about 30 km across
+                if (!placed && map != null && state.taskMode == null) {
+                    // the first fix: there, at the flight mode's zoom
                     placed = true
                     Log.i(TAG, "first position ${position.latitude} ${position.longitude}")
-                    state.moveTo(position.latitude, position.longitude, 10.0)
-                    state.applyCamera()
+                    state.place(position.latitude, position.longitude)
                 }
                 val altitude = s.navAltitude ?: return@collect
                 if (lastAltitude.isNaN() || abs(altitude - lastAltitude) > 100) {
@@ -456,6 +635,56 @@ private fun showReach(style: Style, nearby: List<WaypointInfo>, changes: StyleCh
         style.getLayer("landable-label")?.setProperties(
             PropertyFactory.textField(Expression.raw(label)))
     }
+}
+
+/**
+ * The bounds of the task's features (GeoJSON from `xcs_map_features`),
+ * only those of point [index] if given (an area and its target); null
+ * without any.
+ */
+private fun taskBounds(json: String, index: Int?): LatLngBounds? {
+    val points = mutableListOf<LatLng>()
+    try {
+        val features = JSONObject(json).getJSONArray("features")
+        for (i in 0 until features.length()) {
+            val f = features.getJSONObject(i)
+            if (index != null && f.getJSONObject("properties").optInt("index", -1) != index)
+                continue
+            val geometry = f.getJSONObject("geometry")
+            val coordinates = geometry.getJSONArray("coordinates")
+            fun add(c: JSONArray) = points.add(LatLng(c.getDouble(1), c.getDouble(0)))
+            if (geometry.getString("type") == "Point") add(coordinates)
+            else for (j in 0 until coordinates.length()) add(coordinates.getJSONArray(j))
+        }
+    } catch (e: JSONException) {
+        Log.w(TAG, "task bounds", e)
+        return null
+    }
+    val first = points.firstOrNull() ?: return null
+    // one point: about 10 km around it
+    if (points.all { it == first }) {
+        points += LatLng(first.latitude + 0.05, first.longitude + 0.07)
+        points += LatLng(first.latitude - 0.05, first.longitude - 0.07)
+    }
+    return LatLngBounds.Builder().includes(points).build()
+}
+
+/**
+ * The waypoint (any, or a landable) nearest to [point] within
+ * [radius] pixels, while building the task; null without one.
+ */
+private fun waypointAt(map: MapLibreMap, point: PointF, radius: Float): Int? {
+    val box = android.graphics.RectF(point.x - radius, point.y - radius,
+                                     point.x + radius, point.y + radius)
+    return map.queryRenderedFeatures(box, "waypoint-circle", "landable-circle",
+                                     "waypoint-label", "landable-label")
+        .mapNotNull { f ->
+            val id = f.getNumberProperty("id")?.toInt() ?: return@mapNotNull null
+            val location = (f.geometry() as? org.maplibre.geojson.Point) ?: return@mapNotNull null
+            val at = map.projection.toScreenLocation(LatLng(location.latitude(), location.longitude()))
+            id to ((at.x - point.x) * (at.x - point.x) + (at.y - point.y) * (at.y - point.y))
+        }
+        .minByOrNull { it.second }?.first
 }
 
 /** What is at [point]: airspace and landables, for the map's card. */

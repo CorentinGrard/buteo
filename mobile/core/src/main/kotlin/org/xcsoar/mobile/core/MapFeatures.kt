@@ -27,6 +27,8 @@ enum class MapFeatures(val code: Int) {
     TASK(3),
     /** The last 20 minutes of the flight, by climb. */
     TRAIL(4),
+    /** The task being edited, as the map draws it while building it. */
+    TASK_EDITED(5),
 }
 
 /** An airspace with a warning (`XCS_FEATURES_AIRSPACE_STATE`). */

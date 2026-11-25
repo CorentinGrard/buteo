@@ -367,6 +367,7 @@ class FlightViewModel(
             try {
                 core.start()
                 varioSoundFlow.value = readVarioSound()
+                readMapSettings()
                 airspaceAlertsFlow.value = core.airspaceAlerts()
                 core.units()?.let { Format.units = it }
             } catch (e: Exception) {
@@ -575,6 +576,29 @@ class FlightViewModel(
     private val mapOrientationFlow = MutableStateFlow<MapOrientation?>(null)
     /** The map orientation; null until the core answered. */
     val mapOrientation: StateFlow<MapOrientation?> = mapOrientationFlow.asStateFlow()
+
+    private val circlingZoomFlow = MutableStateFlow(true)
+    /** A zoom of its own while circling (Map & units), for the vector map. */
+    val circlingZoom: StateFlow<Boolean> = circlingZoomFlow.asStateFlow()
+
+    /**
+     * The map's orientation and circling zoom from the profile: at the
+     * start and back from a page (Map & units), for the vector map too,
+     * which never attaches XCSoar's.
+     */
+    fun refreshMapSettings() {
+        viewModelScope.launch { readMapSettings() }
+    }
+
+    private suspend fun readMapSettings() {
+        try {
+            core.mapOrientation()?.let { mapOrientationFlow.value = it }
+            core.mapOption(MapOption.CIRCLING_ZOOM)?.let { circlingZoomFlow.value = it != 0 }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+        }
+    }
 
     fun setMapOrientation(next: MapOrientation) {
         mapOrientationFlow.value = next

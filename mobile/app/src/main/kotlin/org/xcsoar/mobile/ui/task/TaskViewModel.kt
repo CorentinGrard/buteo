@@ -266,7 +266,7 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
         edit(TaskOp.LOCK_TARGET, index, if (locked) 1.0 else 0.0)
 
     /**
-     * A tap on the map while building the task there: the waypoint
+     * A tap on XCSoar's map while building the task there: the waypoint
      * under the finger is added; else why not.
      */
     fun addAt(x: Int, y: Int) {
@@ -278,18 +278,27 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
             } catch (_: Exception) {
                 null
             }
-            val message = if (waypoint == null) text(R.string.task_map_no_waypoint)
-            else try {
-                core.editTask(TaskOp.APPEND, value = waypoint.id!!.toDouble())
-                null
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                text(R.string.task_full)
-            }
-            stateFlow.update { it.copy(message = message) }
-            refresh()
+            append(waypoint?.id)
         }
+    }
+
+    /** A tap on the vector map while building the task: [waypointId] under the finger. */
+    fun addWaypoint(waypointId: Int?) {
+        viewModelScope.launch { append(waypointId) }
+    }
+
+    private suspend fun append(waypointId: Int?) {
+        val message = if (waypointId == null) text(R.string.task_map_no_waypoint)
+        else try {
+            core.editTask(TaskOp.APPEND, value = waypointId.toDouble())
+            null
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            text(R.string.task_full)
+        }
+        stateFlow.update { it.copy(message = message) }
+        refresh()
     }
 
     /** A tap on the map while moving area [index]'s target. */

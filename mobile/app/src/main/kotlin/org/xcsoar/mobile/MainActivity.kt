@@ -129,6 +129,7 @@ import org.xcsoar.mobile.ui.welcome.WelcomeViewModel
 import org.xcsoar.mobile.core.WaypointFilter
 import org.xcsoar.mobile.ui.setup.FlightSetupViewModel
 import org.xcsoar.mobile.ui.flight.FlightViewModel
+import org.xcsoar.mobile.ui.flight.TaskMapMode
 import org.xcsoar.mobile.ui.theme.ThemeChoice
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import kotlinx.coroutines.Dispatchers
@@ -162,13 +163,6 @@ private fun MainActivity.terrainLoader(): TerrainLoader? {
             null
         }
     }
-}
-
-/** The task on the map: building the edited task, or moving a target. */
-private sealed interface TaskOnMap {
-    data object Edit : TaskOnMap
-    /** area [index] of the active task */
-    data class Target(val index: Int) : TaskOnMap
 }
 
 /** How deep a page is: pages further in slide in from the right. */
@@ -475,16 +469,16 @@ class MainActivity : ComponentActivity() {
                    so their Back comes back to it */
                 var menuOpen by rememberSaveable { mutableStateOf(false) }
                 // not saved: the map's mode does not outlive the activity
-                var taskOnMap by remember { mutableStateOf<TaskOnMap?>(null) }
-                fun showTaskOnMap(mode: TaskOnMap?, next: Screen) {
+                var taskOnMap by remember { mutableStateOf<TaskMapMode?>(null) }
+                fun showTaskOnMap(mode: TaskMapMode?, next: Screen) {
                     taskOnMap = mode
                     // the menu stays open under the pages it opens: not
                     // over the task on the map
                     if (mode != null) menuOpen = false
                     when (mode) {
                         null -> flightViewModel.setMapMode(MapMode.FLIGHT)
-                        TaskOnMap.Edit -> flightViewModel.setMapMode(MapMode.TASK)
-                        is TaskOnMap.Target -> flightViewModel.setMapMode(MapMode.TARGET, mode.index)
+                        TaskMapMode.Edit -> flightViewModel.setMapMode(MapMode.TASK)
+                        is TaskMapMode.Target -> flightViewModel.setMapMode(MapMode.TARGET, mode.index)
                     }
                     screen = next
                 }
@@ -603,6 +597,8 @@ class MainActivity : ComponentActivity() {
                         },
                         vectorMapDir = app.flightData.regionDir,
                         vectorMapVersion = flightDataState.regionsVersion,
+                        vectorMapZooms = app.vectorMapZooms,
+                        onVectorMapZooms = { cruise, circling -> app.vectorMapZooms = cruise to circling },
                         theme = theme,
                         onTheme = {
                             theme = it
@@ -613,25 +609,34 @@ class MainActivity : ComponentActivity() {
                         covered = screen != Screen.FLIGHT,
                         taskPanel = when (val mode = taskOnMap) {
                             null -> null
-                            TaskOnMap.Edit -> ({
+                            TaskMapMode.Edit -> ({
                                 TaskEditPanel(
                                     taskViewModel,
                                     onList = { showTaskOnMap(null, Screen.TASK) },
                                     onClose = { showTaskOnMap(null, Screen.FLIGHT) })
                             })
-                            is TaskOnMap.Target -> ({
+                            is TaskMapMode.Target -> ({
                                 TargetPanel(
                                     taskViewModel, mode.index,
                                     onShowTarget = {
-                                        showTaskOnMap(TaskOnMap.Target(it), Screen.FLIGHT)
+                                        showTaskOnMap(TaskMapMode.Target(it), Screen.FLIGHT)
                                     },
                                     onClose = { showTaskOnMap(null, Screen.FLIGHT) })
                             })
                         },
                         onMapTap = { x, y ->
                             when (val mode = taskOnMap) {
-                                TaskOnMap.Edit -> taskViewModel.addAt(x, y)
-                                is TaskOnMap.Target -> taskViewModel.targetAt(mode.index, x, y)
+                                TaskMapMode.Edit -> taskViewModel.addAt(x, y)
+                                is TaskMapMode.Target -> taskViewModel.targetAt(mode.index, x, y)
+                                null -> {}
+                            }
+                        },
+                        taskMapMode = taskOnMap,
+                        onTaskMapTap = { latitude, longitude, waypointId ->
+                            when (val mode = taskOnMap) {
+                                TaskMapMode.Edit -> taskViewModel.addWaypoint(waypointId)
+                                is TaskMapMode.Target ->
+                                    taskViewModel.moveTarget(mode.index, latitude, longitude)
                                 null -> {}
                             }
                         },
@@ -799,9 +804,9 @@ class MainActivity : ComponentActivity() {
                                 onAddStart = { screen = Screen.TASK_ADD_START },
                                 onOpenRules = { screen = Screen.TASK_RULES },
                                 onOpenFiles = { screen = Screen.TASK_FILES },
-                                onOpenMap = { showTaskOnMap(TaskOnMap.Edit, Screen.FLIGHT) },
+                                onOpenMap = { showTaskOnMap(TaskMapMode.Edit, Screen.FLIGHT) },
                                 onOpenTargets = {
-                                    showTaskOnMap(TaskOnMap.Target(it), Screen.FLIGHT)
+                                    showTaskOnMap(TaskMapMode.Target(it), Screen.FLIGHT)
                                 },
                                 onBack = { screen = Screen.FLIGHT })
                             Screen.TASK_RULES -> TaskRulesScreen(
