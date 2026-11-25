@@ -1470,7 +1470,8 @@ enum {
   XCS_FEATURES_WAYPOINTS = 2,
   /** The ordered task: legs, zones and points. */
   XCS_FEATURES_TASK = 3,
-  /** The last 20 minutes of the flight, by climb. */
+  /** The flight's trail by climb, as long as the trail option says
+      (none, 10 minutes, an hour, all). */
   XCS_FEATURES_TRAIL = 4,
   /** The task being edited (XCS_TASK_BEGIN): as XCS_FEATURES_TASK. */
   XCS_FEATURES_TASK_EDITED = 5,

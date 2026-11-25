@@ -917,6 +917,18 @@ CoreTask::Load(const char *path, unsigned index) noexcept
   if (task == nullptr)
     return false;
 
+  /* a task file without a name inside is named after the file: the app
+     lists the routes by it and shows which one is flown */
+  if (task->GetName().empty()) {
+    std::string_view name{path};
+    if (const auto slash = name.rfind('/'); slash != name.npos)
+      name.remove_prefix(slash + 1);
+    if (name.size() > 4 && name.ends_with(".tsk")) {
+      name.remove_suffix(4);
+      task->SetName(std::string{name}.c_str());
+    }
+  }
+
   task->UpdateGeometry();
   edit_task = std::move(task);
   return true;

@@ -412,7 +412,7 @@ TestTask(xcs_core *core)
   const auto ids = WaypointIds(core, 3);
   ok1(ids.size() == 3);
   if (ids.size() != 3) {
-    skip(36 + 24 + 4, 0, "no waypoints");
+    skip(36 + 24 + 5, 0, "no waypoints");
     return;
   }
 
@@ -565,8 +565,10 @@ TestTask(xcs_core *core)
   ok1(xcs_task_edit(core, XCS_TASK_CANCEL, 0, 0) == XCS_OK);
   ok1(xcs_task_load(core, saved.c_str(), 0) == XCS_OK &&
       TaskJson(core, XCS_TASK_EDITED).rfind("{\"type\":5,", 0) == 0);
-  /* the rules and the other start are in the file */
+  /* the rules and the other start are in the file; the route has its
+     name */
   edited = TaskJson(core, XCS_TASK_EDITED);
+  ok1(Has(edited, "\"name\":\"core-api-test\""));
   ok1(Has(edited, "\"start_open\":750,") &&
       Has(edited, "\"optional_starts\":[{\"waypoint_id\":"));
   ok1(xcs_task_edit(core, XCS_TASK_CANCEL, 0, 0) == XCS_OK);
@@ -1876,7 +1878,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 4);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5);
 
   Recorder recorder;
   TestCreateArguments(recorder);

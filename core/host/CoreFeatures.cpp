@@ -387,8 +387,22 @@ Trail() noexcept
   if (trace.size() < 2)
     return std::move(w).Finish();
 
-  constexpr TracePoint::Time span{20 * 60};
-  const auto since = trace.back().GetTime() > span
+  /* as long as the pilot's trail setting, as XCSoar's map
+     (GlueMapWindow::RenderTrail()) */
+  TracePoint::Time span{};
+  switch (CommonInterface::GetMapSettings().trail.length) {
+  case TrailSettings::Length::OFF:
+    return std::move(w).Finish();
+  case TrailSettings::Length::LONG:
+    span = TracePoint::Time{60 * 60};
+    break;
+  case TrailSettings::Length::SHORT:
+    span = TracePoint::Time{10 * 60};
+    break;
+  case TrailSettings::Length::FULL:
+    break;
+  }
+  const auto since = span.count() > 0 && trace.back().GetTime() > span
     ? trace.back().GetTime() - span
     : TracePoint::Time{};
 
