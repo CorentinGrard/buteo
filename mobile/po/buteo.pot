@@ -233,8 +233,12 @@ msgstr ""
 msgid "Offline map: %1$s, %2$s"
 msgstr ""
 
-#. menu_map_outside
-msgid "The flight leaves the stored map (%1$s)"
+#. menu_map_glider_outside
+msgid "The glider is beyond the stored map"
+msgstr ""
+
+#. menu_map_task_gap
+msgid "The stored map lacks part of the task, near %1$s"
 msgstr ""
 
 #. menu_map_online

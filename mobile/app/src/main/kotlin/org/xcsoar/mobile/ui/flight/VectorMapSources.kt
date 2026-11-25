@@ -14,93 +14,35 @@ import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
+import org.json.JSONArray
 import org.json.JSONObject
 import org.maplibre.android.MapLibre
 import org.maplibre.android.module.http.HttpRequestUtil
+import org.xcsoar.mobile.core.OfflineMap
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.io.IOException
-import java.io.RandomAccessFile
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.util.zip.GZIPInputStream
 
 private const val TAG = "VectorMap"
 
 /**
- * A region's map on the phone (prototype, 2026-11-25): OpenStreetMap
- * vector tiles in one PMTiles file in XCSoarData/maps, built with
- * Planetiler from a Geofabrik extract.  With it, the vector map needs
- * no network: every tile of the region is in the file, at every zoom.
- *
- * @param date the day of the OpenStreetMap data, e.g. "2026-11-24"
+ * The vector map's style: the region files on the phone when it has
+ * some ([OfflineMap], answered by [MapNetwork]), else OpenFreeMap's
+ * tiles over the network (fetched and cached as the map needs them, so
+ * not for flying without a network).  The fonts are in the app and the
+ * relief comes from the core's terrain.
  */
-class RegionMap(
-    val file: File,
-    val name: String,
-    val west: Double, val south: Double, val east: Double, val north: Double,
-    val date: String?,
-) {
-    fun covers(latitude: Double, longitude: Double) =
-        latitude in south..north && longitude in west..east
-
-    companion object {
-        /** The first region file in [dir], or null. */
-        fun find(dir: File?): RegionMap? =
-            dir?.listFiles { f -> f.isFile && f.extension == "pmtiles" }
-                ?.sortedBy { it.name }
-                ?.firstNotNullOfOrNull { read(it) }
-
-        /** The PMTiles (version 3) header's bounds and the metadata's date. */
-        fun read(file: File): RegionMap? = try {
-            RandomAccessFile(file, "r").use { f ->
-                val header = ByteArray(127)
-                f.readFully(header)
-                if (String(header, 0, 7, Charsets.US_ASCII) != "PMTiles" || header[7] != 3.toByte())
-                    return null
-                val b = ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN)
-                val bound = { offset: Int -> b.getInt(offset) / 1e7 }
-                RegionMap(file, file.nameWithoutExtension,
-                          west = bound(102), south = bound(106),
-                          east = bound(110), north = bound(114),
-                          date = metadataDate(f, b))
-            }
-        } catch (e: IOException) {
-            Log.w(TAG, "region map $file", e)
-            null
-        }
-
-        /** Planetiler writes the OpenStreetMap data's time in the metadata. */
-        private fun metadataDate(f: RandomAccessFile, header: ByteBuffer): String? {
-            val offset = header.getLong(24)
-            val length = header.getLong(32)
-            if (length <= 0 || length > 1 shl 20) return null
-            val bytes = ByteArray(length.toInt())
-            f.seek(offset)
-            f.readFully(bytes)
-            val json = if (header.get(97) == 2.toByte())
-                GZIPInputStream(bytes.inputStream()).use { it.readBytes() }
-            else bytes
-            return JSONObject(String(json))
-                .optString("planetiler:osm:osmosisreplicationtime")
-                .takeIf { it.length >= 10 }?.substring(0, 10)
-        }
-    }
-}
-
-/**
- * The vector map's style: the region's file when the phone has one,
- * else OpenFreeMap's tiles over the network (fetched and cached as the
- * map needs them, so not for flying without a network).  The fonts are
- * in the app and the relief comes from the core's terrain
- * ([MapNetwork]).
- */
-fun vectorMapStyle(json: String, region: RegionMap?): String {
+fun vectorMapStyle(json: String, offline: OfflineMap?): String {
     val style = JSONObject(json)
-    if (region != null)
+    if (offline != null) {
+        val b = offline.bounds
         style.getJSONObject("sources").put("osm", JSONObject()
             .put("type", "vector")
-            .put("url", "pmtiles://file://${region.file.absolutePath}"))
+            .put("tiles", JSONArray().put("https://${MapNetwork.TILES_HOST}/{z}/{x}/{y}.pbf"))
+            .put("minzoom", offline.minZoom)
+            .put("maxzoom", offline.maxZoom)
+            .put("bounds", JSONArray().put(b[0]).put(b[1]).put(b[2]).put(b[3]))
+            .put("attribution", "© OpenMapTiles © OpenStreetMap contributors"))
+    }
     return style.toString()
 }
 
@@ -115,6 +57,12 @@ object MapNetwork {
     /** The relief's tiles: answered here (".invalid" never resolves). */
     const val TERRAIN_HOST = "terrain.buteo.invalid"
     private const val TERRAIN_SIZE = 256
+    /** The region files' tiles, answered here too. */
+    const val TILES_HOST = "tiles.buteo.invalid"
+
+    /** The region files on the phone, null without. */
+    @Volatile
+    var offline: OfflineMap? = null
 
     /** In flight: only what is on the phone. */
     @Volatile
@@ -140,11 +88,34 @@ object MapNetwork {
                 val request = chain.request()
                 when {
                     request.url.host == TERRAIN_HOST -> terrainTile(request)
+                    request.url.host == TILES_HOST -> regionTile(request)
                     inFlight -> throw IOException("no network for the map in flight")
                     else -> chain.proceed(request)
                 }
             })
             .build())
+    }
+
+    /** /{z}/{x}/{y}.pbf from the first region file that has it; none: no content. */
+    private fun regionTile(request: Request): Response {
+        val path = request.url.pathSegments
+        val zoom = path.getOrNull(0)?.toIntOrNull()
+        val x = path.getOrNull(1)?.toIntOrNull()
+        val y = path.getOrNull(2)?.removeSuffix(".pbf")?.toIntOrNull()
+        val tile = try {
+            if (zoom != null && x != null && y != null) offline?.tile(zoom, x, y) else null
+        } catch (e: Exception) {
+            // a file replaced or closed under the map: drawn without the tile
+            Log.w(TAG, "tile $zoom/$x/$y", e)
+            null
+        }
+        val response = Response.Builder().request(request).protocol(Protocol.HTTP_1_1)
+        if (tile == null)
+            return response.code(204).message("No tile")
+                .body(ByteArray(0).toResponseBody(null)).build()
+        return response.code(200).message("OK")
+            .body(tile.toResponseBody("application/x-protobuf".toMediaType()))
+            .build()
     }
 
     /** /{z}/{x}/{y}.png as Terrarium heights: (R * 256 + G) - 32768 m. */

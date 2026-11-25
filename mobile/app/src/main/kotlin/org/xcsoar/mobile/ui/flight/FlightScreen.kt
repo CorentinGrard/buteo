@@ -63,6 +63,7 @@ import org.xcsoar.mobile.core.AirspaceAlerts
 import org.xcsoar.mobile.core.AirspaceWarningInfo
 import org.xcsoar.mobile.core.FakeXcsoarCore
 import org.xcsoar.mobile.core.FlightState
+import org.xcsoar.mobile.core.MapCoverage
 import org.xcsoar.mobile.core.MapItemInfo
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.core.TileAction

@@ -101,10 +101,11 @@
     <string name="menu_map_engine">Map</string>
     <string name="menu_map_xcsoar" translatable="false">XCSoar</string>
     <string name="menu_map_vector">Vector</string>
-    <!-- under the map choice: the vector map's region file on the phone (its name, the day of its data) -->
+    <!-- under the map choice: the vector map's region files on the phone (their names, the day of their data) -->
     <string name="menu_map_offline">Offline map: %1$s, %2$s</string>
-    <!-- the glider or the task goes beyond the region file %1$s -->
-    <string name="menu_map_outside">The flight leaves the stored map (%1$s)</string>
+    <string name="menu_map_glider_outside">The glider is beyond the stored map</string>
+    <!-- the stored map has a hole on the task, near the task point %1$s -->
+    <string name="menu_map_task_gap">The stored map lacks part of the task, near %1$s</string>
     <string name="menu_map_online">Online map only: none stored for the flight</string>
     <string name="theme_system">System</string>
     <string name="theme_white">White</string>

@@ -48,9 +48,12 @@ import org.maplibre.android.style.sources.GeoJsonSource
 import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.AirspaceState
 import org.xcsoar.mobile.core.FlightState
+import org.xcsoar.mobile.core.MapCoverage
 import org.xcsoar.mobile.core.MapFeatures
 import org.xcsoar.mobile.core.MapItemInfo
 import org.xcsoar.mobile.core.MapOrientation
+import org.xcsoar.mobile.core.OfflineMap
+import org.xcsoar.mobile.core.TaskOutline
 import org.xcsoar.mobile.core.WaypointInfo
 import org.xcsoar.mobile.ui.Format
 import java.io.File
@@ -164,23 +167,14 @@ class VectorMapState {
 }
 
 /**
- * The stored map against this flight: [outside] when the glider or a
- * point of the task is beyond the region's file (its bounds), or there
- * is no file.
- */
-data class MapCoverage(val region: RegionMap?, val outside: Boolean)
-
-/** "[longitude,latitude]" as the core writes GeoJSON coordinates. */
-private val COORDINATES = Regex("""\[(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)]""")
-
-/**
  * The map drawn by MapLibre (prototype): OpenStreetMap vector tiles
- * from the region's file on the phone ([RegionMap], else OpenFreeMap
+ * from the region files on the phone ([OfflineMap], else OpenFreeMap
  * over the network), the relief shaded from the core's terrain, with
  * the core's airspace, landables, task and trail (`xcs_map_features`)
  * drawn over them.  Pan, pinch and rotate are MapLibre's own.
  *
- * @param regionDir where the region files are (XCSoarData/maps)
+ * @param regionDir where the region files are (XCSoarData/maps), read
+ *   once
  * @param features one layer of the core's data as GeoJSON
  * @param terrain the core's terrain heights for a tile of the relief
  * @param landables the nearest landables, with arrival heights
@@ -206,7 +200,16 @@ fun VectorMap(
         MapView(context).apply { onCreate(null) }
     }
     MapNetwork.terrain = terrain
-    val region = remember(regionDir) { RegionMap.find(regionDir) }
+    val offline = remember(regionDir) {
+        OfflineMap.open(regionDir) { file, e -> Log.w(TAG, "region map $file", e) }
+    }
+    DisposableEffect(offline) {
+        MapNetwork.offline = offline
+        onDispose {
+            MapNetwork.offline = null
+            offline?.close()
+        }
+    }
     var style by remember { mutableStateOf<Style?>(null) }
     val currentOnItems by rememberUpdatedState(onItems)
 
@@ -253,8 +256,8 @@ fun VectorMap(
             map.addOnCameraIdleListener { mapView.setMaximumFps(FOLLOW_FPS) }
             val json = context.resources.openRawResource(R.raw.vector_map_style)
                 .bufferedReader().use { it.readText() }
-            Log.i(TAG, "region map: ${region?.file ?: "none, online"}")
-            map.setStyle(Style.Builder().fromJson(vectorMapStyle(json, region))) { loaded ->
+            Log.i(TAG, "region maps: ${offline?.regions?.map { it.file.name } ?: "none, online"}")
+            map.setStyle(Style.Builder().fromJson(vectorMapStyle(json, offline))) { loaded ->
                 activateGlider(context, map, loaded, state)
                 state.map = map
                 state.applyCamera()
@@ -281,7 +284,7 @@ fun VectorMap(
         // what changes in flight
         LaunchedEffect(loaded) {
             var tick = 0
-            var taskOutside = false
+            var task: TaskOutline? = null
             val changes = StyleChanges()
             while (true) {
                 features(MapFeatures.AIRSPACE_STATE)?.let { json ->
@@ -291,9 +294,11 @@ fun VectorMap(
                     features(MapFeatures.TASK)?.let { json ->
                         changes.apply("task", json) {
                             loaded.source("task")?.setGeoJson(json)
-                            taskOutside = region == null || COORDINATES.findAll(json).any { c ->
-                                !region.covers(c.groupValues[2].toDouble(),
-                                               c.groupValues[1].toDouble())
+                            task = try {
+                                TaskOutline.parse(json)
+                            } catch (e: Exception) {
+                                Log.w(TAG, "task outline", e)
+                                null
                             }
                         }
                     }
@@ -301,10 +306,7 @@ fun VectorMap(
                         changes.apply("trail", json) { loaded.source("trail")?.setGeoJson(json) }
                     }
                 }
-                val glider = live.value?.position
-                val gliderOutside = region == null ||
-                    (glider != null && !region.covers(glider.latitude, glider.longitude))
-                state.coverage = MapCoverage(region, taskOutside || gliderOutside)
+                state.coverage = MapCoverage.of(offline, task, live.value?.position)
                 if (tick % 5 == 0)
                     try {
                         showReach(loaded, landables(), changes)

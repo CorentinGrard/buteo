@@ -234,9 +234,13 @@ msgstr "Vectorielle"
 msgid "Offline map: %1$s, %2$s"
 msgstr "Carte hors ligne : %1$s, %2$s"
 
-#. menu_map_outside
-msgid "The flight leaves the stored map (%1$s)"
-msgstr "Le vol sort de la carte stockée (%1$s)"
+#. menu_map_glider_outside
+msgid "The glider is beyond the stored map"
+msgstr "Le planeur est hors de la carte stockée"
+
+#. menu_map_task_gap
+msgid "The stored map lacks part of the task, near %1$s"
+msgstr "La carte stockée n'a pas tout le circuit, vers %1$s"
 
 #. menu_map_online
 msgid "Online map only: none stored for the flight"

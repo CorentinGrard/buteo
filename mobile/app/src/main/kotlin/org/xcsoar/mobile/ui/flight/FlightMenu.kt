@@ -57,6 +57,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.xcsoar.mobile.R
+import org.xcsoar.mobile.core.MapCoverage
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.ui.Chevron
 import org.xcsoar.mobile.ui.SettingsGroup
@@ -291,20 +292,22 @@ private fun LabelledSegmented(label: String, options: List<String>, selected: In
 
 /**
  * Under the map choice: whether the vector map has this flight on the
- * phone (its region's file, and the day of its data), a caution when
- * the glider or the task leaves it.
+ * phone (its region files, and the day of their data), a caution when
+ * the glider is beyond them or the task runs through a hole in them.
  */
 @Composable
 private fun MapCoverageNote(coverage: MapCoverage) {
     val colors = XcsTheme.colors
-    val region = coverage.region
+    val gapNear = coverage.gapNear
     val text = when {
-        region == null -> stringResource(R.string.menu_map_online)
-        coverage.outside -> stringResource(R.string.menu_map_outside, region.name)
-        else -> stringResource(R.string.menu_map_offline, region.name,
-                               region.date?.let(::shortDate) ?: "?")
+        coverage.regions.isEmpty() -> stringResource(R.string.menu_map_online)
+        coverage.gliderOutside -> stringResource(R.string.menu_map_glider_outside)
+        gapNear != null -> stringResource(R.string.menu_map_task_gap, gapNear)
+        else -> stringResource(R.string.menu_map_offline, coverage.regions.joinToString(" + "),
+                               coverage.date?.let(::shortDate) ?: "?")
     }
-    Text(text, color = if (coverage.outside) colors.caution else colors.textSecondary,
+    val caution = coverage.regions.isNotEmpty() && !coverage.complete
+    Text(text, color = if (caution) colors.caution else colors.textSecondary,
          fontSize = 14.sp, modifier = Modifier.padding(start = 88.dp, top = 2.dp))
 }
 
