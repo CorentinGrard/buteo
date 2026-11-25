@@ -31,6 +31,11 @@ Waypoints() noexcept;
 std::string
 Task() noexcept;
 
+/** The task being edited (XCS_TASK_BEGIN), as the map draws it; no
+    features without an edit. */
+std::string
+EditedTask() noexcept;
+
 /** The last 20 minutes of the flight, in segments of like climb. */
 std::string
 Trail() noexcept;

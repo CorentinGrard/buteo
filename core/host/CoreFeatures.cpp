@@ -2,6 +2,7 @@
 // Copyright The XCSoar Project
 
 #include "CoreFeatures.hpp"
+#include "CoreTask.hpp"
 #include "Interface.hpp"
 #include "Components.hpp"
 #include "BackendComponents.hpp"
@@ -19,6 +20,7 @@
 #include "Engine/Waypoint/Waypoint.hpp"
 #include "Engine/Task/ObservationZones/Boundary.hpp"
 #include "Engine/Task/TaskManager.hpp"
+#include "Engine/Task/Factory/AbstractTaskFactory.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Engine/Task/Ordered/Points/OrderedTaskPoint.hpp"
 #include "Engine/Trace/Point.hpp"
@@ -296,18 +298,17 @@ Waypoints() noexcept
   return std::move(w).Finish();
 }
 
-std::string
-Task() noexcept
+/** @p task's legs, zones and points; @p active: the point flown to,
+    -1 for none.  The active task's points are where the glider goes
+    (an area's target); the edited task's, its waypoints (it has no
+    targets yet). */
+static void
+WriteTask(FeatureWriter &w, const OrderedTask &task, int active) noexcept
 {
-  FeatureWriter w;
-  if (!backend_components->protected_task_manager)
-    return std::move(w).Finish();
-
-  const ProtectedTaskManager::Lease lease{
-    *backend_components->protected_task_manager};
-  const OrderedTask &task = lease->GetOrderedTask();
   const unsigned n = task.TaskSize();
-  const unsigned active = task.GetActiveIndex();
+  const auto where = [active](const OrderedTaskPoint &tp) -> const GeoPoint & {
+    return active >= 0 ? tp.GetLocationRemaining() : tp.GetLocation();
+  };
 
   for (unsigned i = 0; i < n; ++i) {
     const OrderedTaskPoint &tp = task.GetTaskPoint(i);
@@ -324,24 +325,52 @@ Task() noexcept
         w.Position(zone.front());
       }
       w.Raw("]");
-      w.Properties({{"layer", "zone"}, {"index", i}, {"active", i == active}});
+      w.Properties({{"layer", "zone"}, {"index", i}, {"active", int(i) == active}});
     }
 
     w.Begin("Point");
-    w.Position(tp.GetLocationRemaining());
-    w.Properties({{"layer", "point"}, {"index", i}, {"active", i == active},
+    w.Position(where(tp));
+    w.Properties({{"layer", "point"}, {"index", i}, {"active", int(i) == active},
                   {"name", tp.GetWaypoint().name}});
 
     if (i > 0) {
       w.Begin("LineString");
       w.Raw("[");
-      w.Position(task.GetTaskPoint(i - 1).GetLocationRemaining());
+      w.Position(where(task.GetTaskPoint(i - 1)));
       w.Raw(",");
-      w.Position(tp.GetLocationRemaining());
+      w.Position(where(tp));
       w.Raw("]");
-      w.Properties({{"layer", "leg"}, {"index", i}, {"active", i == active},
-                    {"done", i < active}});
+      w.Properties({{"layer", "leg"}, {"index", i}, {"active", int(i) == active},
+                    {"done", int(i) < active}});
     }
+  }
+}
+
+std::string
+Task() noexcept
+{
+  FeatureWriter w;
+  if (!backend_components->protected_task_manager)
+    return std::move(w).Finish();
+
+  const ProtectedTaskManager::Lease lease{
+    *backend_components->protected_task_manager};
+  const OrderedTask &task = lease->GetOrderedTask();
+  WriteTask(w, task, task.GetActiveIndex());
+  return std::move(w).Finish();
+}
+
+std::string
+EditedTask() noexcept
+{
+  FeatureWriter w;
+  if (const OrderedTask *edited = CoreTask::GetEdited()) {
+    /* as the map draws it: a copy, its last point a finish as on
+       "Done" (a half-built task has no zones else) */
+    auto copy = edited->Clone(CommonInterface::GetComputerSettings().task);
+    copy->GetFactory().CheckAddFinish();
+    copy->UpdateGeometry();
+    WriteTask(w, *copy, -1);
   }
   return std::move(w).Finish();
 }

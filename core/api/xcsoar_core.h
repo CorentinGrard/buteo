@@ -1465,6 +1465,8 @@ enum {
   XCS_FEATURES_TASK = 3,
   /** The last 20 minutes of the flight, by climb. */
   XCS_FEATURES_TRAIL = 4,
+  /** The task being edited (XCS_TASK_BEGIN): as XCS_FEATURES_TASK. */
+  XCS_FEATURES_TASK_EDITED = 5,
 };
 
 /**
@@ -1489,6 +1491,9 @@ enum {
  *   each has "index" and "active".
  * - XCS_FEATURES_TRAIL: lines with "climb", the netto vario's class
  *   from -2 (sink over 1.5 m/s) to 3 (lift over 3 m/s).
+ * - XCS_FEATURES_TASK_EDITED: the task being edited as the map draws
+ *   it in XCS_MAP_MODE_TASK (its last point a finish, as on "Done"),
+ *   none "active"; no features without an edit in progress.
  *
  * Buffer rules as for xcs_get_data_status().
  */

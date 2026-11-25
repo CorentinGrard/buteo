@@ -433,6 +433,7 @@ TestTask(xcs_core *core)
 
   /* editing needs XCS_TASK_BEGIN */
   ok1(TaskJson(core, XCS_TASK_EDITED).empty());
+  ok1(Features(core, XCS_FEATURES_TASK_EDITED).find("\"features\":[]") != std::string::npos);
   ok1(xcs_task_edit(core, XCS_TASK_APPEND, 0, ids[0]) == XCS_ERROR_INVALID_ARGUMENT);
   ok1(xcs_task_edit(core, 99, 0, 0) == XCS_ERROR_INVALID_ARGUMENT);
 
@@ -449,6 +450,18 @@ TestTask(xcs_core *core)
   ok1(Count(edited, "\"waypoint_id\"") == 3);
   ok1(edited.find("\"editing\":true") != std::string::npos);
 
+  /* the edited task for a map the app draws: its points and zones,
+     none active or done; the active task has none yet */
+  {
+    const auto features = Features(core, XCS_FEATURES_TASK_EDITED);
+    ok1(Count(features, "\"layer\":\"point\"") == 3 &&
+        Count(features, "\"layer\":\"leg\"") == 2 &&
+        features.find("\"layer\":\"zone\"") != std::string::npos);
+    ok1(features.find("\"active\":true") == std::string::npos &&
+        features.find("\"done\":true") == std::string::npos);
+    ok1(Count(Features(core, XCS_FEATURES_TASK), "\"layer\":\"point\"") == 0);
+  }
+
   /* the active task is untouched until the commit, which adds the
      finish */
   ok1(Count(TaskJson(core, XCS_TASK_ACTIVE), "\"waypoint_id\"") == 0);
@@ -458,6 +471,7 @@ TestTask(xcs_core *core)
   ok1(active.find("\"kind\":\"finish\"") != std::string::npos);
   ok1(active.find("\"active\":0") != std::string::npos);
   ok1(TaskJson(core, XCS_TASK_EDITED).empty());
+  ok1(Features(core, XCS_FEATURES_TASK_EDITED).find("\"features\":[]") != std::string::npos);
   {
     /* the analysis task page draws each point's zone */
     std::string analysis(1 << 20, '\0');
@@ -1847,7 +1861,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5);
 
   Recorder recorder;
   TestCreateArguments(recorder);
