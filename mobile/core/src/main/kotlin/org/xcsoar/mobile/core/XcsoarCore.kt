@@ -111,40 +111,6 @@ interface XcsoarCore {
     /** Draw and warn of one airspace class; saved in the profile. */
     suspend fun setAirspaceClass(code: Int, display: Boolean, warning: Boolean) {}
 
-    /** Whether this core draws XCSoar's moving map ([attachMap]). */
-    val hasMap: Boolean get() = false
-
-    /**
-     * Draw the map into [surface] (an `android.view.Surface` on Android),
-     * [width] × [height] pixels.  Call again when the size changes.
-     */
-    suspend fun attachMap(surface: Any, width: Int, height: Int, dpi: Int) {}
-
-    /** Stop drawing; blocks until done, so the surface may be destroyed. */
-    fun detachMap() {}
-
-    /** Where the aircraft is drawn on the map, in pixels. */
-    suspend fun setMapAircraftPosition(x: Int, y: Int) {}
-
-    /** Zoom in (negative) or out (positive) along XCSoar's scale list. */
-    suspend fun zoomMap(steps: Int) {}
-
-    /** Move the map with the finger (pixels); it stops following the aircraft. */
-    suspend fun panMap(dx: Float, dy: Float) {}
-
-    /** Zoom continuously; [factor] > 1 zooms in. */
-    suspend fun scaleMap(factor: Float) {}
-
-    /** Centre on the aircraft again and follow it. */
-    suspend fun followMap() {}
-
-    /**
-     * What the map shows: the flight, the edited task (to build it on
-     * the map) or area [index] of the active task (to move its target).
-     * The last two are framed, north up, and the map stops following.
-     */
-    suspend fun setMapMode(mode: MapMode, index: Int = 0) {}
-
     /**
      * The map's terrain for the box [north]..[south], [west]..[east]
      * (degrees), north up, on the flat projection of the app's charts:
@@ -153,9 +119,6 @@ interface XcsoarCore {
      */
     suspend fun terrainImage(north: Double, west: Double, south: Double, east: Double,
                              width: Int, height: Int): ByteArray? = null
-
-    /** The place under pixel ([x], [y]) of the map; null without a map. */
-    suspend fun mapLocationAt(x: Int, y: Int): GeoPosition? = null
 
     /** The map orientation (saved in the profile); null without a map. */
     suspend fun mapOrientation(): MapOrientation? = null
@@ -417,9 +380,6 @@ interface XcsoarCore {
     /** Set a display option (saved in the profile). */
     suspend fun setMapOption(option: MapOption, value: Int) {}
 
-    /** What is on the map around pixel ([x], [y]), nearest first. */
-    suspend fun mapItemsAt(x: Int, y: Int): List<MapItemInfo> = emptyList()
-
     /** Replay an IGC or NMEA file; [timeScale] 1 = real time. */
     suspend fun startReplay(path: String, timeScale: Double = 1.0)
     suspend fun stopReplay()
@@ -489,13 +449,6 @@ enum class GlideComputerEvent(val code: Int) {
         /** Unknown codes (from a newer core) map to [OTHER]. */
         fun fromCode(code: Int): GlideComputerEvent = byCode[code] ?: OTHER
     }
-}
-
-/** Values of `xcs_map_mode` (core/api/xcsoar_core.h). */
-enum class MapMode(val code: Int) {
-    FLIGHT(0),
-    TASK(1),
-    TARGET(2),
 }
 
 /** Values of `xcs_map_orientation` (core/api/xcsoar_core.h). */

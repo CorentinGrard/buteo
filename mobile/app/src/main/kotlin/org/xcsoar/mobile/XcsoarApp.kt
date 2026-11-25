@@ -120,11 +120,6 @@ class XcsoarApp : Application() {
         } ?: ThemeChoice.SYSTEM
         set(value) = uiPreferences.edit().putString("theme", value.name).apply()
 
-    /** The vector map instead of XCSoar's (prototype); on the phone, like the theme. */
-    var vectorMap: Boolean
-        get() = uiPreferences.getBoolean("vectorMap", false)
-        set(value) = uiPreferences.edit().putBoolean("vectorMap", value).apply()
-
     /** The vector map's zooms, cruising and circling; on the phone, like the theme. */
     var vectorMapZooms: Pair<Double, Double>
         get() = uiPreferences.getFloat("vectorCruiseZoom", VECTOR_CRUISE_ZOOM.toFloat()).toDouble() to

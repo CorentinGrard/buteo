@@ -44,12 +44,6 @@ class DataStatusTest {
             .filterKeys { MapOption.entries.none { o -> it == "XCS_MAP_${o.name}" } }
         assertEquals(c, MapOrientation.entries.associate { "XCS_MAP_${it.name}" to it.code })
     }
-
-    @Test
-    fun mapModesMatchHeader() {
-        assertEquals(CoreHeader.constants("XCS_MAP_MODE_"),
-                     MapMode.entries.associate { "XCS_MAP_MODE_${it.name}" to it.code })
-    }
 }
 
 class MapItemInfoTest {

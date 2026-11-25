@@ -48,21 +48,10 @@ internal object NativeCore {
     @JvmStatic external fun nativeSetDataFile(core: Long, kind: Int, path: String?): Int
     /** @return the JSON of `xcs_get_data_status`, or null on error */
     @JvmStatic external fun nativeGetDataStatus(core: Long): String?
-    /** @param surface an android.view.Surface */
-    @JvmStatic external fun nativeMapAttach(core: Long, surface: Any, width: Int, height: Int, dpi: Int): Int
-    @JvmStatic external fun nativeMapDetach(core: Long): Int
-    @JvmStatic external fun nativeMapSetAircraftPosition(core: Long, x: Int, y: Int): Int
-    @JvmStatic external fun nativeMapZoom(core: Long, steps: Int): Int
-    @JvmStatic external fun nativeMapPan(core: Long, dx: Float, dy: Float): Int
-    @JvmStatic external fun nativeMapScale(core: Long, factor: Float): Int
-    @JvmStatic external fun nativeMapSetMode(core: Long, mode: Int, index: Int): Int
     /** @return RGBA rows from the top, or null (no map or terrain) */
     @JvmStatic external fun nativeMapTerrainImage(core: Long, north: Double, west: Double,
                                                   south: Double, east: Double,
                                                   width: Int, height: Int): ByteArray?
-    /** @return {latitude, longitude}, or null without a map */
-    @JvmStatic external fun nativeMapLocationAt(core: Long, x: Int, y: Int): DoubleArray?
-    @JvmStatic external fun nativeMapFollow(core: Long): Int
     @JvmStatic external fun nativeMapSetOrientation(core: Long, orientation: Int): Int
     /** @return an xcs_map_orientation, or -1 on error */
     @JvmStatic external fun nativeMapGetOrientation(core: Long): Int
@@ -196,8 +185,6 @@ internal object NativeCore {
     @JvmStatic external fun nativeSoundSetOption(core: Long, option: Int, value: Int): Int
     /** @return the value, or Int.MIN_VALUE on error */
     @JvmStatic external fun nativeSoundGetOption(core: Long, option: Int): Int
-    /** @return the JSON of `xcs_map_items_at`, or null on error */
-    @JvmStatic external fun nativeMapItemsAt(core: Long, x: Int, y: Int): String?
 
     /* called from native code */
 

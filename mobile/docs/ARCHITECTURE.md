@@ -199,6 +199,10 @@ The moving map is the hardest part and XCSoar's most valuable UI. Plan:
   in Kotlin and sent to `xcs_map_gesture`.
 - **Later (optional):** evaluate a MapLibre-based renderer behind the same
   `xcs_map_*` API. This is not needed for a first release.
+- **Since 2026-11-25 (D33):** the app draws only MapLibre's map
+  (`ui/flight/VectorMap.kt`), from offline region files, with the core's
+  data as GeoJSON (`xcs_map_features`) and its terrain as relief
+  (`xcs_terrain_tile`); XCSoar's map is no longer shown.
 
 The old window system (`ui/window`, `ui/event` main loop), `Form/`, `Widget/`,
 `Dialogs/`, `InfoBoxes/` (as widgets) and `Menu/` are **not** linked into

@@ -54,7 +54,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import java.nio.ByteBuffer
 import kotlinx.coroutines.CancellationException
 import org.xcsoar.AppPermissionManager
-import org.xcsoar.mobile.core.MapMode
 import org.xcsoar.mobile.core.DataFile
 import org.xcsoar.mobile.core.REPOSITORY_URI
 import org.xcsoar.mobile.ui.analysis.LocalTerrain
@@ -263,7 +262,6 @@ class MainActivity : ComponentActivity() {
             var theme by remember { mutableStateOf(app.theme) }
             val terrain = remember { terrainLoader() }
             var tileRows by remember { mutableStateOf(app.tileRows) }
-            var vectorMap by remember { mutableStateOf(app.vectorMap) }
             val dark = when (theme) {
                 ThemeChoice.WHITE -> false
                 ThemeChoice.DARK -> true
@@ -475,11 +473,7 @@ class MainActivity : ComponentActivity() {
                     // the menu stays open under the pages it opens: not
                     // over the task on the map
                     if (mode != null) menuOpen = false
-                    when (mode) {
-                        null -> flightViewModel.setMapMode(MapMode.FLIGHT)
-                        TaskMapMode.Edit -> flightViewModel.setMapMode(MapMode.TASK)
-                        is TaskMapMode.Target -> flightViewModel.setMapMode(MapMode.TARGET, mode.index)
-                    }
+                    flightViewModel.hideMapItems()
                     screen = next
                 }
                 val crewDone = {
@@ -531,9 +525,7 @@ class MainActivity : ComponentActivity() {
                             unitsBack = Screen.FLIGHT
                             screen = Screen.UNITS
                         },
-                        onOpenMapSettings = if (flightViewModel.hasMap)
-                                                ({ screen = Screen.MAP_SETTINGS })
-                                            else null,
+                        onOpenMapSettings = { screen = Screen.MAP_SETTINGS },
                         onOpenSafety = { screen = Screen.SAFETY },
                         onOpenWind = {
                             windBack = Screen.FLIGHT
@@ -590,11 +582,6 @@ class MainActivity : ComponentActivity() {
                             tileRows = it
                             app.tileRows = it
                         },
-                        vectorMap = vectorMap,
-                        onVectorMap = {
-                            vectorMap = it
-                            app.vectorMap = it
-                        },
                         vectorMapDir = app.flightData.regionDir,
                         vectorMapVersion = flightDataState.regionsVersion,
                         vectorMapZooms = app.vectorMapZooms,
@@ -627,13 +614,6 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onClose = { showTaskOnMap(null, Screen.FLIGHT) })
                             })
-                        },
-                        onMapTap = { x, y ->
-                            when (val mode = taskOnMap) {
-                                TaskMapMode.Edit -> taskViewModel.addAt(x, y)
-                                is TaskMapMode.Target -> taskViewModel.targetAt(mode.index, x, y)
-                                null -> {}
-                            }
                         },
                         taskMapMode = taskOnMap,
                         onTaskMapTap = { latitude, longitude, waypointId ->

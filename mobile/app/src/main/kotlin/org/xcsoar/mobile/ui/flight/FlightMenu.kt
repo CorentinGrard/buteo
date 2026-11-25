@@ -114,11 +114,8 @@ class FlightMenu(
     val onVarioSound: (Boolean) -> Unit = {},
     val theme: ThemeChoice = ThemeChoice.SYSTEM,
     val onTheme: (ThemeChoice) -> Unit = {},
-    /** the vector map instead of XCSoar's (prototype); null hides the choice */
-    val vectorMap: Boolean? = null,
-    val onVectorMap: (Boolean) -> Unit = {},
-    /** what the phone has of the vector map for this flight, under the choice */
-    val vectorMapCoverage: MapCoverage? = null,
+    /** what the phone has of the map for this flight; null hides it */
+    val mapCoverage: MapCoverage? = null,
 )
 
 /** The orientations the menu offers, in its order. */
@@ -221,14 +218,7 @@ fun FlightMenuSheet(visible: Boolean, menu: FlightMenu, onClose: () -> Unit,
                                       ThemeChoice.entries.map { stringResource(it.label) },
                                       selected = menu.theme.ordinal,
                                       onSelect = { menu.onTheme(ThemeChoice.entries[it]) })
-                    menu.vectorMap?.let { vector ->
-                        LabelledSegmented(stringResource(R.string.menu_map_engine),
-                                          listOf(stringResource(R.string.menu_map_xcsoar),
-                                                 stringResource(R.string.menu_map_vector)),
-                                          selected = if (vector) 1 else 0,
-                                          onSelect = { menu.onVectorMap(it == 1) })
-                        menu.vectorMapCoverage?.let { MapCoverageNote(it) }
-                    }
+                    menu.mapCoverage?.let { MapCoverageNote(it) }
                     menu.varioSound?.let { on ->
                         SettingsGroup {
                             SwitchRow(stringResource(R.string.menu_vario_sound),
@@ -307,8 +297,18 @@ private fun MapCoverageNote(coverage: MapCoverage) {
                                coverage.date?.let(Format::day) ?: "?")
     }
     val caution = coverage.regions.isNotEmpty() && !coverage.complete
-    Text(text, color = if (caution) colors.caution else colors.textSecondary,
-         fontSize = 14.sp, modifier = Modifier.padding(start = 88.dp, top = 2.dp))
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(stringResource(R.string.menu_map_engine), color = colors.text, fontSize = 16.sp,
+             fontWeight = FontWeight.SemiBold, maxLines = 1,
+             modifier = Modifier.width(72.dp).padding(start = 4.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(text, color = if (caution) colors.caution else colors.textSecondary,
+                 fontSize = 14.sp)
+            // the licence's credit, here rather than an "i" on the map
+            Text(stringResource(R.string.menu_map_credit), color = colors.textSecondary,
+                 fontSize = 12.sp)
+        }
+    }
 }
 
 /** A large in-flight button: the name, and what it holds underneath. */

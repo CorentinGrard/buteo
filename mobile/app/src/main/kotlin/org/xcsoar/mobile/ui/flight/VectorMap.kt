@@ -7,7 +7,6 @@ import android.content.Context
 import android.graphics.PointF
 import android.os.SystemClock
 import android.util.Log
-import android.view.Gravity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -545,6 +544,7 @@ private fun shortest(from: Double, to: Double): Double {
  * @param onItems what the pilot held, for the map's card
  * @param circling the flight mode the tiles show: the circling zoom
  * @param circlingZoom a zoom of its own while circling (Map & units)
+ * @param relief the shaded relief (Map & units)
  * @param taskMode the task on the map instead of the flight
  * @param onTaskTap a tap in a task mode: where, and the waypoint under
  *   the finger while building the task
@@ -562,6 +562,7 @@ fun VectorMap(
     modifier: Modifier = Modifier,
     circling: Boolean = false,
     circlingZoom: Boolean = true,
+    relief: Boolean = true,
     taskMode: TaskMapMode? = null,
     onTaskTap: (latitude: Double, longitude: Double, waypointId: Int?) -> Unit = { _, _, _ -> },
 ) {
@@ -626,11 +627,9 @@ fun VectorMap(
                 // zooms are the buttons' and the pinch's, as on XCSoar's map
                 isDoubleTapGesturesEnabled = false
                 isQuickZoomGesturesEnabled = false
-                // the map data's credit beside the menu button: at the top
-                // it sat under the cards
-                attributionGravity = Gravity.BOTTOM or Gravity.START
-                setAttributionMargins((80 * density).roundToInt(), 0, 0,
-                                      (28 * density).roundToInt())
+                // the map data's credit is in the menu, under the map's
+                // coverage (the pilot: no "i" on the map)
+                isAttributionEnabled = false
             }
             map.addOnMapLongClickListener { point ->
                 // the task modes have taps, not holds
@@ -707,6 +706,10 @@ fun VectorMap(
                 }
                 delay(5 * 60_000)
             }
+        }
+        LaunchedEffect(loaded, relief) {
+            loaded.getLayer("hillshade")?.setProperties(
+                PropertyFactory.visibility(if (relief) Property.VISIBLE else Property.NONE))
         }
         // the task on the map: every waypoint while building it
         LaunchedEffect(loaded, taskMode) {

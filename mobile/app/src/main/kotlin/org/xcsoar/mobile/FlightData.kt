@@ -144,8 +144,7 @@ class FlightData(private val app: XcsoarApp, private val scope: CoroutineScope) 
             Log.d(TAG, "repository index: ${e.message}")
             null
         }
-        val vector = app.vectorMap
-        val regionIndex = if (!vector) null else try {
+        val regionIndex = try {
             val index = app.downloader.index(BuildConfig.MAP_REGIONS_URL, "map-regions.json", fresh)
             MapRegion.parseIndex(withContext(Dispatchers.IO) { index.readText() },
                                  BuildConfig.MAP_REGIONS_URL)
@@ -158,7 +157,7 @@ class FlightData(private val app: XcsoarApp, private val scope: CoroutineScope) 
                 .map(::File).filter { it.isFile }
                 .associate { it.name to day(it.lastModified()) }
         }
-        val regions = if (!vector) null else withContext(Dispatchers.IO) {
+        val regions = withContext(Dispatchers.IO) {
             OfflineMap.open(regionDir) { file, e -> Log.w(TAG, "region map $file", e) }?.use { map ->
                 StoredRegions(map.regions.associate { it.name to it.date },
                               gap = area?.let { map.firstGap(it.lines, it.margin) })

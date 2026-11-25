@@ -66,7 +66,6 @@ import org.xcsoar.mobile.core.RepositoryFile
 import org.xcsoar.mobile.core.WaypointFilter
 import org.xcsoar.mobile.core.WaypointInfo
 import org.xcsoar.mobile.core.GeoPosition
-import org.xcsoar.mobile.core.MapMode
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.core.SnapshotDecoder
 import org.xcsoar.mobile.core.SoundOption
@@ -196,48 +195,12 @@ class NativeXcsoarCore(
     override suspend fun gotoWaypoint(id: Int) =
         command { NativeCore.nativeGotoWaypoint(it, id) }
 
-    override val hasMap get() = true
-
-    override suspend fun attachMap(surface: Any, width: Int, height: Int, dpi: Int) =
-        command { NativeCore.nativeMapAttach(it, surface, width, height, dpi) }
-
-    /* on the caller's thread: SurfaceHolder.Callback.surfaceDestroyed must
-       not return before the core stopped drawing */
-    override fun detachMap() {
-        val h = handle
-        if (h != 0L) NativeCore.nativeMapDetach(h)
-    }
-
-    override suspend fun setMapAircraftPosition(x: Int, y: Int) =
-        command { NativeCore.nativeMapSetAircraftPosition(it, x, y) }
-
-    override suspend fun zoomMap(steps: Int) =
-        command { NativeCore.nativeMapZoom(it, steps) }
-
-    override suspend fun panMap(dx: Float, dy: Float) =
-        command { NativeCore.nativeMapPan(it, dx, dy) }
-
-    override suspend fun scaleMap(factor: Float) =
-        command { NativeCore.nativeMapScale(it, factor) }
-
-    override suspend fun followMap() =
-        command { NativeCore.nativeMapFollow(it) }
-
-    override suspend fun setMapMode(mode: MapMode, index: Int) =
-        command { NativeCore.nativeMapSetMode(it, mode.code, index) }
-
     override suspend fun terrainImage(north: Double, west: Double, south: Double, east: Double,
                                       width: Int, height: Int): ByteArray? = lock.withLock {
         if (handle == 0L) return@withLock null
         withContext(Dispatchers.IO) {
             NativeCore.nativeMapTerrainImage(handle, north, west, south, east, width, height)
         }
-    }
-
-    override suspend fun mapLocationAt(x: Int, y: Int): GeoPosition? = lock.withLock {
-        if (handle == 0L) return@withLock null
-        withContext(Dispatchers.IO) { NativeCore.nativeMapLocationAt(handle, x, y) }
-            ?.let { GeoPosition(it[0], it[1]) }
     }
 
     override suspend fun mapOrientation(): MapOrientation? = lock.withLock {
@@ -606,12 +569,6 @@ class NativeXcsoarCore(
 
     override suspend fun setSoundOption(option: SoundOption, value: Int) =
         command { NativeCore.nativeSoundSetOption(it, option.code, value) }
-
-    override suspend fun mapItemsAt(x: Int, y: Int): List<MapItemInfo> = lock.withLock {
-        check(handle != 0L) { "core not started" }
-        val json = withContext(Dispatchers.IO) { NativeCore.nativeMapItemsAt(handle, x, y) }
-        MapItemInfo.parseList(checkNotNull(json) { "xcs_map_items_at failed" })
-    }
 
     override suspend fun setMapOrientation(orientation: MapOrientation) =
         command { NativeCore.nativeMapSetOrientation(it, orientation.code) }
