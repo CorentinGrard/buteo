@@ -99,8 +99,7 @@
     <string name="menu_theme">Theme</string>
     <!-- the map MapLibre draws, a prototype beside XCSoar's (map review, 2026-11-24) -->
     <string name="menu_map_engine">Map</string>
-    <string name="menu_map_xcsoar" translatable="false">XCSoar</string>
-    <string name="menu_map_vector">Vector</string>
+    <string name="menu_map_credit">Map data © OpenStreetMap contributors, Protomaps</string>
     <!-- under the map choice: the vector map's region files on the phone (their names, the day of their data) -->
     <string name="menu_map_offline">Offline map: %1$s, %2$s</string>
     <!-- %1$d: how many region files of the vector map are on the phone -->
@@ -179,7 +178,7 @@
     <string name="menu_sound">Sound</string>
     <string name="menu_sound_detail">Vario tone, voice callouts</string>
     <string name="menu_map_units">Map &amp; units</string>
-    <string name="menu_map_units_detail">Terrain, topography, trail, units</string>
+    <string name="menu_map_units_detail">Circling zoom, trail, units</string>
     <string name="menu_units">Units</string>
     <string name="menu_units_detail">Altitude, speed, lift…</string>
     <string name="menu_tracking">Live tracking</string>
@@ -262,28 +261,15 @@
     <string name="units_preset">Preset</string>
 
     <!-- the map settings page -->
-    <string name="map_terrain_detail">Shaded relief from the map file</string>
-    <string name="map_topography">Topography</string>
-    <string name="map_topography_detail">Roads, rivers, lakes and towns</string>
+    <string name="map_terrain_detail">Shaded relief from the terrain file</string>
     <string name="map_zoom">Zoom of its own</string>
     <string name="map_zoom_detail">Closer in a climb, back to the cruise\'s after</string>
     <string name="map_thermal_assistant">Thermal assistant</string>
     <string name="map_thermal_assistant_detail">The lift around the circle, on the glider</string>
-    <string name="map_terrain_colours">Terrain colours</string>
     <string name="map_trail">Trail</string>
     <string name="map_trail_short">Short</string>
     <string name="map_trail_long">Long</string>
     <string name="map_trail_full">Full</string>
-    <string name="ramp_pastel">Pastel</string>
-    <string name="ramp_low_lands">Low lands</string>
-    <string name="ramp_mountainous">Mountainous</string>
-    <string name="ramp_imhof">Imhof Atlas</string>
-    <string name="ramp_icao">ICAO</string>
-    <string name="ramp_french_sia">French SIA VFR chart</string>
-    <string name="ramp_german_dfs">German DFS VFR chart</string>
-    <string name="ramp_sandstone">Sandstone</string>
-    <string name="ramp_grey">Grey</string>
-    <string name="ramp_high_contrast">High contrast</string>
 
     <!-- downloads -->
     <string name="download_damaged">Download of %1$s is damaged (checksum)</string>
@@ -783,6 +769,18 @@
     <string name="route_going_to">Flying to %1$s (Go to waypoint)</string>
     <string name="route_resume">Resume the route</string>
     <string name="route_finish_at">Finish at %1$s</string>
+    <string name="route_current">Current route</string>
+    <string name="route_none">No route. Fly one of yours below, or make a new one.</string>
+    <string name="route_stop">Stop</string>
+    <string name="route_stop_confirm">Stop?</string>
+    <string name="route_new">New route</string>
+    <string name="route_yours">Your routes</string>
+    <string name="route_yours_empty">The routes you fly are kept here.</string>
+    <string name="route_flown">Flying</string>
+    <string name="route_fly">Fly %1$s</string>
+    <string name="route_delete">Delete</string>
+    <string name="route_delete_confirm">Delete?</string>
+    <string name="route_more">WeGlide and other files…</string>
 
     <!-- the flight log -->
     <string name="flights_cannot_delete">Could not delete %1$s</string>

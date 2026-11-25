@@ -226,9 +226,9 @@ msgstr "En haut"
 msgid "Theme"
 msgstr "Thème"
 
-#. menu_map_vector
-msgid "Vector"
-msgstr "Vectorielle"
+#. menu_map_credit
+msgid "Map data © OpenStreetMap contributors, Protomaps"
+msgstr "Données cartographiques © contributeurs OpenStreetMap, Protomaps"
 
 #. menu_map_offline
 msgid "Offline map: %1$s, %2$s"
@@ -464,8 +464,8 @@ msgid "Map & units"
 msgstr "Carte et unités"
 
 #. menu_map_units_detail
-msgid "Terrain, topography, trail, units"
-msgstr "Relief, topographie, trace, unités"
+msgid "Circling zoom, trail, units"
+msgstr "Zoom en spirale, trace, unités"
 
 #. menu_units_detail
 msgid "Altitude, speed, lift…"
@@ -648,16 +648,8 @@ msgid "Task speed"
 msgstr "Vitesse du circuit"
 
 #. map_terrain_detail
-msgid "Shaded relief from the map file"
-msgstr "Relief ombré, tiré du fichier de carte"
-
-#. map_topography
-msgid "Topography"
-msgstr "Topographie"
-
-#. map_topography_detail
-msgid "Roads, rivers, lakes and towns"
-msgstr "Routes, rivières, lacs et villes"
+msgid "Shaded relief from the terrain file"
+msgstr "Relief ombré du fichier de terrain"
 
 #. map_zoom
 msgid "Zoom of its own"
@@ -670,22 +662,6 @@ msgstr "Plus près en ascendance, puis retour à celui de la transition"
 #. map_thermal_assistant_detail
 msgid "The lift around the circle, on the glider"
 msgstr "Le vario autour du cercle, sur le planeur"
-
-#. map_terrain_colours
-msgid "Terrain colours"
-msgstr "Couleurs du relief"
-
-#. ramp_french_sia
-msgid "French SIA VFR chart"
-msgstr "Carte VFR SIA française"
-
-#. ramp_german_dfs
-msgid "German DFS VFR chart"
-msgstr "Carte VFR DFS allemande"
-
-#. ramp_high_contrast
-msgid "High contrast"
-msgstr "Contraste élevé"
 
 #. download_damaged
 msgid "Download of %1$s is damaged (checksum)"
@@ -2084,6 +2060,46 @@ msgstr "Reprendre le circuit"
 msgid "Finish at %1$s"
 msgstr "Arrivée à %1$s"
 
+#. route_current
+msgid "Current route"
+msgstr "Circuit en cours"
+
+#. route_none
+msgid "No route. Fly one of yours below, or make a new one."
+msgstr "Pas de circuit. Volez l'un des vôtres ci-dessous, ou créez-en un."
+
+#. route_stop_confirm
+msgid "Stop?"
+msgstr "Arrêter ?"
+
+#. route_new
+msgid "New route"
+msgstr "Nouveau circuit"
+
+#. route_yours
+msgid "Your routes"
+msgstr "Vos circuits"
+
+#. route_yours_empty
+msgid "The routes you fly are kept here."
+msgstr "Les circuits que vous volez sont gardés ici."
+
+#. route_flown
+msgid "Flying"
+msgstr "En cours"
+
+#. route_delete
+msgid "Delete"
+msgstr "Supprimer"
+
+#. route_delete_confirm
+msgid "Delete?"
+msgstr "Supprimer ?"
+
+#. route_more
+msgid "WeGlide and other files…"
+msgstr "WeGlide et autres fichiers…"
+
 #. flights_cannot_delete
 msgid "Could not delete %1$s"
 msgstr "Suppression de %1$s impossible"
@@ -2171,10 +2187,6 @@ msgstr "Envoi…"
 #. flights_upload
 msgid "Upload to WeGlide"
 msgstr "Envoyer à WeGlide"
-
-#. flights_delete
-msgid "Delete"
-msgstr "Supprimer"
 
 #. flights_ground
 msgid "Replay and Delete: on the ground."

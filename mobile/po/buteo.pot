@@ -225,8 +225,8 @@ msgstr ""
 msgid "Theme"
 msgstr ""
 
-#. menu_map_vector
-msgid "Vector"
+#. menu_map_credit
+msgid "Map data © OpenStreetMap contributors, Protomaps"
 msgstr ""
 
 #. menu_map_offline
@@ -463,7 +463,7 @@ msgid "Map & units"
 msgstr ""
 
 #. menu_map_units_detail
-msgid "Terrain, topography, trail, units"
+msgid "Circling zoom, trail, units"
 msgstr ""
 
 #. menu_units_detail
@@ -647,15 +647,7 @@ msgid "Task speed"
 msgstr ""
 
 #. map_terrain_detail
-msgid "Shaded relief from the map file"
-msgstr ""
-
-#. map_topography
-msgid "Topography"
-msgstr ""
-
-#. map_topography_detail
-msgid "Roads, rivers, lakes and towns"
+msgid "Shaded relief from the terrain file"
 msgstr ""
 
 #. map_zoom
@@ -668,22 +660,6 @@ msgstr ""
 
 #. map_thermal_assistant_detail
 msgid "The lift around the circle, on the glider"
-msgstr ""
-
-#. map_terrain_colours
-msgid "Terrain colours"
-msgstr ""
-
-#. ramp_french_sia
-msgid "French SIA VFR chart"
-msgstr ""
-
-#. ramp_german_dfs
-msgid "German DFS VFR chart"
-msgstr ""
-
-#. ramp_high_contrast
-msgid "High contrast"
 msgstr ""
 
 #. download_damaged
@@ -2083,6 +2059,46 @@ msgstr ""
 msgid "Finish at %1$s"
 msgstr ""
 
+#. route_current
+msgid "Current route"
+msgstr ""
+
+#. route_none
+msgid "No route. Fly one of yours below, or make a new one."
+msgstr ""
+
+#. route_stop_confirm
+msgid "Stop?"
+msgstr ""
+
+#. route_new
+msgid "New route"
+msgstr ""
+
+#. route_yours
+msgid "Your routes"
+msgstr ""
+
+#. route_yours_empty
+msgid "The routes you fly are kept here."
+msgstr ""
+
+#. route_flown
+msgid "Flying"
+msgstr ""
+
+#. route_delete
+msgid "Delete"
+msgstr ""
+
+#. route_delete_confirm
+msgid "Delete?"
+msgstr ""
+
+#. route_more
+msgid "WeGlide and other files…"
+msgstr ""
+
 #. flights_cannot_delete
 msgid "Could not delete %1$s"
 msgstr ""
@@ -2169,10 +2185,6 @@ msgstr ""
 
 #. flights_upload
 msgid "Upload to WeGlide"
-msgstr ""
-
-#. flights_delete
-msgid "Delete"
 msgstr ""
 
 #. flights_ground

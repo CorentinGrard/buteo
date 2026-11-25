@@ -947,6 +947,17 @@ caution).  From a fresh install tested on a Redmi 5 and the Pixel 7.
 
 ## Log
 
+- 2026-11-25 (late) — The pilot: "remove all together the xcsoar map,
+  can you remove the information icon on the map?  Can you make the
+  route menu even simpler, I need to be able to switch easily between
+  circuits, quit a current circuit".  One map, MapLibre's (D33): no
+  choice, no XCSoar map view; the relief switch and the trail's length
+  drive it; the credit in the menu, no "i".  The Route page (D32): the
+  route flown with Stop, the saved routes (a tap flies one), every route
+  applied saved by name.  Checked on the Redmi 5: a new route built and
+  applied by Back, the other flown from the list, stopped, flown again.
+  core-check (547), the app's tests and screenshots pass.
+
 - 2026-11-25 (night) — The pilot: "still bugs with the map … the
   performances are quite poor, I need more fps … rethink the way
   'task' work".  On `map-lab`, measured on the Redmi 5 (1x replay in

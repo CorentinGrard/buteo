@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.TaskFileInfo
 import org.xcsoar.mobile.core.TaskInfo
@@ -27,6 +29,7 @@ import org.xcsoar.mobile.core.XcsoarCore
 import org.xcsoar.mobile.ui.UiText
 import org.xcsoar.mobile.ui.asText
 import org.xcsoar.mobile.ui.text
+import java.io.File
 
 data class TaskState(
     /** The active task, or the edited copy while [TaskInfo.editing]. */
@@ -66,6 +69,7 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     /** Shown: read the task, and the active one again while flying it. */
     fun open() {
         if (openCount++ > 0) return
+        listFiles()
         job = viewModelScope.launch {
             refresh()
             // no route yet: straight to building one
@@ -149,11 +153,26 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
         viewModelScope.launch { commit() }
     }
 
-    /** [done]; false, with what is wrong, when the task is not valid. */
+    /**
+     * [done]; false, with what is wrong, when the task is not valid.
+     * Every route applied is kept in XCSoarData/tasks, by its name or
+     * one made of its points, so that the pilot switches back to it in
+     * one tap ([fly]).
+     */
     private suspend fun commit(): Boolean = try {
+        val edited = core.task(true)
+        if (edited != null && edited.points.size >= 2)
+            try {
+                core.saveTask(edited.name.ifBlank { routeName(edited.points) })
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // flown all the same; only not listed
+            }
         core.editTask(TaskOp.COMMIT)
         changed = false
         stateFlow.update { it.copy(task = core.task(false), selected = null, message = null) }
+        listFiles()
         true
     } catch (e: CancellationException) {
         throw e
@@ -199,6 +218,48 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
                 stateFlow.update { it.copy(task = active, selected = null) }
             }
             onLeft()
+        }
+    }
+
+    /**
+     * Fly one of the saved routes ([TaskState.files]) now, instead of
+     * the current one: no editing, no "Done".
+     */
+    fun fly(file: TaskFileInfo) = run(text(R.string.task_cannot_load, file.name)) {
+        if (editing) core.editTask(TaskOp.CANCEL)
+        core.loadTask(file)
+        core.editTask(TaskOp.COMMIT)
+        changed = false
+        stateFlow.update { it.copy(task = core.task(false), selected = null) }
+        null
+    }
+
+    /** Fly without a route; it stays in the list. */
+    fun stop() = run(text(R.string.task_cannot_edit)) {
+        core.editTask(TaskOp.BEGIN)
+        core.editTask(TaskOp.CLEAR)
+        core.editTask(TaskOp.COMMIT)
+        changed = false
+        stateFlow.update { it.copy(task = core.task(false), selected = null) }
+        null
+    }
+
+    /** An empty route to build; the current one flies until it is applied. */
+    fun newRoute() = run(text(R.string.task_cannot_edit)) {
+        core.editTask(TaskOp.BEGIN)
+        core.editTask(TaskOp.CLEAR)
+        changed = false
+        stateFlow.update { it.copy(task = core.task(true), selected = null) }
+        null
+    }
+
+    /** Forget a saved route (only Buteo's and XCSoar's own .tsk files). */
+    fun delete(file: TaskFileInfo) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                File(file.path).takeIf { it.name.endsWith(".tsk", ignoreCase = true) }?.delete()
+            }
+            listFiles()
         }
     }
 
@@ -328,24 +389,7 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     fun setTargetLocked(index: Int, locked: Boolean) =
         edit(TaskOp.LOCK_TARGET, index, if (locked) 1.0 else 0.0)
 
-    /**
-     * A tap on XCSoar's map while building the task there: the waypoint
-     * under the finger is added; else why not.
-     */
-    fun addAt(x: Int, y: Int) {
-        viewModelScope.launch {
-            val waypoint = try {
-                core.mapItemsAt(x, y).firstOrNull { it.type == "waypoint" && it.id != null }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                null
-            }
-            append(waypoint?.id)
-        }
-    }
-
-    /** A tap on the vector map while building the task: [waypointId] under the finger. */
+    /** A tap on the map while building the route: [waypointId] under the finger. */
     fun addWaypoint(waypointId: Int?) {
         viewModelScope.launch { append(waypointId) }
     }
@@ -365,20 +409,6 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
         refresh()
     }
 
-    /** A tap on the map while moving area [index]'s target. */
-    fun targetAt(index: Int, x: Int, y: Int) {
-        viewModelScope.launch {
-            val place = try {
-                core.mapLocationAt(x, y)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                null
-            } ?: return@launch
-            moveTarget(index, place.latitude, place.longitude)
-        }
-    }
-
     /** The target there, if inside its area. */
     fun moveTarget(index: Int, latitude: Double, longitude: Double) =
         run(text(R.string.task_target_outside)) {
@@ -396,11 +426,21 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
 
     /* files */
 
+    /**
+     * The saved routes, the last saved first, then those of other files
+     * (SeeYou's); not XCSoar's copy of the current one (Default.tsk).
+     */
     fun listFiles() {
-        stateFlow.update { it.copy(files = null) }
         viewModelScope.launch {
             val files = try {
-                core.taskFiles()
+                val all = core.taskFiles()
+                withContext(Dispatchers.IO) {
+                    all.filterNot { File(it.path).name.equals("Default.tsk", ignoreCase = true) }
+                        .sortedWith(compareBy<TaskFileInfo> { !it.path.endsWith(".tsk", true) }
+                                        .thenByDescending { File(it.path).lastModified() })
+                }
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 emptyList()
             }
@@ -487,3 +527,29 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
         }
     }
 }
+
+/**
+ * A route's name from its points: "Montelimar Ancone - Sagy - Grenoble
+ * Isere", without the leading codes ("LFLQ", "LF7121", "110:"), what
+ * follows a dash ("Remoulins – ULM LF3025"), and the finish where it is
+ * the start (back home); at most 60 characters.
+ */
+internal fun routeName(points: List<TaskPointInfo>): String {
+    val code = Regex("^([A-Z0-9]{4,7}|[0-9]+:)\\s+")
+    fun short(name: String): String {
+        val plain = name.trim().replace(Regex("\\s+"), " ")
+        val named = code.replace(plain, "").ifEmpty { plain }
+        return named.substringBefore(" – ").substringBefore(" - ").trim()
+    }
+    val names = points.map { short(it.name) }.toMutableList()
+    if (names.size >= 2 && points.last().waypointId == points.first().waypointId)
+        names.removeAt(names.size - 1)
+    val name = names.joinToString(" - ").map { if (it in "/\\:*?\"<>|") '-' else it }
+        .joinToString("")
+    return if (name.length <= 60) name
+    else name.take(60).substringBeforeLast(' ').trimEnd(' ', '-')
+}
+
+/** What the list shows for a route file: a .tsk by its file name. */
+val TaskFileInfo.routeName: String
+    get() = if (path.endsWith(".tsk", ignoreCase = true)) File(path).nameWithoutExtension else name

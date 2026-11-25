@@ -73,8 +73,16 @@ class TaskScreenshotTest {
     @Test
     fun activeRacingTask() = captureRoboImage("src/test/screenshots/task_active.png") {
         XcsTheme(dark = false) {
-            TaskContent(TaskState(TaskInfo(4, "Racing", valid = true, distance = 64_700.0,
-                                           active = 2, points = points)), {})
+            // flown from the pilot's list of routes
+            TaskContent(TaskState(TaskInfo(4, "Racing", name = "Le Versoud - Dent de Crolles",
+                                           valid = true, distance = 64_700.0,
+                                           active = 2, points = points),
+                                  files = listOf(
+                                      TaskFileInfo("Le Versoud - Dent de Crolles",
+                                                   "/x/tasks/Le Versoud - Dent de Crolles.tsk"),
+                                      TaskFileInfo("Vercors 300", "/x/tasks/Vercors 300.tsk"),
+                                      TaskFileInfo("Chartreuse triangle",
+                                                   "/x/tasks/Chartreuse triangle.tsk"))), {})
         }
     }
 

@@ -161,7 +161,7 @@ private fun PointChips(task: TaskInfo, selected: Int?, onSelect: (Int) -> Unit) 
     }
 }
 
-private fun pointMark(index: Int, point: TaskPointInfo) = when (point.kind) {
+internal fun pointMark(index: Int, point: TaskPointInfo) = when (point.kind) {
     "start" -> "S"
     "finish" -> "F"
     else -> "$index"

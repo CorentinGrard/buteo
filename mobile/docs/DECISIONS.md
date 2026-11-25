@@ -666,6 +666,37 @@ word; most flights are a club pilot's out-and-return or triangle.
   JSON has the "mode" and the "goto" waypoint).
 - **Finish at the start:** one tap appends the start again (the finish
   once applied) for the usual flight back home.
+- **Switching and stopping** (the pilot, later that night: "I need to
+  be able to switch easily between circuits, quit a current circuit"):
+  the page is the route flown (its points, Previous / Next / Restart,
+  Edit, **Stop** with a second tap) and **Your routes**, the saved ones,
+  the last first: a tap flies one at once, no editing and no "Done";
+  the one flown says "Flying".  Every route applied is saved in
+  XCSoarData/tasks by its name, or one made of its points
+  ("Montelimar Ancone - Sagy - Grenoble Isere", without the leading
+  codes and the finish back home), so it is in the list; a task file
+  loaded is named after the file (core).  Delete with a second tap.
+  "New route" at the bottom; WeGlide and other files behind one button.
+  The editor lost Save, Load and Clear: the list does those.
 - Not done: the name on the flight screen's next-point card ("NEXT" also
-  under Go to), naming saved routes by their points, a route list of
-  recent flights.
+  under Go to).
+
+## D33 — One map: MapLibre's; XCSoar's map leaves the app
+**Status:** Accepted (2026-11-25, the pilot: "remove all together the
+xcsoar map")
+
+The vector map (map review 2026-11-24, D31) is the app's only map: no
+choice in the menu, no XCSoar map view (`CoreMapView`), no pan, zoom,
+hold or task taps by the core's pixels (Kotlin, JNI).  Map & units keeps
+what the vector map uses: the relief on or off (XCSoar's terrain switch),
+the circling zoom, the thermal assistant and the trail's length (the
+core's trail features now follow it: off, 10 minutes, an hour, all);
+topography and terrain colours went.  The map's credit (OpenStreetMap,
+Protomaps) is in the menu under the map's coverage, not an "i" on the
+map, as the pilot asked.
+
+The core's renderer (`core/map`, `xcs_map_*`) still builds into the
+library: the map's options and orientation are stored through it, and
+the analysis pages draw their terrain with it (`xcs_map_terrain_image`).
+Moving those into the host and dropping the renderer, its fonts and
+drawables, is the next step.
