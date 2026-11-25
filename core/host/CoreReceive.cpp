@@ -20,6 +20,8 @@
 #include "Task/ProtectedTaskManager.hpp"
 #include "Components.hpp"
 #include "BackendComponents.hpp"
+#include "DataComponents.hpp"
+#include "Terrain/RasterTerrain.hpp"
 #include "Operation/PopupOperationEnvironment.hpp"
 #include "ui/event/Notify.hpp"
 #include "ui/event/PeriodicTimer.hpp"
@@ -143,6 +145,28 @@ LateInitialise() noexcept
 /* "Battery low" messages, as MainWindow's timer runs it */
 static BatteryTimer battery_timer;
 
+/**
+ * Load the detailed terrain around the glider.  XCSoar loads it only
+ * while painting the map (MapWindow::UpdateTerrain()), around the
+ * map's centre; the app may show no map (in the background) or one it
+ * draws itself, and the glide computer (reach, final glide over
+ * terrain) would then use the 16 times coarser overview once the
+ * glider has flown out of the tiles loaded last.  Tiles already
+ * loaded stay while they fit (RasterTileCache::PollTiles()), so this
+ * and the map's own loading keep each other's.
+ */
+static void
+UpdateTerrain() noexcept
+{
+  /* about a glide's range; the loader adds a tile (256 pixels) */
+  constexpr double radius = 50000;
+
+  const auto &basic = CommonInterface::Basic();
+  if (data_components != nullptr && data_components->terrain != nullptr &&
+      basic.location_available)
+    data_components->terrain->UpdateTiles(basic.location, radius);
+}
+
 static void
 OnTimer() noexcept
 {
@@ -150,6 +174,7 @@ OnTimer() noexcept
   ExchangeBlackboard();
   BackendSettingsTimer();
   BackendDeviceTimer();
+  UpdateTerrain();
   battery_timer.Process();
 }
 
