@@ -120,6 +120,9 @@ fun FlightScreen(
     /** the vector map's zooms, cruising and circling, and where to keep them */
     vectorMapZooms: Pair<Double, Double> = VECTOR_CRUISE_ZOOM to VECTOR_CIRCLING_ZOOM,
     onVectorMapZooms: (cruise: Double, circling: Double) -> Unit = { _, _ -> },
+    /** where the glider was last, for the vector map before a fix, and where to keep it */
+    vectorMapPlace: Pair<Double, Double>? = null,
+    onVectorMapPlace: (latitude: Double, longitude: Double) -> Unit = { _, _ -> },
     onEditTile: (TileLayout, Int) -> Unit = { _, _ -> },
     /** A tile was tapped: the page its InfoBox opens. */
     onTileAction: (TileAction) -> Unit = {},
@@ -157,7 +160,8 @@ fun FlightScreen(
     val thermalAssistant by viewModel.thermalAssistant.collectAsStateWithLifecycle()
     val circlingZoom by viewModel.circlingZoom.collectAsStateWithLifecycle()
     val vectorState = remember {
-        VectorMapState(vectorMapZooms.first, vectorMapZooms.second, onVectorMapZooms)
+        VectorMapState(vectorMapZooms.first, vectorMapZooms.second, onVectorMapZooms,
+                       vectorMapPlace, onVectorMapPlace)
     }
     // back from a page: the airspace alerts, the vario sound or the
     // map's settings may have changed

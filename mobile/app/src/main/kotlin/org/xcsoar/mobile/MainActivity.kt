@@ -599,6 +599,10 @@ class MainActivity : ComponentActivity() {
                         vectorMapVersion = flightDataState.regionsVersion,
                         vectorMapZooms = app.vectorMapZooms,
                         onVectorMapZooms = { cruise, circling -> app.vectorMapZooms = cruise to circling },
+                        vectorMapPlace = app.vectorMapPlace,
+                        onVectorMapPlace = { latitude, longitude ->
+                            app.vectorMapPlace = latitude to longitude
+                        },
                         theme = theme,
                         onTheme = {
                             theme = it

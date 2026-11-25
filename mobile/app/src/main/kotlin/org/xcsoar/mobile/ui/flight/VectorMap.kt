@@ -128,7 +128,13 @@ class VectorMapState(
     private var cruiseZoom: Double = VECTOR_CRUISE_ZOOM,
     private var circlingZoom: Double = VECTOR_CIRCLING_ZOOM,
     private val onZooms: (cruise: Double, circling: Double) -> Unit = { _, _ -> },
+    /** where the glider was last: the map starts there before a fix */
+    place: Pair<Double, Double>? = null,
+    private val onPlace: (latitude: Double, longitude: Double) -> Unit = { _, _ -> },
 ) {
+    private var lastPlace = place?.let { LatLng(it.first, it.second) }
+    private var placeSaved = 0L
+
     /** Following the glider; a pan stops it, the centre button resumes. */
     var follows by mutableStateOf(true)
         private set
@@ -171,6 +177,8 @@ class VectorMapState(
     /* the last fix, its track and when it came; the glider turns from
        [bearingFrom] to [bearingTo] (unwrapped) until the next one */
     private var fix: LatLng? = null
+    /** Where the glider was drawn when [fix] came: it glides from there. */
+    private var fixFrom: LatLng? = null
     private var fixTrack: Double? = null
     private var fixTime = 0L
     private var fixInterval = 0L
@@ -187,14 +195,19 @@ class VectorMapState(
 
     fun zoom(steps: Int) {
         val map = map ?: return
-        if (following) {
+        if (following && fix != null) {
             zoomGoal = (zoomGoal - steps).coerceIn(map.minZoomLevel, map.maxZoomLevel)
             keepZoom()
             glide(MOVE_MILLIS)
         } else {
+            // panned, or before a fix
+            val zoom = map.cameraPosition.zoom - steps
+            if (following) {
+                zoomGoal = zoom.coerceIn(map.minZoomLevel, map.maxZoomLevel)
+                keepZoom()
+            }
             boost(MOVE_MILLIS)
-            map.animateCamera(CameraUpdateFactory.zoomTo(map.cameraPosition.zoom - steps),
-                              MOVE_MILLIS)
+            map.animateCamera(CameraUpdateFactory.zoomTo(zoom), MOVE_MILLIS)
         }
     }
 
@@ -251,10 +264,17 @@ class VectorMapState(
         bearingFrom = start
         bearingTo = track?.let { start + shortest(start, it) } ?: start
         val interval = if (previous == null) 0L else (now - fixTime).coerceIn(100L, 2000L)
+        fixFrom = previous?.let { gliderAt(now) }
         fix = at
         fixTrack = track
         fixTime = now
         fixInterval = interval
+        // where to start next time, now and then
+        if (now - placeSaved > 60_000) {
+            placeSaved = now
+            lastPlace = at
+            onPlace(latitude, longitude)
+        }
         upBearing = when (orientation) {
             null, MapOrientation.NORTH_UP -> 0.0
             MapOrientation.TARGET_UP -> target ?: track ?: upBearing
@@ -270,6 +290,7 @@ class VectorMapState(
             // the first fix, or a replay's start: there at once
             Log.i(TAG, "glider at $latitude $longitude")
             fixInterval = 0
+            fixFrom = null
             ownMove { map.moveCamera(CameraUpdateFactory.newCameraPosition(camera(map, at))) }
             showGlider(at, bearingTo)
             return
@@ -298,14 +319,25 @@ class VectorMapState(
     }
 
     /**
-     * After each frame: following, the glider where the camera looks
-     * (one frame behind it, a pixel at most at these speeds).
+     * After each frame: following, the glider on its way to the fix, as
+     * the camera (one frame behind it, a pixel at most at these speeds).
+     * Not the camera's target: zoomed out to the whole world, MapLibre
+     * keeps the camera off the poles and the glider was drawn in Africa.
      */
     internal fun frameRendered() {
-        val map = map ?: return
-        val at = fix ?: return
+        if (map == null || fix == null) return
         val now = SystemClock.uptimeMillis()
-        if (following && gestures == 0) showGlider(map.cameraPosition.target ?: at, gliderBearing(now))
+        if (following && gestures == 0) showGlider(gliderAt(now), gliderBearing(now))
+    }
+
+    /** The glider at [now], gliding evenly from [fixFrom] to [fix]. */
+    private fun gliderAt(now: Long): LatLng {
+        val to = fix ?: return LatLng()
+        val from = fixFrom ?: return to
+        if (fixInterval <= 0) return to
+        val t = ((now - fixTime).toDouble() / fixInterval).coerceIn(0.0, 1.0)
+        return LatLng(from.latitude + (to.latitude - from.latitude) * t,
+                      from.longitude + (to.longitude - from.longitude) * t)
     }
 
     /* what the glider layer shows: set again only when it changes */
@@ -399,10 +431,19 @@ class VectorMapState(
         shownAt = null
     }
 
-    /** The style is loaded: the camera as the flight screen wants it. */
-    internal fun attached() {
+    /**
+     * The style is loaded: the camera as the flight screen wants it;
+     * before a fix where the glider was last, else over [regions] (the
+     * middle of the map files, as XCSoar's map).
+     */
+    internal fun attached(regions: LatLng?) {
         applyPadding()
-        if (following) glide(0)
+        val map = map ?: return
+        if (fix == null)
+            (lastPlace ?: regions)?.let {
+                ownMove { map.moveCamera(CameraUpdateFactory.newLatLngZoom(it, zoomGoal)) }
+            }
+        else if (following) glide(0)
     }
 
     /**
@@ -635,7 +676,9 @@ fun VectorMap(
                 state.glider = loaded.getLayer("glider")
                 state.view = mapView
                 state.map = map
-                state.attached()
+                state.attached(offline?.bounds?.let { b ->
+                    LatLng((b[1] + b[3]) / 2, (b[0] + b[2]) / 2)
+                })
                 style = loaded
             }
         }

@@ -134,6 +134,23 @@ class XcsoarApp : Application() {
             .putFloat("vectorCirclingZoom", value.second.toFloat())
             .apply()
 
+    /**
+     * Where the glider was last (latitude, longitude): the vector map
+     * starts there before a fix.  On the phone, like the theme.
+     */
+    var vectorMapPlace: Pair<Double, Double>?
+        get() = if (uiPreferences.contains("vectorLatitude"))
+            uiPreferences.getFloat("vectorLatitude", 0f).toDouble() to
+                uiPreferences.getFloat("vectorLongitude", 0f).toDouble()
+        else null
+        set(value) {
+            if (value == null) return
+            uiPreferences.edit()
+                .putFloat("vectorLatitude", value.first.toFloat())
+                .putFloat("vectorLongitude", value.second.toFloat())
+                .apply()
+        }
+
     /** Rows of tiles on the flight screen ([TILE_ROWS]); on the phone, like the theme. */
     var tileRows: Int
         get() = uiPreferences.getInt("tileRows", TILE_ROWS.first).coerceIn(TILE_ROWS)
