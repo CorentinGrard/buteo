@@ -12,6 +12,7 @@
 #include "InfoBoxes/Content/Type.hpp"
 #include "TestUtil.hpp"
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstdio>
@@ -261,12 +262,39 @@ TestDataFiles(xcs_core *core)
         XCS_ERROR_INVALID_ARGUMENT);
   }
 
+  /* the terrain's heights for the map's relief: the tile of zoom 10
+     around Benalla (-36.55, 146.0), from about 150 m in the plain to
+     the hills; the whole terrain at zoom 5; none in the Atlantic */
+  {
+    std::vector<int16_t> heights(64 * 64);
+    ok1(xcs_terrain_tile(core, 21, 0, 0, 64, heights.data()) ==
+        XCS_ERROR_INVALID_ARGUMENT &&
+        xcs_terrain_tile(core, 10, 1024, 0, 64, heights.data()) ==
+        XCS_ERROR_INVALID_ARGUMENT &&
+        xcs_terrain_tile(core, 10, 927, 623, 0, heights.data()) ==
+        XCS_ERROR_INVALID_ARGUMENT &&
+        xcs_terrain_tile(core, 10, 927, 623, 513, heights.data()) ==
+        XCS_ERROR_INVALID_ARGUMENT &&
+        xcs_terrain_tile(core, 10, 927, 623, 64, nullptr) ==
+        XCS_ERROR_INVALID_ARGUMENT);
+    ok1(xcs_terrain_tile(core, 10, 927, 623, 64, heights.data()) == XCS_OK);
+    const auto [low, high] = std::minmax_element(heights.begin(), heights.end());
+    ok1(*low > 100 && *high < 2000 && *high - *low > 50);
+    ok1(xcs_terrain_tile(core, 5, 28, 19, 64, heights.data()) == XCS_OK);
+    ok1(xcs_terrain_tile(core, 10, 0, 0, 64, heights.data()) ==
+        XCS_ERROR_FAILED);
+  }
+
   /* removing the files unloads their data */
   ok1(xcs_set_data_file(core, XCS_DATA_AIRSPACE, nullptr) == XCS_OK);
   ok1(xcs_set_data_file(core, XCS_DATA_MAP, "") == XCS_OK);
   status = DataStatus(core);
   ok1(status.find("\"terrain\":false") != std::string::npos);
   ok1(DataCount(status, "airspace") == 0);
+  {
+    int16_t height;
+    ok1(xcs_terrain_tile(core, 0, 0, 0, 1, &height) == XCS_ERROR_FAILED);
+  }
 }
 
 static std::string
@@ -1757,7 +1785,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 22 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7);
 
   Recorder recorder;
   TestCreateArguments(recorder);

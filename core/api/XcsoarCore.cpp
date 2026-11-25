@@ -1445,6 +1445,20 @@ xcs_map_features(xcs_core *core, uint32_t which, char *buffer, size_t size,
 }
 
 xcs_status
+xcs_terrain_tile(xcs_core *core, uint32_t zoom, uint32_t x, uint32_t y,
+                 uint32_t size, int16_t *heights)
+{
+  if (core == nullptr || heights == nullptr || zoom > 20 ||
+      x >= (1u << zoom) || y >= (1u << zoom) || size == 0 || size > 512)
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+  return RunOnMain(*core, [=]{
+    return CoreFeatures::TerrainTile(zoom, x, y, size, heights)
+      ? XCS_OK : XCS_ERROR_FAILED;
+  });
+}
+
+xcs_status
 xcs_tiles_types(xcs_core *core, char *buffer, size_t size, size_t *length_r)
 {
   return GetJsonOnMain(core, buffer, size, length_r,

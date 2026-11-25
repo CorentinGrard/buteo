@@ -1472,6 +1472,20 @@ XCS_EXPORT xcs_status
 xcs_map_features(xcs_core *core, uint32_t which, char *buffer, size_t size,
                  size_t *length_r);
 
+/**
+ * The terrain's heights for a map the app draws itself (its relief,
+ * from the same terrain the glide computer uses): tile (zoom, x, y) of
+ * the Web Mercator grid of OpenStreetMap's tiles, `size` by `size`
+ * heights in metres at the pixels' centres, row by row from the north.
+ * Water and the area outside the terrain take the height beside them.
+ * From zoom 9, loads the detailed terrain there first.  zoom 0..20,
+ * x and y below 2^zoom, size 1..512; XCS_ERROR_FAILED without terrain
+ * or for a tile outside it.
+ */
+XCS_EXPORT xcs_status
+xcs_terrain_tile(xcs_core *core, uint32_t zoom, uint32_t x, uint32_t y,
+                 uint32_t size, int16_t *heights);
+
 /*
  * Moving map: XCSoar's map drawn by the core with OpenGL ES into a
  * surface of the app.  Android only for now; elsewhere these return

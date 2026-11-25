@@ -816,6 +816,26 @@ Java_org_xcsoar_mobile_NativeCore_nativeMapFeatures(JNIEnv *env, jclass,
   return status == XCS_OK ? env->NewStringUTF(buffer.c_str()) : nullptr;
 }
 
+/** @return size * size heights (m) from the north-west, or null */
+JNIEXPORT jshortArray JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeTerrainTile(JNIEnv *env, jclass,
+                                                    jlong core, jint zoom,
+                                                    jint x, jint y, jint size)
+{
+  if (zoom < 0 || x < 0 || y < 0 || size <= 0 || size > 512)
+    return nullptr;
+
+  std::vector<int16_t> heights(std::size_t(size) * size);
+  if (xcs_terrain_tile(ToCore(core), zoom, x, y, size, heights.data())
+      != XCS_OK)
+    return nullptr;
+
+  jshortArray array = env->NewShortArray(jsize(heights.size()));
+  if (array != nullptr)
+    env->SetShortArrayRegion(array, 0, jsize(heights.size()), heights.data());
+  return array;
+}
+
 JNIEXPORT jstring JNICALL
 Java_org_xcsoar_mobile_NativeCore_nativeTaskGet(JNIEnv *env, jclass,
                                                 jlong core, jint which)

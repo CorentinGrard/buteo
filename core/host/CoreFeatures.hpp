@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 /**
@@ -32,5 +33,16 @@ Task() noexcept;
 /** The last 20 minutes of the flight, in segments of like climb. */
 std::string
 Trail() noexcept;
+
+/**
+ * The terrain's heights (metres) over tile (zoom, x, y) of the Web
+ * Mercator grid, @p size by @p size from the north-west, for the map's
+ * relief (xcs_terrain_tile()).
+ *
+ * @return false without terrain or outside it
+ */
+bool
+TerrainTile(unsigned zoom, unsigned x, unsigned y, unsigned size,
+            int16_t *heights) noexcept;
 
 } // namespace CoreFeatures

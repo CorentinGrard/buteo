@@ -25,15 +25,19 @@
 #include "Engine/Trace/Vector.hpp"
 #include "Task/ProtectedTaskManager.hpp"
 #include "Formatter/AirspaceFormatter.hpp"
+#include "Geo/GeoBounds.hpp"
 #include "Geo/GeoPoint.hpp"
+#include "Terrain/RasterTerrain.hpp"
 #include "io/StringOutputStream.hxx"
 #include "json/Serialize.hxx"
 
 #include <boost/json.hpp>
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <cmath>
 #include <iterator>
+#include <limits>
 #include <string_view>
 #include <unordered_map>
 
@@ -385,6 +389,94 @@ Trail() noexcept
   }
   flush();
   return std::move(w).Finish();
+}
+
+/** The latitude of row @p y (fractional) of a Web Mercator tile grid
+    @p n tiles high. */
+static Angle
+MercatorLatitude(double y, double n) noexcept
+{
+  return Angle::Radians(std::atan(std::sinh(M_PI * (1 - 2 * y / n))));
+}
+
+static Angle
+MercatorLongitude(double x, double n) noexcept
+{
+  return Angle::Degrees(x / n * 360 - 180);
+}
+
+/**
+ * Water and the area outside the terrain have no height: give them
+ * the one beside them on their row (else above), so that lake shores
+ * and the terrain's edge cast no shadow.  The map draws the water over
+ * the relief.
+ */
+static constexpr int16_t NO_HEIGHT = std::numeric_limits<int16_t>::min();
+
+static void
+FillGaps(int16_t *heights, unsigned size) noexcept
+{
+  for (unsigned row = 0; row < size; ++row) {
+    int16_t *const begin = heights + row * size, *const end = begin + size;
+    const auto first = std::find_if(begin, end,
+                                    [](int16_t h){ return h != NO_HEIGHT; });
+    if (first == end) {
+      std::fill(begin, end, row > 0 ? begin[-1] : int16_t(0));
+      continue;
+    }
+    std::fill(begin, first, *first);
+    for (int16_t *h = first + 1; h != end; ++h)
+      if (*h == NO_HEIGHT)
+        *h = h[-1];
+  }
+}
+
+bool
+TerrainTile(unsigned zoom, unsigned x, unsigned y, unsigned size,
+            int16_t *heights) noexcept
+{
+  if (data_components == nullptr || data_components->terrain == nullptr)
+    return false;
+
+  RasterTerrain &terrain = *data_components->terrain;
+  const double n = std::exp2(zoom);
+  const GeoBounds bounds{
+    GeoPoint{MercatorLongitude(x, n), MercatorLatitude(y, n)},
+    GeoPoint{MercatorLongitude(x + 1, n), MercatorLatitude(y + 1, n)},
+  };
+
+  {
+    RasterTerrain::Lease map{terrain};
+    if (!map->IsDefined() || !map->GetBounds().Overlaps(bounds))
+      return false;
+  }
+
+  /* zoomed in, the detailed terrain there; farther out, a tile spans
+     many of the terrain's own and its overview (16 times coarser) is
+     about as fine as the tile's pixels */
+  constexpr unsigned DETAIL_ZOOM = 9;
+  if (zoom >= DETAIL_ZOOM) {
+    const GeoPoint center = bounds.GetCenter();
+    const double radius = center.DistanceS(bounds.GetNorthWest());
+    /* 16 tiles a call (RasterTileCache::PollTiles()); bounded, in
+       case a tile fails to load */
+    for (unsigned i = 0; i < 8 && terrain.UpdateTiles(center, radius); ++i) {}
+  }
+
+  RasterTerrain::Lease map{terrain};
+  for (unsigned row = 0; row < size; ++row) {
+    const Angle latitude = MercatorLatitude(y + (row + 0.5) / size, n);
+    for (unsigned column = 0; column < size; ++column) {
+      const GeoPoint p{MercatorLongitude(x + (column + 0.5) / size, n),
+                       latitude};
+      const TerrainHeight h = map->GetInterpolatedHeight(p);
+      heights[row * size + column] =
+        h.IsSpecial() ? NO_HEIGHT : h.GetValue();
+    }
+  }
+
+  FillGaps(heights, size);
+  return true;
 }
 
 } // namespace CoreFeatures
