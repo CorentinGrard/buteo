@@ -241,8 +241,8 @@ msgstr ""
 msgid "The stored map lacks part of the task, near %1$s"
 msgstr ""
 
-#. menu_map_online
-msgid "Online map only: none stored for the flight"
+#. menu_map_none
+msgid "No map stored for the flight yet: it downloads on Wi-Fi"
 msgstr ""
 
 #. preflight_along_task
@@ -285,8 +285,8 @@ msgstr ""
 msgid "Ends within %1$s"
 msgstr ""
 
-#. preflight_online_only
-msgid "None on the phone: online only"
+#. preflight_no_regions
+msgid "None on the phone yet: downloads on Wi-Fi"
 msgstr ""
 
 #. preflight_data_of

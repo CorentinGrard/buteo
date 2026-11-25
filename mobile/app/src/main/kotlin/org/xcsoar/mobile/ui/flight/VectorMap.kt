@@ -168,8 +168,8 @@ class VectorMapState {
 
 /**
  * The map drawn by MapLibre (prototype): OpenStreetMap vector tiles
- * from the region files on the phone ([OfflineMap], else OpenFreeMap
- * over the network), the relief shaded from the core's terrain, with
+ * from the region files on the phone ([OfflineMap]), the relief shaded
+ * from the core's terrain, with
  * the core's airspace, landables, task and trail (`xcs_map_features`)
  * drawn over them.  Pan, pinch and rotate are MapLibre's own.
  *
@@ -257,7 +257,7 @@ fun VectorMap(
             map.addOnCameraIdleListener { mapView.setMaximumFps(FOLLOW_FPS) }
             val json = context.resources.openRawResource(R.raw.vector_map_style)
                 .bufferedReader().use { it.readText() }
-            Log.i(TAG, "region maps: ${offline?.regions?.map { it.file.name } ?: "none, online"}")
+            Log.i(TAG, "region maps: ${offline?.regions?.map { it.file.name } ?: "none"}")
             map.setStyle(Style.Builder().fromJson(vectorMapStyle(json, offline))) { loaded ->
                 activateGlider(context, map, loaded, state)
                 state.map = map

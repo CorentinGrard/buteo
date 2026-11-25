@@ -69,7 +69,8 @@ class PreflightTest {
         val regions = MapRegion.parseIndex(
             """{"regions":[{"name":"rhone-alpes","title":"Rhône-Alpes","url":"rhone-alpes.pmtiles",""" +
                 """"size":17283615,"date":"2026-11-24","bbox":[4.0,44.0,7.2,46.5],""" +
-                """"outline":[[4.0,44.0],[7.2,44.0],[7.2,46.5],[4.0,44.0]],"extra":1}]}""",
+                """"outlines":[[[4.0,44.0],[7.2,44.0],[7.2,46.5],[4.0,44.0]],""" +
+                """[[8.5,41.4],[9.6,41.4],[9.6,43.0]]],"extra":1}]}""",
             "https://maps.example.org/fr/regions.json")
         val r = regions.single()
         assertEquals("https://maps.example.org/fr/rhone-alpes.pmtiles", r.url)
@@ -80,8 +81,11 @@ class PreflightTest {
         assertTrue(r.near(GeoPosition(45.0, 4.8), 40_000.0))   // ... 28 km from it
         assertFalse(r.near(GeoPosition(45.0, 4.8), 20_000.0))
         assertFalse(r.near(GeoPosition(48.85, 2.35), 50_000.0))  // Paris
+        // an island: its own ring (Corsica's corner here), outside the box
+        assertFalse(r.near(GeoPosition(41.6, 9.4), 0.0))
+        assertTrue(r.copy(bbox = listOf(4.0, 41.4, 9.6, 46.5)).near(GeoPosition(41.6, 9.4), 0.0))
         // without an outline, its box
-        assertTrue(r.copy(outline = null).near(GeoPosition(45.0, 4.8), 0.0))
+        assertTrue(r.copy(outlines = null).near(GeoPosition(45.0, 4.8), 0.0))
     }
 
     @Test
@@ -206,6 +210,13 @@ class PreflightTest {
         assertTrue(updated.ok)
         assertEquals("2026-11-24", updated.date)
         assertEquals(listOf("ra-nord.pmtiles"), updated.updates.map { it.name })
+
+        // the glider elsewhere (at home in Brittany): its region too, the check the task's
+        val home = FlightArea.of(task, GeoPosition(48.1, -1.7))!!
+        val withHome = PreflightCheck.of(home, data(regions = all, index = index))
+            .checks.single { it.kind == DataKind.VECTOR_MAP }
+        assertTrue(withHome.ok)
+        assertEquals(listOf("bretagne.pmtiles"), withHome.updates.map { it.name })
 
         // none on the phone: not ok, all the task's regions to download
         val none = PreflightCheck.of(area, data(regions = StoredRegions(emptyMap(), null),

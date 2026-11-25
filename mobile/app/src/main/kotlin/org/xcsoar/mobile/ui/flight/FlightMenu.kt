@@ -297,7 +297,7 @@ private fun MapCoverageNote(coverage: MapCoverage) {
     val colors = XcsTheme.colors
     val gapNear = coverage.gapNear
     val text = when {
-        coverage.regions.isEmpty() -> stringResource(R.string.menu_map_online)
+        coverage.regions.isEmpty() -> stringResource(R.string.menu_map_none)
         coverage.gliderOutside -> stringResource(R.string.menu_map_glider_outside)
         gapNear != null -> stringResource(R.string.menu_map_task_gap, gapNear)
         else -> stringResource(R.string.menu_map_offline, coverage.regions.joinToString(" + "),

@@ -613,13 +613,28 @@ lose the map in flight".  Nothing in the air may depend on a network.
   does not (a larger map, another country's airspace) is offered on the
   page, not swapped in: that is the pilot's choice.  On a metered
   network the page offers "Download all".
-- The vector map's regions come from Buteo's map server: PMTiles files
-  cut from one build of the map (so a tile on a border is the same in
-  both regions) and an index, regions.json, with each region's outline,
-  size, SHA-256 and the day of its OpenStreetMap data
-  (mobile/tools/map_regions.py).  The index's address is a build setting
-  (`buteo.mapRegionsUrl`); the test app may reach a server on the
-  computer through `adb reverse`, in clear text to 127.0.0.1 only.
+- The vector map's regions: Protomaps' daily planet build (basemap
+  schema 4, from OpenStreetMap), cut by region to zoom 11.  One map of
+  the planet, so a tile on two regions' border is the same in both and
+  the map has no seam; no build of our own (a planet build needs a
+  machine of 64 GB for hours), and the map's style follows Protomaps'
+  layers.  The regions are Geofabrik's smallest extracts (510 for the
+  world; not those that join others, like "alps"), read by HTTP ranges
+  (mobile/tools/map_regions.py): only their tiles, without buildings and
+  the fields and meadows the map does not draw (85 % of the tiles is
+  land use): Rhone-Alpes is 27 MB, France about 330 MB.
+- Once a month, the workflow map-regions (GitHub Actions, one job a
+  continent) cuts them and publishes them with their index, regions.json
+  (each region's outlines, size, SHA-256, the day of its data), in the
+  release "maps" of Buteo's repository: a pre-release, never "latest",
+  so that Obtainium does not take it for the app.  The index's address
+  is a build setting (`buteo.mapRegionsUrl`); the test app may reach a
+  server on the computer through `adb reverse`, in clear text to
+  127.0.0.1 only.
+- No map from the network any more (OpenFreeMap's was another schema):
+  without regions, the relief and the core's layers on a blank ground.
+  The regions around the glider (or the phone) download too, 50 km
+  around, beside the task's.
 - Not done: running without the app open (WorkManager), deleting
   regions no flight needs, adding a second airspace file (the core takes
   one list per kind; with several files, an update loads at the next

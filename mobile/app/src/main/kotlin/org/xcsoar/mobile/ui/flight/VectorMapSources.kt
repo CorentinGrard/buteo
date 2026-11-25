@@ -25,23 +25,20 @@ import java.io.IOException
 private const val TAG = "VectorMap"
 
 /**
- * The vector map's style: the region files on the phone when it has
- * some ([OfflineMap], answered by [MapNetwork]), else OpenFreeMap's
- * tiles over the network (fetched and cached as the map needs them, so
- * not for flying without a network).  The fonts are in the app and the
- * relief comes from the core's terrain.
+ * The vector map's style: its tiles come only from the region files on
+ * the phone ([OfflineMap], answered by [MapNetwork]): Protomaps'
+ * basemap (schema 4) cut by region (D31).  Without any, the map has the
+ * relief and the core's layers on a blank ground.  The fonts are in the
+ * app and the relief comes from the core's terrain.
  */
 fun vectorMapStyle(json: String, offline: OfflineMap?): String {
     val style = JSONObject(json)
     if (offline != null) {
         val b = offline.bounds
-        style.getJSONObject("sources").put("osm", JSONObject()
-            .put("type", "vector")
-            .put("tiles", JSONArray().put("https://${MapNetwork.TILES_HOST}/{z}/{x}/{y}.pbf"))
+        style.getJSONObject("sources").getJSONObject("osm")
             .put("minzoom", offline.minZoom)
             .put("maxzoom", offline.maxZoom)
             .put("bounds", JSONArray().put(b[0]).put(b[1]).put(b[2]).put(b[3]))
-            .put("attribution", "© OpenMapTiles © OpenStreetMap contributors"))
     }
     return style.toString()
 }

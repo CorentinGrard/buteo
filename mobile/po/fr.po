@@ -242,9 +242,9 @@ msgstr "Le planeur est hors de la carte stockée"
 msgid "The stored map lacks part of the task, near %1$s"
 msgstr "La carte stockée n'a pas tout le circuit, vers %1$s"
 
-#. menu_map_online
-msgid "Online map only: none stored for the flight"
-msgstr "Carte en ligne seulement : rien de stocké pour le vol"
+#. menu_map_none
+msgid "No map stored for the flight yet: it downloads on Wi-Fi"
+msgstr "Pas encore de carte stockée pour le vol : elle se télécharge en Wi-Fi"
 
 #. preflight_along_task
 msgid "Along the task: %1$s"
@@ -286,9 +286,9 @@ msgstr "S'arrête avant la fin du circuit, vers %1$s"
 msgid "Ends within %1$s"
 msgstr "S'arrête à moins de %1$s"
 
-#. preflight_online_only
-msgid "None on the phone: online only"
-msgstr "Aucune sur le téléphone : en ligne seulement"
+#. preflight_no_regions
+msgid "None on the phone yet: downloads on Wi-Fi"
+msgstr "Aucune sur le téléphone pour l'instant : se télécharge en Wi-Fi"
 
 #. preflight_data_of
 msgid "Data of %1$s"

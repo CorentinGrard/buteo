@@ -169,7 +169,7 @@ private fun statusText(check: DataCheck, area: FlightArea?): String {
     return when (check.kind) {
         DataKind.TERRAIN, DataKind.VECTOR_MAP -> when {
             check.files.isEmpty() && check.kind == DataKind.VECTOR_MAP ->
-                stringResource(R.string.preflight_online_only)
+                stringResource(R.string.preflight_no_regions)
             !check.ok && !check.gap -> stringResource(R.string.preflight_no_terrain)
             check.gap && check.gapNear != null ->
                 stringResource(R.string.preflight_stops_near, check.gapNear!!)

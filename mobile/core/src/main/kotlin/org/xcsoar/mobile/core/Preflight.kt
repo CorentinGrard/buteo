@@ -102,8 +102,8 @@ data class MapRegion(
     val date: String,
     /** West, south, east, north. */
     val bbox: List<Double>,
-    /** The region's outline, [[lon, lat], ...]; else its [bbox]. */
-    val outline: List<List<Double>>? = null,
+    /** The region's outer rings (islands too), [[[lon, lat], ...], ...]; else its [bbox]. */
+    val outlines: List<List<List<Double>>>? = null,
 ) {
     val fileName get() = "$name.pmtiles"
 
@@ -117,16 +117,19 @@ data class MapRegion(
             p.longitude < west - dLon || p.longitude > east + dLon)
             return false
 
-        val ring = outline?.filter { it.size >= 2 }?.takeIf { it.size >= 3 }
-            ?.map { GeoPosition(it[1], it[0]) }
-            ?: return true  // within the margin of the box
-        if (inside(ring, p)) return true
+        val rings = outlines.orEmpty()
+            .map { ring -> ring.filter { it.size >= 2 }.map { GeoPosition(it[1], it[0]) } }
+            .filter { it.size >= 3 }
+        if (rings.isEmpty()) return true  // within the margin of the box
+        if (rings.any { inside(it, p) }) return true
         // a plane in metres around p
         val k = cos(Math.toRadians(p.latitude)) * METRES_PER_DEGREE
         fun x(q: GeoPosition) = (q.longitude - p.longitude) * k
         fun y(q: GeoPosition) = (q.latitude - p.latitude) * METRES_PER_DEGREE
-        return (ring + ring.first()).zipWithNext().any { (a, b) ->
-            distanceToSegment(x(a), y(a), x(b), y(b)) <= margin
+        return rings.any { ring ->
+            (ring + ring.first()).zipWithNext().any { (a, b) ->
+                distanceToSegment(x(a), y(a), x(b), y(b)) <= margin
+            }
         }
     }
 
@@ -175,6 +178,11 @@ data class FlightArea(
     val margin: Double,
     /** The task's points, to name where data is missing; empty around a position. */
     val points: List<MapPoint>,
+    /**
+     * Along a task, where the glider (or the phone) is: its region's map
+     * downloads too, [AROUND_MARGIN] around, though the check is the task's.
+     */
+    val here: GeoPosition? = null,
 ) {
     val isTask get() = points.isNotEmpty()
 
@@ -194,7 +202,7 @@ data class FlightArea(
         fun of(task: TaskOutline?, position: GeoPosition?): FlightArea? = when {
             task != null && task.points.isNotEmpty() ->
                 FlightArea(task.lines + task.points.map { listOf(it.position) }, TASK_MARGIN,
-                           task.points)
+                           task.points, here = position)
             position != null -> FlightArea(listOf(listOf(position)), AROUND_MARGIN, emptyList())
             else -> null
         }
@@ -376,12 +384,18 @@ data class PreflightCheck(
             name = name, title = name, url = uri, sha256 = sha256, size = null,
             folder = folder ?: return null, use = use, date = updated)
 
-        /** The server's regions the area reaches, missing on the phone or older there. */
+        /**
+         * The server's regions the area reaches (and the glider's
+         * surroundings), missing on the phone or older there.
+         */
         private fun PreflightData.neededRegions(area: FlightArea?): List<DataDownload> {
             val samples = area?.samples ?: return emptyList()
             val stored = regions?.dates ?: return emptyList()
             return regionIndex.orEmpty()
-                .filter { r -> samples.any { r.near(it, area.margin) } }
+                .filter { r ->
+                    samples.any { r.near(it, area.margin) } ||
+                        area.here?.let { r.near(it, FlightArea.AROUND_MARGIN) } == true
+                }
                 // an undated file (no Planetiler metadata) stays: it would come again and again
                 .filter { r -> r.name !in stored || stored[r.name]?.let { it < r.date } == true }
                 .map { r ->
