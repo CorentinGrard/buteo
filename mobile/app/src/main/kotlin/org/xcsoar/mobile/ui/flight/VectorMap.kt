@@ -3,10 +3,9 @@
 
 package org.xcsoar.mobile.ui.flight
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PointF
-import android.location.Location
+import android.os.SystemClock
 import android.util.Log
 import android.view.Gravity
 import androidx.compose.runtime.Composable
@@ -23,33 +22,36 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.gestures.MoveGestureDetector
+import org.maplibre.android.gestures.StandardScaleGestureDetector
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
-import org.maplibre.android.location.LocationComponentActivationOptions
-import org.maplibre.android.location.LocationComponentOptions
-import org.maplibre.android.location.OnCameraTrackingChangedListener
-import org.maplibre.android.location.modes.CameraMode
-import org.maplibre.android.location.modes.RenderMode
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.FillLayer
+import org.maplibre.android.style.layers.Layer
 import org.maplibre.android.style.layers.LineLayer
+import org.maplibre.android.style.layers.PaintPropertyValue
 import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.sources.GeoJsonSource
 import org.xcsoar.mobile.R
@@ -64,19 +66,31 @@ import org.xcsoar.mobile.core.TaskOutline
 import org.xcsoar.mobile.core.WaypointInfo
 import org.xcsoar.mobile.ui.Format
 import java.io.File
+import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.hypot
 import kotlin.math.roundToInt
 
 private const val TAG = "VectorMap"
 
 /**
- * Frames a second while the map follows the glider.  Unlimited,
- * MapLibre drew 38 on the Redmi 5 in flight (its camera's animation)
- * and the app took 73-82 % of a core at 1x replay; 52-60 % at 10 frames,
- * 41-47 % at 5, against 24-28 % with XCSoar's map.  A pan or a pinch
- * lifts the limit.
+ * Frames a second while the map follows the glider: one for every
+ * [PIXELS_PER_FRAME] that the map or the glider moves, within these.  A
+ * frame takes MapLibre several ms of the Redmi 5's CPU, so the screen's
+ * rate all the time would cost most of a core; following in cruise the
+ * map moves a pixel or two a second, track up while circling a hundred
+ * or more.  Gestures and the pilot's own zooms draw at the screen's rate.
  */
-private const val FOLLOW_FPS = 5
+private const val FOLLOW_MIN_FPS = 4
+private const val FOLLOW_MAX_FPS = 30
+/** Two pixels is a sixth of a millimetre on the Redmi 5: a step the eye does not see. */
+private const val PIXELS_PER_FRAME = 2
+
+/** How long the zoom buttons, the centre button and the orientation animate. */
+private const val MOVE_MILLIS = 300
+
+/** A fix farther than this from the last one is jumped to (a replay's start). */
+private const val JUMP_METRES = 5_000.0
 
 /** The closest a task mode frames: a small area's streets. */
 private const val MAX_FRAME_ZOOM = 13.0
@@ -95,8 +109,15 @@ sealed interface TaskMapMode {
 }
 
 /**
- * The vector map's camera and what the flight screen's buttons do to
- * it (prototype, map review 2026-11-24).
+ * The vector map's camera and the glider on it, and what the flight
+ * screen's buttons do to them (map review 2026-11-24).
+ *
+ * Following, the camera glides from one fix to the next in MapLibre's
+ * own animation, as long as the fixes are apart, so the map moves
+ * evenly; the glider sits where the camera looks.  MapLibre's location
+ * component did the same with animators on the UI thread and a symbol
+ * for the glider, laid out again in every frame with every label of the
+ * map: 22 ms of CPU a frame on the Redmi 5.
  *
  * @param cruiseZoom the zooms the pilot last chose, cruising and
  *   circling (upstream's cruise and circling map scales)
@@ -121,18 +142,24 @@ class VectorMapState(
         internal set
 
     internal var map: MapLibreMap? = null
-    internal var northUp = true
+    internal var view: MapView? = null
+    /** The style's glider layer (a location indicator). */
+    internal var glider: Layer? = null
+    private var orientation: MapOrientation? = MapOrientation.NORTH_UP
     /** Around what the task modes frame: the sides and the map's buttons, pixels. */
     internal var frameMargin = 0
     internal var frameBottom = 0
+    /** The glider's size, pixels: how far its wing tips move when it turns. */
+    internal var gliderRadius = 0f
 
     /** The glider circles (the flight mode the tiles show, as upstream's display mode). */
     private var circling = false
     /** A zoom of its own while circling (upstream's CircleZoom). */
     internal var circlingZoomEnabled = true
     private val modeZoom get() = if (circling && circlingZoomEnabled) circlingZoom else cruiseZoom
-    /** The pilot zoomed or moved the map: its zoom is the mode's once it stops. */
-    private var pilotMoved = false
+    /** The zoom the camera keeps while following. */
+    private var zoomGoal = cruiseZoom
+
     /** The map's height and where in it the glider goes, pixels. */
     internal var height = 0
         set(value) {
@@ -141,16 +168,34 @@ class VectorMapState(
         }
     private var focusY = -1
 
+    /* the last fix, its track and when it came; the glider turns from
+       [bearingFrom] to [bearingTo] (unwrapped) until the next one */
+    private var fix: LatLng? = null
+    private var fixTrack: Double? = null
+    private var fixTime = 0L
+    private var fixInterval = 0L
+    private var bearingFrom = 0.0
+    private var bearingTo = 0.0
+    /** Where the map turns to: north, the track or the target. */
+    private var upBearing = 0.0
+
+    /** Fingers on the map (pan or pinch): the camera is theirs meanwhile. */
+    private var gestures = 0
+    private var followFps = FOLLOW_MIN_FPS
+    private var boostedUntil = 0L
+    private val restoreFps = Runnable { applyFps() }
+
     fun zoom(steps: Int) {
         val map = map ?: return
-        pilotMoved = true
-        val location = map.locationComponent
-        val target = map.cameraPosition.zoom - steps
-        if (follows && location.isLocationComponentActivated)
-            // a camera move of the map's own would end the tracking
-            location.zoomWhileTracking(target, 250)
-        else
-            map.animateCamera(CameraUpdateFactory.zoomTo(target), 250)
+        if (following) {
+            zoomGoal = (zoomGoal - steps).coerceIn(map.minZoomLevel, map.maxZoomLevel)
+            keepZoom()
+            glide(MOVE_MILLIS)
+        } else {
+            boost(MOVE_MILLIS)
+            map.animateCamera(CameraUpdateFactory.zoomTo(map.cameraPosition.zoom - steps),
+                              MOVE_MILLIS)
+        }
     }
 
     /** The centre button: the glider again, or in a task mode what it frames. */
@@ -160,28 +205,17 @@ class VectorMapState(
             return
         }
         follows = true
-        applyCamera()
+        glide(MOVE_MILLIS)
     }
 
     /** What the task mode framed last. */
     private var lastFrame: LatLngBounds? = null
 
-    /** A pan or a pinch began. */
-    internal fun gesture() {
-        pilotMoved = true
-    }
+    private val following get() = follows && taskMode == null
 
-    /**
-     * The camera stopped: a zoom the pilot chose while following is the
-     * flight mode's from now on (upstream keeps a panned zoom apart).
-     */
-    internal fun idle() {
-        val map = map ?: return
-        if (!pilotMoved) return
-        pilotMoved = false
-        if (!follows || taskMode != null) return
-        val zoom = map.cameraPosition.zoom
-        if (circling && circlingZoomEnabled) circlingZoom = zoom else cruiseZoom = zoom
+    /** The zoom the pilot chose while following is the flight mode's from now on. */
+    private fun keepZoom() {
+        if (circling && circlingZoomEnabled) circlingZoom = zoomGoal else cruiseZoom = zoomGoal
         onZooms(cruiseZoom, circlingZoom)
     }
 
@@ -189,22 +223,186 @@ class VectorMapState(
     internal fun setCircling(value: Boolean) {
         if (value == circling) return
         circling = value
-        if (circlingZoomEnabled && follows && taskMode == null) zoomTo(modeZoom, 600)
+        zoomGoal = modeZoom
+        if (circlingZoomEnabled && following) glide(600)
     }
 
-    private fun zoomTo(zoom: Double, millis: Long) {
+    /** North, track or target up (the menu's choice). */
+    internal fun orient(value: MapOrientation?) {
+        if (value == orientation) return
+        orientation = value
+        if (value == null || value == MapOrientation.NORTH_UP) upBearing = 0.0
+        if (following) glide(MOVE_MILLIS)
+    }
+
+    /**
+     * A snapshot: the glider at [latitude], [longitude] going [track]
+     * (null: unknown); [target] is the next point's bearing, for target
+     * up.  Nothing happens while the fix stays the same.
+     */
+    internal fun onFix(latitude: Double, longitude: Double, track: Double?, target: Double?) {
         val map = map ?: return
-        val location = map.locationComponent
-        if (follows && location.isLocationComponentActivated)
-            location.zoomWhileTracking(zoom, millis)
-        else
-            map.animateCamera(CameraUpdateFactory.zoomTo(zoom), millis.toInt())
+        val at = LatLng(latitude, longitude)
+        val previous = fix
+        if (at == previous && track == fixTrack) return
+        val now = SystemClock.uptimeMillis()
+        // the glider turns from where it is drawn now, the short way
+        val start = gliderBearing(now)
+        bearingFrom = start
+        bearingTo = track?.let { start + shortest(start, it) } ?: start
+        val interval = if (previous == null) 0L else (now - fixTime).coerceIn(100L, 2000L)
+        fix = at
+        fixTrack = track
+        fixTime = now
+        fixInterval = interval
+        upBearing = when (orientation) {
+            null, MapOrientation.NORTH_UP -> 0.0
+            MapOrientation.TARGET_UP -> target ?: track ?: upBearing
+            else -> track ?: upBearing
+        }
+
+        if (!following || gestures > 0) {
+            // the map stays: the glider moves on it
+            showGlider(at, bearingTo)
+            return
+        }
+        if (previous == null || interval == 0L || previous.distanceTo(at) > JUMP_METRES) {
+            // the first fix, or a replay's start: there at once
+            Log.i(TAG, "glider at $latitude $longitude")
+            fixInterval = 0
+            ownMove { map.moveCamera(CameraUpdateFactory.newCameraPosition(camera(map, at))) }
+            showGlider(at, bearingTo)
+            return
+        }
+        // the camera glides to the fix until the next one comes
+        val camera = camera(map, at)
+        adaptFps(map, previous, at, camera.bearing, interval)
+        ownMove {
+            map.easeCamera(CameraUpdateFactory.newCameraPosition(camera), interval.toInt(), false)
+        }
     }
 
-    /** The first fix: there, at the flight mode's zoom. */
-    internal fun place(latitude: Double, longitude: Double) {
-        moveTo(latitude, longitude, modeZoom)
-        applyCamera()
+    /** The camera on [at]: the flight mode's zoom, which way is up. */
+    private fun camera(map: MapLibreMap, at: LatLng) =
+        CameraPosition.Builder(map.cameraPosition).target(at).zoom(zoomGoal)
+            .bearing(upBearing).tilt(0.0).build()
+
+    /** Back to the glider in [millis], at the screen's frame rate. */
+    private fun glide(millis: Int) {
+        val map = map ?: return
+        val at = fix ?: return
+        boost(millis)
+        ownMove {
+            map.easeCamera(CameraUpdateFactory.newCameraPosition(camera(map, at)), millis, true)
+        }
+    }
+
+    /**
+     * After each frame: following, the glider where the camera looks
+     * (one frame behind it, a pixel at most at these speeds).
+     */
+    internal fun frameRendered() {
+        val map = map ?: return
+        val at = fix ?: return
+        val now = SystemClock.uptimeMillis()
+        if (following && gestures == 0) showGlider(map.cameraPosition.target ?: at, gliderBearing(now))
+    }
+
+    /* what the glider layer shows: set again only when it changes */
+    private var shownAt: LatLng? = null
+    private var shownBearing = Double.NaN
+
+    private fun showGlider(at: LatLng, bearing: Double) {
+        val layer = glider ?: return
+        if (at == shownAt && bearing == shownBearing) return
+        if (shownAt == null) layer.setProperties(PropertyFactory.visibility(Property.VISIBLE))
+        shownAt = at
+        shownBearing = bearing
+        // the location indicator's own properties (MapLibre's factory for
+        // them is not public)
+        layer.setProperties(
+            PaintPropertyValue("location", arrayOf(at.latitude, at.longitude, 0.0)),
+            PaintPropertyValue("bearing", bearing))
+    }
+
+    /** The glider's bearing at [now], turning evenly from one fix's track to the next. */
+    private fun gliderBearing(now: Long): Double {
+        if (fixInterval <= 0) return bearingTo
+        val t = ((now - fixTime).toDouble() / fixInterval).coerceIn(0.0, 1.0)
+        return bearingFrom + (bearingTo - bearingFrom) * t
+    }
+
+    /**
+     * About one frame for each pixel that the map or the glider's wing
+     * tips move until the next fix.
+     */
+    private fun adaptFps(map: MapLibreMap, from: LatLng, to: LatLng, bearing: Double,
+                         interval: Long) {
+        val projection = map.projection
+        val a = projection.toScreenLocation(from)
+        val b = projection.toScreenLocation(to)
+        val moved = hypot((b.x - a.x).toDouble(), (b.y - a.y).toDouble())
+        // turning track up, the map's corners move the most
+        val turned = abs(shortest(map.cameraPosition.bearing, bearing)) * PI / 180 * height / 2
+        // the glider's turn in steps of a few degrees
+        val tips = abs(bearingTo - bearingFrom) * PI / 180 * gliderRadius / 2
+        val perSecond = (moved + turned + tips) * 1000 / interval
+        followFps = (perSecond / PIXELS_PER_FRAME).roundToInt()
+            .coerceIn(FOLLOW_MIN_FPS, FOLLOW_MAX_FPS)
+        applyFps()
+    }
+
+    /** The screen's frame rate for [millis] (an animation the pilot asked for). */
+    private fun boost(millis: Int) {
+        val view = view ?: return
+        boostedUntil = SystemClock.uptimeMillis() + millis + 100
+        view.removeCallbacks(restoreFps)
+        view.setMaximumFps(screenFps(view))
+        view.postDelayed(restoreFps, millis + 100L)
+    }
+
+    private fun applyFps() {
+        val view = view ?: return
+        if (gestures > 0 || SystemClock.uptimeMillis() < boostedUntil) return
+        view.setMaximumFps(followFps)
+    }
+
+    private fun screenFps(view: MapView) = (view.display?.refreshRate ?: 60f).roundToInt()
+
+    /** A pan or a pinch began: the map draws at the screen's rate meanwhile. */
+    internal fun gestureBegan(pan: Boolean) {
+        gestures++
+        view?.let { it.removeCallbacks(restoreFps); it.setMaximumFps(screenFps(it)) }
+        // a pan with one finger leaves the glider; a pinch zooms around it
+        if (pan && taskMode == null) follows = false
+    }
+
+    internal fun gestureEnded(zoomed: Boolean) {
+        gestures = (gestures - 1).coerceAtLeast(0)
+        if (gestures > 0) return
+        val map = map ?: return
+        if (zoomed && following) {
+            zoomGoal = map.cameraPosition.zoom
+            keepZoom()
+        }
+        // the fling ends at the screen's rate too
+        boost(500)
+        if (following) glide(MOVE_MILLIS)
+    }
+
+    /** The map view is gone (a new one may come with new region files). */
+    internal fun detached() {
+        view?.removeCallbacks(restoreFps)
+        map = null
+        view = null
+        glider = null
+        shownAt = null
+    }
+
+    /** The style is loaded: the camera as the flight screen wants it. */
+    internal fun attached() {
+        applyPadding()
+        if (following) glide(0)
     }
 
     /**
@@ -214,13 +412,12 @@ class VectorMapState(
     internal fun setTaskMode(mode: TaskMapMode?) {
         if (mode == taskMode) return
         taskMode = mode
-        if (mode != null) {
-            follows = false
-            track()
-        } else {
-            follows = true
-            applyCamera()
-            zoomTo(modeZoom, 400)
+        // the centre button frames the task again meanwhile
+        follows = mode == null
+        if (mode == null) {
+            zoomGoal = modeZoom
+            applyPadding()
+            glide(400)
         }
     }
 
@@ -243,15 +440,12 @@ class VectorMapState(
             ?.let { CameraPosition.Builder(it).zoom(it.zoom.coerceAtMost(MAX_FRAME_ZOOM)).build() }
             // nothing to frame yet: north up where the map is
             ?: CameraPosition.Builder(map.cameraPosition).bearing(0.0).build()
+        boost(500)
         ownMove { map.animateCamera(CameraUpdateFactory.newCameraPosition(position), 500) }
     }
 
-    /** Our own camera moves (padding, the first fix) end tracking too. */
+    /** Our own camera moves are not the pilot's. */
     private var moving = false
-
-    internal fun dismissed() {
-        if (!moving) follows = false
-    }
 
     private inline fun ownMove(block: () -> Unit) {
         moving = true
@@ -260,10 +454,6 @@ class VectorMapState(
         } finally {
             moving = false
         }
-    }
-
-    internal fun moveTo(latitude: Double, longitude: Double, zoom: Double) = ownMove {
-        map?.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(latitude, longitude), zoom))
     }
 
     /**
@@ -286,33 +476,24 @@ class VectorMapState(
         val top = (2 * focusY - height).coerceAtLeast(0).toDouble()
         val bottom = (height - 2 * focusY).coerceAtLeast(0).toDouble()
         ownMove { map.moveCamera(CameraUpdateFactory.paddingTo(0.0, top, 0.0, bottom)) }
-        track()
-    }
-
-    internal fun applyCamera() {
-        applyPadding()
-        track()
-    }
-
-    /** MapLibre's tracking as [follows] and the orientation want it. */
-    private fun track() {
-        val location = map?.locationComponent ?: return
-        if (!location.isLocationComponentActivated) return
-        location.cameraMode = when {
-            !follows -> CameraMode.NONE
-            northUp -> CameraMode.TRACKING_GPS_NORTH
-            else -> CameraMode.TRACKING_GPS
-        }
     }
 }
 
+/** From [from] to [to] degrees the short way: -180 to 180. */
+private fun shortest(from: Double, to: Double): Double {
+    var d = (to - from) % 360
+    if (d > 180) d -= 360
+    if (d < -180) d += 360
+    return d
+}
+
 /**
- * The map drawn by MapLibre (prototype): OpenStreetMap vector tiles
- * from the region files on the phone ([OfflineMap]), the relief shaded
- * from the core's terrain, with
- * the core's airspace, landables, task and trail (`xcs_map_features`)
- * drawn over them.  Pan and pinch are MapLibre's own; it turns only
- * as the orientation says (north up unless the pilot chose otherwise).
+ * The map drawn by MapLibre: OpenStreetMap vector tiles from the region
+ * files on the phone ([OfflineMap]), the relief shaded from the core's
+ * terrain, with the core's airspace, landables, task and trail
+ * (`xcs_map_features`) drawn over them.  Pan and pinch are MapLibre's
+ * own; it turns only as the orientation says (north up unless the pilot
+ * chose otherwise).
  *
  * @param regionDir where the region files are (XCSoarData/maps), read
  *   once
@@ -368,6 +549,7 @@ fun VectorMap(
     state.frameMargin = (24 * density).roundToInt()
     // the menu and zoom buttons along the map's bottom
     state.frameBottom = (96 * density).roundToInt()
+    state.gliderRadius = 26 * density
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle, mapView) {
@@ -388,7 +570,7 @@ fun VectorMap(
             if (resumed) mapView.onPause()
             if (started) mapView.onStop()
             mapView.onDestroy()
-            state.map = null
+            state.detached()
         }
     }
 
@@ -400,7 +582,14 @@ fun VectorMap(
                 isTiltGesturesEnabled = false
                 // the orientation turns it, not the fingers
                 isRotateGesturesEnabled = false
-                attributionGravity = Gravity.TOP or Gravity.END
+                // zooms are the buttons' and the pinch's, as on XCSoar's map
+                isDoubleTapGesturesEnabled = false
+                isQuickZoomGesturesEnabled = false
+                // the map data's credit beside the menu button: at the top
+                // it sat under the cards
+                attributionGravity = Gravity.BOTTOM or Gravity.START
+                setAttributionMargins((80 * density).roundToInt(), 0, 0,
+                                      (28 * density).roundToInt())
             }
             map.addOnMapLongClickListener { point ->
                 // the task modes have taps, not holds
@@ -416,32 +605,44 @@ fun VectorMap(
                 currentOnTaskTap(point.latitude, point.longitude, waypoint)
                 true
             }
-            mapView.setMaximumFps(FOLLOW_FPS)
-            map.addOnCameraMoveStartedListener { reason ->
-                if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) {
-                    state.gesture()
-                    mapView.setMaximumFps((mapView.display?.refreshRate ?: 60f).roundToInt())
-                }
-            }
-            map.addOnCameraIdleListener {
-                state.idle()
-                mapView.setMaximumFps(FOLLOW_FPS)
-            }
+            map.addOnMoveListener(object : MapLibreMap.OnMoveListener {
+                override fun onMoveBegin(detector: MoveGestureDetector) =
+                    state.gestureBegan(pan = detector.pointersCount == 1)
+                override fun onMove(detector: MoveGestureDetector) {}
+                override fun onMoveEnd(detector: MoveGestureDetector) =
+                    state.gestureEnded(zoomed = false)
+            })
+            map.addOnScaleListener(object : MapLibreMap.OnScaleListener {
+                override fun onScaleBegin(detector: StandardScaleGestureDetector) =
+                    state.gestureBegan(pan = false)
+                override fun onScale(detector: StandardScaleGestureDetector) {}
+                override fun onScaleEnd(detector: StandardScaleGestureDetector) =
+                    state.gestureEnded(zoomed = true)
+            })
+            // the glider where the camera looks, after each frame (a style
+            // change in a camera callback would run MapLibre's update again
+            // from within it)
+            mapView.addOnDidFinishRenderingFrameListener { _, _, _ -> state.frameRendered() }
+            mapView.setMaximumFps(FOLLOW_MIN_FPS)
+            if (Log.isLoggable(TAG, Log.DEBUG)) logFrameStats(mapView)
             val json = context.resources.openRawResource(R.raw.vector_map_style)
                 .bufferedReader().use { it.readText() }
             Log.i(TAG, "region maps: ${offline?.regions?.map { it.file.name } ?: "none"}")
             map.setStyle(Style.Builder().fromJson(vectorMapStyle(json, offline))) { loaded ->
-                activateGlider(context, map, loaded, state)
+                ContextCompat.getDrawable(context, R.drawable.map_glider)?.let {
+                    loaded.addImage("glider", it.toBitmap())
+                }
+                state.glider = loaded.getLayer("glider")
+                state.view = mapView
                 state.map = map
-                state.applyCamera()
+                state.attached()
                 style = loaded
             }
         }
     }
 
     LaunchedEffect(orientation) {
-        state.northUp = orientation == null || orientation == MapOrientation.NORTH_UP
-        state.applyCamera()
+        state.orient(orientation)
     }
 
     LaunchedEffect(circling, circlingZoom) {
@@ -451,11 +652,16 @@ fun VectorMap(
 
     val loaded = style
     if (loaded != null) {
+        val airspace = remember(loaded) { AirspaceLook() }
         // the core's data: what changes with the data files, rarely
+        var landablesAt by remember { mutableStateOf<Map<Int, Landable>>(emptyMap()) }
         LaunchedEffect(loaded) {
             while (true) {
                 features(MapFeatures.AIRSPACE)?.let { loaded.source("airspace")?.setGeoJson(it) }
-                features(MapFeatures.WAYPOINTS)?.let { loaded.source("waypoints")?.setGeoJson(it) }
+                features(MapFeatures.WAYPOINTS)?.let {
+                    loaded.source("waypoints")?.setGeoJson(it)
+                    landablesAt = withContext(Dispatchers.Default) { parseLandables(it) }
+                }
                 delay(5 * 60_000)
             }
         }
@@ -467,7 +673,8 @@ fun VectorMap(
             loaded.getLayer("waypoint-circle")?.setProperties(visibility)
             loaded.getLayer("waypoint-label")?.setProperties(visibility)
         }
-        // what changes in flight
+        // what changes in flight, each only when it changed: a new data
+        // set or filter has MapLibre lay its layer out again
         LaunchedEffect(loaded) {
             var tick = 0
             var task: TaskOutline? = null
@@ -476,7 +683,7 @@ fun VectorMap(
             val changes = StyleChanges()
             while (true) {
                 features(MapFeatures.AIRSPACE_STATE)?.let { json ->
-                    changes.apply("warnings", json) { showWarnings(loaded, json) }
+                    changes.apply("warnings", json) { airspace.warnings(loaded, json) }
                 }
                 val mode = state.taskMode
                 if (mode == null) framed = null
@@ -503,9 +710,12 @@ fun VectorMap(
                     }
                 }
                 state.coverage = MapCoverage.of(offline, task, live.value?.position)
-                if (tick % 5 == 0)
+                if (tick % 5 == 0 && landablesAt.isNotEmpty())
                     try {
-                        showReach(loaded, landables(), changes)
+                        val nearby = landables()
+                        val at = landablesAt
+                        val reach = withContext(Dispatchers.Default) { reachJson(nearby, at) }
+                        changes.apply("reach", reach) { loaded.source("reach")?.setGeoJson(reach) }
                     } catch (e: Exception) {
                         Log.w(TAG, "landables", e)
                     }
@@ -514,42 +724,41 @@ fun VectorMap(
             }
         }
         LaunchedEffect(loaded) {
-            var lastAltitude = Double.NaN
             var lastSequence = -1L
-            var placed = false
             live.filterNotNull().collect { s ->
                 if (s.sequence == lastSequence) return@collect
                 lastSequence = s.sequence
                 MapNetwork.inFlight = s.flying
                 val position = s.position ?: return@collect
-                val location = Location("xcsoar").apply {
-                    latitude = position.latitude
-                    longitude = position.longitude
-                    s.track?.let { bearing = it.toFloat() }
-                    s.groundSpeed?.let { speed = it.toFloat() }
-                    time = System.currentTimeMillis()
-                }
-                val map = state.map
-                val component = map?.locationComponent
-                if (component?.isLocationComponentActivated == true)
-                    component.forceLocationUpdate(location)
-                if (!placed && map != null && state.taskMode == null) {
-                    // the first fix: there, at the flight mode's zoom
-                    placed = true
-                    Log.i(TAG, "first position ${position.latitude} ${position.longitude}")
-                    state.place(position.latitude, position.longitude)
-                }
+                state.onFix(position.latitude, position.longitude, s.track, s.next?.bearing)
                 val altitude = s.navAltitude ?: return@collect
-                if (lastAltitude.isNaN() || abs(altitude - lastAltitude) > 100) {
-                    lastAltitude = altitude
-                    fadeFarAirspace(loaded, altitude)
-                }
+                airspace.altitude(loaded, altitude)
             }
         }
     }
 
     AndroidView(factory = { mapView },
                 modifier = modifier.onSizeChanged { state.height = it.height })
+}
+
+/** MapLibre's own figures, every 50 frames (`setprop log.tag.VectorMap DEBUG`). */
+private fun logFrameStats(mapView: MapView) {
+    var frames = 0
+    var encoding = 0.0
+    var calls = 0
+    mapView.addOnDidFinishRenderingFrameListener(
+        MapView.OnDidFinishRenderingFrameWithStatsListener { _, stats ->
+            frames++
+            encoding += stats.encodingTime
+            calls += stats.numDrawCalls
+            if (frames == 50) {
+                Log.d(TAG, "a frame: %.1f ms of CPU, %d draw calls".format(
+                    encoding * 1000 / frames, calls / frames))
+                frames = 0
+                encoding = 0.0
+                calls = 0
+            }
+        })
 }
 
 private fun Style.source(id: String) = getSourceAs<GeoJsonSource>(id)
@@ -568,87 +777,93 @@ private class StyleChanges {
     }
 }
 
-@SuppressLint("MissingPermission") // fed by the core, not Android's location
-private fun activateGlider(context: Context, map: MapLibreMap, style: Style,
-                           state: VectorMapState) {
-    val options = LocationComponentOptions.builder(context)
-        .foregroundDrawable(R.drawable.map_glider)
-        .gpsDrawable(R.drawable.map_glider)
-        .bearingDrawable(R.drawable.map_glider)
-        .backgroundDrawable(R.drawable.map_none)
-        .accuracyAlpha(0f)
-        .elevation(0f)
-        .build()
-    val component = map.locationComponent
-    component.activateLocationComponent(
-        LocationComponentActivationOptions.builder(context, style)
-            .useDefaultLocationEngine(false)
-            .locationComponentOptions(options)
-            .build())
-    component.isLocationComponentEnabled = true
-    component.renderMode = RenderMode.GPS
-    // the glider glides between fixes; at the screen's 90 Hz that cost
-    // the app 84 % of a core in a replay (XCSoar's map: 30 %)
-    component.setMaxAnimationFps(FOLLOW_FPS)
-    component.addOnCameraTrackingChangedListener(object : OnCameraTrackingChangedListener {
-        override fun onCameraTrackingDismissed() = state.dismissed()
-        override fun onCameraTrackingChanged(currentMode: Int) {}
-    })
-}
+/** A landable of the waypoint file: where, and its name for the map. */
+internal class Landable(val longitude: Double, val latitude: Double, val label: String)
 
-/** `[[id, "near"|"inside", acked], ...]` into the warning layers' filters. */
-private fun showWarnings(style: Style, json: String) {
-    val states = AirspaceState.parseList(json)
-    val near = states.filter { !it.inside }.map { it.id }
-    val inside = states.filter { it.inside }.map { it.id }
-    fun filter(ids: List<Int>) =
-        Expression.raw("""["in", ["get", "id"], ["literal", [${ids.joinToString(",")}]]]""")
-    style.getLayerAs<FillLayer>("airspace-near")?.setFilter(filter(near))
-    style.getLayerAs<LineLayer>("airspace-near-line")?.setFilter(filter(near))
-    style.getLayerAs<FillLayer>("airspace-inside")?.setFilter(filter(inside))
-    style.getLayerAs<LineLayer>("airspace-inside-line")?.setFilter(filter(inside))
+/** The landables of the core's waypoints (GeoJSON), by id. */
+internal fun parseLandables(json: String): Map<Int, Landable> {
+    val result = HashMap<Int, Landable>()
+    try {
+        val features = JSONObject(json).getJSONArray("features")
+        for (i in 0 until features.length()) {
+            val f = features.getJSONObject(i)
+            val properties = f.getJSONObject("properties")
+            if (!properties.optBoolean("landable")) continue
+            val c = f.getJSONObject("geometry").getJSONArray("coordinates")
+            result[properties.getInt("id")] =
+                Landable(c.getDouble(0), c.getDouble(1), properties.optString("label"))
+        }
+    } catch (e: JSONException) {
+        Log.w(TAG, "waypoints", e)
+    }
+    return result
 }
 
 /**
- * Airspace well below or above the glider drawn faintly: what it
- * cannot fly into soon.
+ * The landables near the glider as GeoJSON for the "reach" layers:
+ * reachable or not, the name and the arrival height.  A source of their
+ * own: changing the label of the country's waypoints every few seconds
+ * laid them all out again, and their labels blinked.
  */
-private fun fadeFarAirspace(style: Style, altitude: Double) {
-    val below = (altitude - 300).toInt()
-    val above = (altitude + 1500).toInt()
-    val far = """["any", ["<", ["get", "top_m"], $below], [">", ["get", "base_m"], $above]]"""
-    style.getLayer("airspace-line")?.setProperties(
-        PropertyFactory.lineOpacity(Expression.raw("""["case", $far, 0.22, 0.9]""")))
-    style.getLayer("airspace-fill")?.setProperties(
-        PropertyFactory.fillOpacity(Expression.raw("""["case", $far, 0.0, 0.035]""")))
-    style.getLayer("airspace-label")?.setProperties(
-        PropertyFactory.textOpacity(Expression.raw("""["case", $far, 0.0, 1.0]""")))
+internal fun reachJson(nearby: List<WaypointInfo>, at: Map<Int, Landable>): String {
+    val features = JSONArray()
+    for (w in nearby) {
+        val where = at[w.id] ?: continue
+        val arrival = w.arrival?.let {
+            Format.altitudeDifference(it.toDouble()).let { v -> "\n${v.text} ${v.unit}" }
+        }.orEmpty()
+        features.put(JSONObject()
+            .put("type", "Feature")
+            .put("geometry", JSONObject().put("type", "Point")
+                .put("coordinates", JSONArray().put(where.longitude).put(where.latitude)))
+            .put("properties", JSONObject()
+                .put("id", w.id)
+                .put("airport", w.airport)
+                .put("reach", when (w.reachable) { true -> "yes"; false -> "no"; null -> "" })
+                .put("text", where.label + arrival)))
+    }
+    return JSONObject().put("type", "FeatureCollection").put("features", features).toString()
 }
 
-/** The landables' colour (reachable green, not orange) and arrival heights. */
-private fun showReach(style: Style, nearby: List<WaypointInfo>, changes: StyleChanges) {
-    val reachable = nearby.filter { it.reachable == true }.map { it.id }
-    val unreachable = nearby.filter { it.reachable == false }.map { it.id }
-    fun among(ids: List<Int>) =
-        """["in", ["get", "id"], ["literal", [${ids.joinToString(",")}]]]"""
-    val color = """["case", ${among(reachable)}, "#0b7a5c", ${among(unreachable)}, "#c2410c", "#8a8f8c"]"""
-    val arrivals = nearby.filter { it.arrival != null }
-    val label = if (arrivals.isEmpty()) """["get", "label"]""" else buildString {
-        append("""["concat", ["get", "label"], ["match", ["get", "id"]""")
-        for (w in arrivals) {
-            val v = Format.altitudeDifference(w.arrival!!.toDouble())
-            // a number, a sign and a unit: nothing to escape but the newline
-            append(""", ${w.id}, "\n${v.text} ${v.unit}"""")
-        }
-        append(""", ""]]""")
+/**
+ * What the airspace layers show besides each airspace's kind: the
+ * warnings (orange near, red inside, until acknowledged) and, faintly,
+ * what lies well below or above the glider.
+ *
+ * Filters, not data-driven colours: MapLibre copies a layer's
+ * per-feature paint values again in every frame, 3 ms for a country's
+ * roads on the Redmi 5.  A filter costs a new layout of its layer, once,
+ * when it changes.
+ */
+private class AirspaceLook {
+    private var near = emptyList<Int>()
+    private var inside = emptyList<Int>()
+    private var altitude: Int? = null
+
+    /** `[[id, "near"|"inside", acked], ...]` from the core. */
+    fun warnings(style: Style, json: String) {
+        val states = AirspaceState.parseList(json)
+        near = states.filter { !it.inside }.map { it.id }
+        inside = states.filter { it.inside }.map { it.id }
+        fun among(ids: List<Int>) =
+            Expression.raw("""["in", ["get", "id"], ["literal", [${ids.joinToString(",")}]]]""")
+        style.getLayerAs<FillLayer>("airspace-near")?.setFilter(among(near))
+        style.getLayerAs<LineLayer>("airspace-near-line")?.setFilter(among(near))
+        style.getLayerAs<FillLayer>("airspace-inside")?.setFilter(among(inside))
+        style.getLayerAs<LineLayer>("airspace-inside-line")?.setFilter(among(inside))
     }
-    changes.apply("landable-color", color) {
-        style.getLayer("landable-circle")?.setProperties(
-            PropertyFactory.circleColor(Expression.raw(color)))
-    }
-    changes.apply("landable-label", label) {
-        style.getLayer("landable-label")?.setProperties(
-            PropertyFactory.textField(Expression.raw(label)))
+
+    /** The glider's altitude, m: every 100 m, what lies far from it again. */
+    fun altitude(style: Style, metres: Double) {
+        val last = altitude
+        if (last != null && abs(metres - last) <= 100) return
+        val a = metres.roundToInt()
+        altitude = a
+        // what the glider cannot fly into soon
+        val far = """["any", ["<", ["get", "top_m"], ${a - 300}], [">", ["get", "base_m"], ${a + 1500}]]"""
+        style.getLayer("airspace-line")?.setProperties(
+            PropertyFactory.lineOpacity(Expression.raw("""["case", $far, 0.22, 0.9]""")))
+        style.getLayerAs<SymbolLayer>("airspace-label")?.setFilter(Expression.raw("""["!", $far]"""))
     }
 }
 
