@@ -1250,6 +1250,10 @@ xcs_task_edit(xcs_core *core, uint32_t op, uint32_t index, double value)
       ok = true;
       break;
 
+    case XCS_TASK_RESUME:
+      ok = CoreTask::Resume();
+      break;
+
     case XCS_TASK_SET_INNER_RADIUS:
       ok = CoreTask::SetInnerRadius(index, value);
       break;

@@ -802,6 +802,10 @@ enum {
  * (the index of the point flown to) only for the active task.  "errors"
  * is XCSoar's validation message for an invalid task.
  *
+ * The active task has the "mode" XCSoar flies: "ordered" (this task),
+ * "goto" (a waypoint of xcs_goto_waypoint() meanwhile, the task kept:
+ * "goto": {"id": 42, "name": "Anduze"}), "abort" or "none".
+ *
  * A point's "zone" has its "shape" ("cylinder", "line", "sector",
  * "annular_sector", "symmetric_sector", "keyhole", "fai_sector", …)
  * and the sizes the pilot may change, as upstream's zone editors:
@@ -884,6 +888,9 @@ typedef enum xcs_task_op {
   /** Active area task: lock (`value` 1) the target of point `index`, or
       let XCSoar's optimiser move it (0). */
   XCS_TASK_LOCK_TARGET = 23,
+  /** Fly the task again after xcs_goto_waypoint(); not without a
+      task. */
+  XCS_TASK_RESUME = 24,
 } xcs_task_op;
 
 /** The task's rules, XCS_TASK_SET_RULE's `index`. */

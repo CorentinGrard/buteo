@@ -412,7 +412,7 @@ TestTask(xcs_core *core)
   const auto ids = WaypointIds(core, 3);
   ok1(ids.size() == 3);
   if (ids.size() != 3) {
-    skip(36 + 24, 0, "no waypoints");
+    skip(36 + 24 + 4, 0, "no waypoints");
     return;
   }
 
@@ -430,6 +430,14 @@ TestTask(xcs_core *core)
     }
     ok1(named && (s.valid & (XCS_VALID_NEXT_WAYPOINT | XCS_VALID_NEXT_ARRIVAL)) == 0);
   }
+  /* the task says it is not flown meanwhile, and to where; without a
+     task there is nothing to resume */
+  {
+    const auto active = TaskJson(core, XCS_TASK_ACTIVE);
+    ok1(Has(active, "\"mode\":\"goto\"") &&
+        Has(active, "\"goto\":{\"id\":"));
+  }
+  ok1(xcs_task_edit(core, XCS_TASK_RESUME, 0, 0) == XCS_ERROR_INVALID_ARGUMENT);
 
   /* editing needs XCS_TASK_BEGIN */
   ok1(TaskJson(core, XCS_TASK_EDITED).empty());
@@ -468,6 +476,13 @@ TestTask(xcs_core *core)
   ok1(xcs_task_edit(core, XCS_TASK_COMMIT, 0, 0) == XCS_OK);
   auto active = TaskJson(core, XCS_TASK_ACTIVE);
   ok1(Count(active, "\"waypoint_id\"") == 3);
+  /* the new task is flown, not the "Go to" before it; another "Go to"
+     pauses it, XCS_TASK_RESUME flies it again */
+  ok1(Has(active, "\"mode\":\"ordered\""));
+  ok1(xcs_goto_waypoint(core, ids[2]) == XCS_OK &&
+      Has(TaskJson(core, XCS_TASK_ACTIVE), "\"mode\":\"goto\"") &&
+      xcs_task_edit(core, XCS_TASK_RESUME, 0, 0) == XCS_OK &&
+      Has(TaskJson(core, XCS_TASK_ACTIVE), "\"mode\":\"ordered\""));
   ok1(active.find("\"kind\":\"finish\"") != std::string::npos);
   ok1(active.find("\"active\":0") != std::string::npos);
   ok1(TaskJson(core, XCS_TASK_EDITED).empty());
@@ -1861,7 +1876,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 4);
 
   Recorder recorder;
   TestCreateArguments(recorder);

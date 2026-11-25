@@ -376,8 +376,33 @@ CoreTask::Describe(bool edited) noexcept
   const OrderedTask &task = lease->GetOrderedTask();
   auto o = ToJson(task);
   o["editing"] = false;
-  const unsigned active = lease->GetActiveTaskPointIndex();
+  const unsigned active = task.GetActiveTaskPointIndex();
   o["active"] = active;
+
+  /* what the glider flies to: this task, or a waypoint of "Go to"
+     meanwhile (XCSoar keeps the task) */
+  switch (lease->GetMode()) {
+  case TaskType::NONE:
+    o["mode"] = "none";
+    break;
+  case TaskType::ORDERED:
+    o["mode"] = "ordered";
+    break;
+  case TaskType::GOTO:
+    o["mode"] = "goto";
+    break;
+  case TaskType::ABORT:
+    o["mode"] = "abort";
+    break;
+  }
+  if (lease->GetMode() == TaskType::GOTO)
+    if (const auto *active_task = lease->GetActiveTask())
+      if (const auto *tp = active_task->GetActiveTaskPoint()) {
+        const auto &waypoint = tp->GetWaypoint();
+        o["goto"] = {{"id", waypoint.id},
+                     {"name", waypoint.name.c_str()}};
+      }
+
   if (IsAreaTask(task.GetFactoryType()))
     AddTargets(o, task, active);
   return Serialize(o);
@@ -925,6 +950,23 @@ CoreTask::Advance(int offset) noexcept
     return false;
 
   task_manager->IncrementActiveTaskPoint(offset);
+  Recalculate();
+  return true;
+}
+
+bool
+CoreTask::Resume() noexcept
+{
+  auto *task_manager = GetTaskManager();
+  if (task_manager == nullptr)
+    return false;
+
+  {
+    /* upstream's Resume() falls back to the "Go to": only the task */
+    ProtectedTaskManager::ExclusiveLease lease{*task_manager};
+    if (lease->GetOrderedTask().TaskSize() == 0 || !lease->Resume())
+      return false;
+  }
   Recalculate();
   return true;
 }

@@ -181,6 +181,10 @@ Save(const char *name) noexcept;
 bool
 Advance(int offset) noexcept;
 
+/** Fly the task again after "Go to"; false without one. */
+bool
+Resume() noexcept;
+
 /** Restart the active task as if not flown yet (start again). */
 void
 Restart() noexcept;
