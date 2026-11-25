@@ -437,10 +437,11 @@ MercatorLongitude(double x, double n) noexcept
 }
 
 /**
- * Water and the area outside the terrain have no height: give them
- * the one beside them on their row (else above), so that lake shores
- * and the terrain's edge cast no shadow.  The map draws the water over
- * the relief.
+ * Water has no height: give it the one beside it on its row (else the
+ * row above), so that lake shores cast no shadow.  The map draws the
+ * water over the relief.  Beyond the terrain's edge the ground is at
+ * sea level: carried along the rows, the edge's heights drew streaks
+ * across the whole world when zoomed out.
  */
 static constexpr int16_t NO_HEIGHT = std::numeric_limits<int16_t>::min();
 
@@ -452,7 +453,10 @@ FillGaps(int16_t *heights, unsigned size) noexcept
     const auto first = std::find_if(begin, end,
                                     [](int16_t h){ return h != NO_HEIGHT; });
     if (first == end) {
-      std::fill(begin, end, row > 0 ? begin[-1] : int16_t(0));
+      if (row > 0)
+        std::copy(begin - size, begin, begin);
+      else
+        std::fill(begin, end, int16_t(0));
       continue;
     }
     std::fill(begin, first, *first);
@@ -495,14 +499,20 @@ TerrainTile(unsigned zoom, unsigned x, unsigned y, unsigned size,
   }
 
   RasterTerrain::Lease map{terrain};
+  const GeoBounds inside = map->GetBounds();
   for (unsigned row = 0; row < size; ++row) {
     const Angle latitude = MercatorLatitude(y + (row + 0.5) / size, n);
     for (unsigned column = 0; column < size; ++column) {
       const GeoPoint p{MercatorLongitude(x + (column + 0.5) / size, n),
                        latitude};
+      int16_t &height = heights[row * size + column];
+      if (!inside.IsInside(p)) {
+        height = 0;
+        continue;
+      }
+
       const TerrainHeight h = map->GetInterpolatedHeight(p);
-      heights[row * size + column] =
-        h.IsSpecial() ? NO_HEIGHT : h.GetValue();
+      height = h.IsSpecial() ? NO_HEIGHT : h.GetValue();
     }
   }
 
