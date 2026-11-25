@@ -242,7 +242,7 @@ msgid "The glider is beyond the stored map"
 msgstr ""
 
 #. menu_map_task_gap
-msgid "The stored map lacks part of the task, near %1$s"
+msgid "The stored map lacks part of the route, near %1$s"
 msgstr ""
 
 #. menu_map_none
@@ -250,15 +250,15 @@ msgid "No map stored for the flight yet: it downloads on Wi-Fi"
 msgstr ""
 
 #. preflight_along_task
-msgid "Along the task: %1$s"
+msgid "Along the route: %1$s"
 msgstr ""
 
 #. preflight_around
-msgid "No task: within %1$s of the glider"
+msgid "No route: within %1$s of the glider"
 msgstr ""
 
 #. preflight_no_area
-msgid "No task and no position: the files alone"
+msgid "No route and no position: the files alone"
 msgstr ""
 
 #. preflight_vector_map
@@ -266,7 +266,7 @@ msgid "Vector map"
 msgstr ""
 
 #. preflight_covers_task
-msgid "Covers the task"
+msgid "Covers the route"
 msgstr ""
 
 #. preflight_covers_around
@@ -282,7 +282,7 @@ msgid "No terrain"
 msgstr ""
 
 #. preflight_stops_near
-msgid "Ends before the task does, near %1$s"
+msgid "Ends before the route does, near %1$s"
 msgstr ""
 
 #. preflight_stops_around
@@ -306,7 +306,7 @@ msgid "No waypoints"
 msgstr ""
 
 #. preflight_airspace_near_task
-msgid "Airspaces near the task: %1$d"
+msgid "Airspaces near the route: %1$d"
 msgstr ""
 
 #. preflight_airspace_around
@@ -318,7 +318,7 @@ msgid "None near the flight: does the file cover this region?"
 msgstr ""
 
 #. preflight_landables_near_task
-msgid "Landables near the task: %1$d"
+msgid "Landables near the route: %1$d"
 msgstr ""
 
 #. preflight_landables_around
@@ -362,7 +362,7 @@ msgid "Downloading %1$s…"
 msgstr ""
 
 #. preflight_automatic
-msgid "On Wi-Fi and on the ground, Buteo downloads newer files and the map for the task by itself while it is open."
+msgid "On Wi-Fi and on the ground, Buteo downloads newer files and the map for the route by itself while it is open."
 msgstr ""
 
 #. preflight_last_check
@@ -385,8 +385,13 @@ msgstr ""
 msgid "Nearest landable first"
 msgstr ""
 
+#. menu_task
+msgctxt "Flight route"
+msgid "Route"
+msgstr ""
+
 #. menu_task_detail
-msgid "Edit, next, previous"
+msgid "Plan it on the map, next point"
 msgstr ""
 
 #. menu_flight_setup
@@ -410,7 +415,7 @@ msgid "Pre-flight check"
 msgstr ""
 
 #. menu_preflight_detail
-msgid "Map, terrain, airspace, waypoints for the task"
+msgid "Map, terrain, airspace, waypoints for the route"
 msgstr ""
 
 #. menu_crew
@@ -1182,7 +1187,7 @@ msgid "Above it, and dropped below: “Above final glide by 120 metres”"
 msgstr ""
 
 #. voice_task_points_title
-msgid "Task points"
+msgid "Route points"
 msgstr ""
 
 #. voice_task_points
@@ -1814,11 +1819,11 @@ msgid "The average climb, then on final glide the highest MacCready that still g
 msgstr ""
 
 #. task_not_possible
-msgid "Not possible for this task type"
+msgid "Not possible for this type of route"
 msgstr ""
 
 #. task_cannot_edit
-msgid "Cannot edit the task"
+msgid "Cannot edit the route"
 msgstr ""
 
 #. task_no_next
@@ -1830,11 +1835,11 @@ msgid "No previous point"
 msgstr ""
 
 #. task_invalid
-msgid "The task is not valid"
+msgid "The route is not valid"
 msgstr ""
 
 #. task_full
-msgid "The task is full"
+msgid "The route is full"
 msgstr ""
 
 #. task_weglide_silent
@@ -1846,7 +1851,7 @@ msgid "%1$s: not loaded"
 msgstr ""
 
 #. task_cannot_load
-msgid "%1$s: cannot load the task"
+msgid "%1$s: cannot load the route"
 msgstr ""
 
 #. task_not_file_name
@@ -1862,7 +1867,7 @@ msgid "Saved as %1$s"
 msgstr ""
 
 #. task_edit_title
-msgid "Edit task"
+msgid "Edit route"
 msgstr ""
 
 #. task_empty_editing
@@ -1870,7 +1875,7 @@ msgid "Add the start, the turn points and the finish, in order."
 msgstr ""
 
 #. task_empty
-msgid "No task. Edit to build one from waypoints, or load a task file."
+msgid "No route. Build one from waypoints, or load a task file."
 msgstr ""
 
 #. task_save_dots
@@ -1883,6 +1888,10 @@ msgstr ""
 
 #. task_previous
 msgid "Previous"
+msgstr ""
+
+#. task_type
+msgid "Type of route"
 msgstr ""
 
 #. task_nominal
@@ -1918,7 +1927,7 @@ msgid "Half width"
 msgstr ""
 
 #. task_save_title
-msgid "Save task"
+msgid "Save route"
 msgstr ""
 
 #. task_save_hint
@@ -1926,23 +1935,27 @@ msgid "In XCSoarData/tasks, as a .tsk file XCSoar reads too."
 msgstr ""
 
 #. task_load_title
-msgid "Load task"
+msgid "Load a route"
 msgstr ""
 
 #. task_looking
-msgid "Looking for tasks…"
+msgid "Looking for routes…"
 msgstr ""
 
 #. task_no_files
-msgid "No task files. Saved tasks go to XCSoarData/tasks; tasks in SeeYou .cup files there are found too."
+msgid "No route files. Saved routes go to XCSoarData/tasks; tasks in SeeYou .cup files there are found too."
 msgstr ""
 
 #. task_load_name
 msgid "Load %1$s"
 msgstr ""
 
+#. task_no_tasks
+msgid "No routes"
+msgstr ""
+
 #. task_numbered
-msgid "Task %1$d"
+msgid "Route %1$d"
 msgstr ""
 
 #. task_turnpoints
@@ -2052,6 +2065,22 @@ msgstr ""
 
 #. task_speed_achieved
 msgid "Speed achieved"
+msgstr ""
+
+#. route_paused
+msgid "Route paused"
+msgstr ""
+
+#. route_going_to
+msgid "Flying to %1$s (Go to waypoint)"
+msgstr ""
+
+#. route_resume
+msgid "Resume the route"
+msgstr ""
+
+#. route_finish_at
+msgid "Finish at %1$s"
 msgstr ""
 
 #. flights_cannot_delete
@@ -2327,7 +2356,7 @@ msgid "Task speed over the flight"
 msgstr ""
 
 #. ana_speed_needs_task
-msgid "Needs a task: the chart starts once the task has started."
+msgid "Needs a route: the chart starts once the route has started."
 msgstr ""
 
 #. ana_speed_hint
@@ -2431,11 +2460,15 @@ msgid "Black: air temperature; dashed red: the dry adiabat; dashed blue: dew poi
 msgstr ""
 
 #. ana_task_description
-msgid "Task: its points and the flight"
+msgid "Route: its points and the flight"
+msgstr ""
+
+#. ana_no_task
+msgid "No route"
 msgstr ""
 
 #. ana_make_task
-msgid "Load or make a task in %1$s."
+msgid "Load or make a route in %1$s."
 msgstr ""
 
 #. ana_xs_not_moving
@@ -2491,11 +2524,15 @@ msgid "Take-off"
 msgstr ""
 
 #. event_task_started
-msgid "Task started"
+msgid "Route started"
 msgstr ""
 
 #. event_next_turnpoint
 msgid "Next turnpoint"
+msgstr ""
+
+#. event_task_finished
+msgid "Route finished"
 msgstr ""
 
 #. event_no_landable

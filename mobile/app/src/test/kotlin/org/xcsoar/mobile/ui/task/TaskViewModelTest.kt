@@ -27,6 +27,7 @@ import org.xcsoar.mobile.core.TaskOp
 import org.xcsoar.mobile.core.TaskPointInfo
 import org.xcsoar.mobile.core.ZoneInfo
 import org.xcsoar.mobile.core.XcsoarCore
+import org.xcsoar.mobile.ui.asText
 import org.xcsoar.mobile.ui.text
 
 /** The task on the map: the refresh the screens share, taps on the map. */
@@ -110,6 +111,63 @@ class TaskViewModelTest {
         runCurrent()
         assertEquals(1, core.edits.size)
         assertEquals(text(R.string.task_map_no_waypoint), viewModel.state.value.message)
+    }
+
+    @Test
+    fun leavingAppliesTheChangesOnly() = runTest(dispatcher) {
+        val core = Core(this)
+        val viewModel = TaskViewModel(core)
+        var left = 0
+        // nothing changed: the edit goes, the active route stays
+        viewModel.beginEdit()
+        runCurrent()
+        viewModel.leave { left++ }
+        runCurrent()
+        assertEquals(listOf(TaskOp.BEGIN, TaskOp.CANCEL), core.edits.map { it.first })
+        assertEquals(1, left)
+        assertEquals(false, viewModel.state.value.task?.editing)
+
+        // a waypoint added: applied on the way out, no "Done" needed
+        core.edits.clear()
+        viewModel.beginEdit()
+        runCurrent()
+        viewModel.addWaypoint(42)
+        runCurrent()
+        viewModel.leave { left++ }
+        runCurrent()
+        assertEquals(listOf(TaskOp.BEGIN, TaskOp.APPEND, TaskOp.COMMIT),
+                     core.edits.map { it.first })
+        assertEquals(2, left)
+    }
+
+    @Test
+    fun anInvalidRouteKeepsThePilotOnThePage() = runTest(dispatcher) {
+        val core = object : XcsoarCore by Core(this) {
+            override suspend fun task(edited: Boolean) =
+                TaskInfo(4, "Racing", editing = edited, errors = "No finish")
+            override suspend fun editTask(op: TaskOp, index: Int, value: Double) {
+                check(op != TaskOp.COMMIT) { "not valid" }
+            }
+        }
+        val viewModel = TaskViewModel(core)
+        var left = false
+        viewModel.beginEdit()
+        runCurrent()
+        viewModel.addWaypoint(42)
+        runCurrent()
+        viewModel.leave { left = true }
+        runCurrent()
+        assertEquals(false, left)
+        assertEquals("No finish".asText(), viewModel.state.value.message)
+    }
+
+    @Test
+    fun resumeFliesTheRouteAgain() = runTest(dispatcher) {
+        val core = Core(this)
+        val viewModel = TaskViewModel(core)
+        viewModel.resume()
+        runCurrent()
+        assertEquals(listOf(Triple(TaskOp.RESUME, 0, 0.0)), core.edits)
     }
 
     @Test

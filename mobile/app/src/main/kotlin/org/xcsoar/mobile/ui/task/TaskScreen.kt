@@ -78,6 +78,10 @@ class TaskActions(
     val changeMinTime: (Int) -> Unit = {},
     val addOptionalStart: () -> Unit = {},
     val removeOptionalStart: (Int) -> Unit = {},
+    /** fly the route again after "Go to" */
+    val resume: () -> Unit = {},
+    /** the start again as the last point: back home */
+    val finishAtStart: () -> Unit = {},
     val openRules: () -> Unit = {},
     /** build the edited task on the map */
     val openMap: () -> Unit = {},
@@ -97,8 +101,10 @@ fun TaskScreen(viewModel: TaskViewModel, onAddPoint: () -> Unit, onAddStart: () 
         viewModel.open()
         onDispose { viewModel.close() }
     }
-    BackHandler(onBack = onBack)
-    TaskContent(state, onBack, TaskActions(
+    // leaving applies what was changed (or stays to show what is wrong)
+    val leave = { viewModel.leave(onBack) }
+    BackHandler(onBack = leave)
+    TaskContent(state, leave, TaskActions(
         beginEdit = viewModel::beginEdit, cancel = viewModel::cancel, done = viewModel::done,
         next = viewModel::next, previous = viewModel::previous, restart = viewModel::restart,
         addPoint = onAddPoint, select = viewModel::select, remove = viewModel::remove,
@@ -108,6 +114,7 @@ fun TaskScreen(viewModel: TaskViewModel, onAddPoint: () -> Unit, onAddStart: () 
         changeRadial = viewModel::changeRadial, changeAngle = viewModel::changeAngle,
         changeMinTime = viewModel::changeMinTime,
         addOptionalStart = onAddStart, removeOptionalStart = viewModel::removeOptionalStart,
+        resume = viewModel::resume, finishAtStart = viewModel::finishAtStart,
         openRules = onOpenRules, openMap = onOpenMap, openTargets = onOpenTargets,
         save = viewModel::save, openFiles = onOpenFiles,
         dismissMessage = viewModel::dismissMessage,
@@ -162,6 +169,9 @@ fun TaskContent(state: TaskState, onBack: () -> Unit, actions: TaskActions = Tas
             return@PageLayout
         }
 
+        // "Go to" flies elsewhere: the route waits, and says so
+        if (!editing && task.paused) Paused(task.goto?.name.orEmpty(), actions.resume)
+
         Summary(task, editing, actions)
 
         if (task.points.isEmpty())
@@ -174,6 +184,12 @@ fun TaskContent(state: TaskState, onBack: () -> Unit, actions: TaskActions = Tas
         }
 
         if (editing) {
+            // back home: the start again, which "Done" makes the finish
+            val start = task.points.firstOrNull()
+            if (start != null && task.points.size >= 2 &&
+                task.points.last().waypointId != start.waypointId)
+                TaskButton(stringResource(R.string.route_finish_at, start.name.trim()), outlined = true,
+                           modifier = Modifier.fillMaxWidth(), onClick = actions.finishAtStart)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TaskButton(stringResource(R.string.waypoints_add_point), primary = true, modifier = Modifier.weight(1f),
                            onClick = actions.addPoint)
@@ -219,6 +235,28 @@ fun TaskContent(state: TaskState, onBack: () -> Unit, actions: TaskActions = Tas
     if (saving)
         SaveDialog(task?.name.orEmpty(), onSave = { saving = false; actions.save(it) },
                    onDismiss = { saving = false })
+}
+
+/**
+ * "Go to" flies to [name] instead: the route waits until the pilot
+ * resumes it (XCSoar keeps it meanwhile).
+ */
+@Composable
+private fun Paused(name: String, onResume: () -> Unit) {
+    val colors = XcsTheme.colors
+    Column(Modifier
+               .fillMaxWidth()
+               .background(colors.panel, RoundedCornerShape(14.dp))
+               .border(2.dp, colors.neutralSafe, RoundedCornerShape(14.dp))
+               .padding(14.dp),
+           verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Caption(stringResource(R.string.route_paused))
+        Text(stringResource(R.string.route_going_to, name.trim()), color = colors.text,
+             fontSize = 18.sp, fontWeight = FontWeight.SemiBold, maxLines = 2,
+             overflow = TextOverflow.Ellipsis)
+        TaskButton(stringResource(R.string.route_resume), primary = true,
+                   modifier = Modifier.fillMaxWidth(), onClick = onResume)
+    }
 }
 
 /** Task type, distance, area minimum time and what makes it invalid. */

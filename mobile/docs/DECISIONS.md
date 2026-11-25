@@ -639,3 +639,33 @@ lose the map in flight".  Nothing in the air may depend on a network.
   regions no flight needs, adding a second airspace file (the core takes
   one list per kind; with several files, an update loads at the next
   start).
+
+## D32 — The task is the route; Back applies it, Go to pauses it
+**Status:** Proposed (2026-11-25), the pilot to confirm the name
+
+The pilot (2026-11-25): "rethink the way 'task' work … we could also
+change the name as it is not super clear".  "Task" is the competition
+word; most flights are a club pilot's out-and-return or triangle.
+
+- In English the app says **Route** for its own texts (menu, page,
+  editor, messages, pre-flight, analysis); French keeps XCSoar's
+  "Circuit".  XCSoar's own names stay (InfoBoxes "Task speed", status
+  pages): those are competition terms the core translates.  "Route"
+  has a context of Buteo's (`po:msgctxt="Flight route"`): XCSoar's
+  "Route" is its route planner.
+- **No route yet:** the page opens on building one, not on "Edit".
+- **Back applies** what was changed, as "Done" did: a half-done edit
+  no longer waits unseen while the old route guides.  A route that is
+  not valid keeps the pilot on the page with XCSoar's reason; "Cancel"
+  drops the edit; nothing changed, nothing is applied (the route's
+  progress stays).
+- **Go to pauses the route.**  XCSoar keeps the task while it flies to
+  a waypoint of "Go to", and the app showed the task as if flown.  The
+  page now says "Route paused · Flying to X" with **Resume the route**
+  (`XCS_TASK_RESUME`, upstream's `TaskManager::Resume()`; the task's
+  JSON has the "mode" and the "goto" waypoint).
+- **Finish at the start:** one tap appends the start again (the finish
+  once applied) for the usual flight back home.
+- Not done: the name on the flight screen's next-point card ("NEXT" also
+  under Go to), naming saved routes by their points, a route list of
+  recent flights.

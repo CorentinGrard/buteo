@@ -143,13 +143,29 @@ data class TaskInfo(
     val rules: TaskRules = TaskRules(),
     /** Active area task only. */
     val area: AreaStats? = null,
+    /**
+     * Active task only: what XCSoar flies, "ordered" (this task), "goto"
+     * (a waypoint meanwhile, the task kept: [goto]), "abort" or "none".
+     */
+    val mode: String? = null,
+    val goto: GotoTarget? = null,
 ) {
     val isArea get() = aatMinTime != null
+
+    /** "Go to" flies elsewhere: the task waits for [TaskOp.RESUME]. */
+    val paused get() = mode == "goto" && points.isNotEmpty()
 
     companion object {
         fun parse(text: String): TaskInfo = json.decodeFromString(serializer(), text)
     }
 }
+
+/** The waypoint "Go to" flies to while the task waits. */
+@Serializable
+data class GotoTarget(
+    @SerialName("id") val waypointId: Int,
+    val name: String,
+)
 
 /** A task XCSoar finds in a file (`xcs_task_list_files`). */
 @Serializable
@@ -205,6 +221,8 @@ enum class TaskOp(val code: Int) {
     SET_TARGET_RADIAL(22),
     /** Active area task; value 1 locked, 0 optimised */
     LOCK_TARGET(23),
+    /** The task again after "Go to". */
+    RESUME(24),
 }
 
 /** Values of `xcs_task_rule`: [TaskOp.SET_RULE]'s index. */

@@ -9,6 +9,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.xcsoar.mobile.core.GotoTarget
 import org.xcsoar.mobile.core.TaskFileInfo
 import org.xcsoar.mobile.core.TaskInfo
 import org.xcsoar.mobile.core.WeGlideTask
@@ -74,6 +75,16 @@ class TaskScreenshotTest {
         XcsTheme(dark = false) {
             TaskContent(TaskState(TaskInfo(4, "Racing", valid = true, distance = 64_700.0,
                                            active = 2, points = points)), {})
+        }
+    }
+
+    /** "Go to" flies elsewhere: the route says it waits, and resumes. */
+    @Test
+    fun pausedByGoTo() = captureRoboImage("src/test/screenshots/task_paused.png") {
+        XcsTheme(dark = false) {
+            TaskContent(TaskState(TaskInfo(4, "Racing", valid = true, distance = 64_700.0,
+                                           active = 1, points = points, mode = "goto",
+                                           goto = GotoTarget(9, "Saint-Hilaire"))), {})
         }
     }
 

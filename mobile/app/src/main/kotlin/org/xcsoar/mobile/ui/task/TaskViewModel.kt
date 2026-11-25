@@ -54,6 +54,9 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
 
     private val editing get() = stateFlow.value.task?.editing == true
 
+    /** The edit changed something: leaving the page applies it ([leave]). */
+    private var changed = false
+
     private var job: Job? = null
 
     /* the screens showing the task: the panel under the map and the
@@ -64,9 +67,13 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     fun open() {
         if (openCount++ > 0) return
         job = viewModelScope.launch {
+            refresh()
+            // no route yet: straight to building one
+            val task = stateFlow.value.task
+            if (task != null && !task.editing && task.points.isEmpty()) beginEdit()
             while (isActive) {
-                refresh()
                 delay(REFRESH_MS)
+                refresh()
             }
         }
     }
@@ -105,14 +112,17 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     }
 
     private fun edit(op: TaskOp, index: Int = 0, value: Double = 0.0,
-                     refused: UiText = text(R.string.task_not_possible)) =
+                     refused: UiText = text(R.string.task_not_possible)) {
+        if (editing) changed = true
         run(refused) { core.editTask(op, index, value); null }
+    }
 
     fun dismissMessage() = stateFlow.update { it.copy(message = null) }
 
     /* the active task */
 
     fun beginEdit() = run(text(R.string.task_cannot_edit)) {
+        changed = false
         core.editTask(TaskOp.BEGIN)
         stateFlow.update { it.copy(task = core.task(true), selected = null) }
         null
@@ -122,9 +132,13 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     fun previous() = edit(TaskOp.ADVANCE, value = -1.0, refused = text(R.string.task_no_previous))
     fun restart() = edit(TaskOp.RESTART)
 
+    /** Fly the route again after "Go to" flew elsewhere. */
+    fun resume() = edit(TaskOp.RESUME)
+
     /* editing */
 
     fun cancel() = run(null) {
+        changed = false
         core.editTask(TaskOp.CANCEL)
         stateFlow.update { it.copy(task = core.task(false), selected = null) }
         null
@@ -132,20 +146,69 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
 
     /** Make the edited task the active one, unless it is not valid. */
     fun done() {
-        viewModelScope.launch {
-            try {
-                core.editTask(TaskOp.COMMIT)
-                stateFlow.update { it.copy(task = core.task(false), selected = null,
-                                           message = null) }
-            } catch (_: Exception) {
-                val errors = core.task(true)?.errors?.trim().orEmpty()
-                stateFlow.update {
-                    it.copy(message = errors.takeIf { e -> e.isNotEmpty() }?.asText()
-                        ?: text(R.string.task_invalid))
-                }
-                refresh()
-            }
+        viewModelScope.launch { commit() }
+    }
+
+    /** [done]; false, with what is wrong, when the task is not valid. */
+    private suspend fun commit(): Boolean = try {
+        core.editTask(TaskOp.COMMIT)
+        changed = false
+        stateFlow.update { it.copy(task = core.task(false), selected = null, message = null) }
+        true
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        val errors = core.task(true)?.errors?.trim().orEmpty()
+        stateFlow.update {
+            it.copy(message = errors.takeIf { e -> e.isNotEmpty() }?.asText()
+                ?: text(R.string.task_invalid))
         }
+        refresh()
+        false
+    }
+
+    /**
+     * The pilot leaves the page (Back): what they changed is applied,
+     * as on "Done", rather than left waiting unseen while the old route
+     * guides; a route that is not valid keeps them on the page with what
+     * is wrong ("Cancel" drops it).  Nothing changed: the edit goes.
+     */
+    fun leave(onLeft: () -> Unit) {
+        if (!editing) {
+            onLeft()
+            return
+        }
+        viewModelScope.launch {
+            if (changed) {
+                if (!commit()) return@launch
+            } else {
+                try {
+                    core.editTask(TaskOp.CANCEL)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    // the core stopped: nothing to keep
+                }
+                val active = try {
+                    core.task(false)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    null
+                }
+                stateFlow.update { it.copy(task = active, selected = null) }
+            }
+            onLeft()
+        }
+    }
+
+    /**
+     * An out-and-return or a triangle back home: the start again, as the
+     * last point (the finish once applied).
+     */
+    fun finishAtStart() {
+        val start = stateFlow.value.task?.points?.firstOrNull() ?: return
+        edit(TaskOp.APPEND, value = start.waypointId.toDouble(), refused = text(R.string.task_full))
     }
 
     fun add(waypoint: WaypointInfo) =
@@ -288,6 +351,7 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     }
 
     private suspend fun append(waypointId: Int?) {
+        if (editing) changed = true
         val message = if (waypointId == null) text(R.string.task_map_no_waypoint)
         else try {
             core.editTask(TaskOp.APPEND, value = waypointId.toDouble())
@@ -368,6 +432,7 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     /** Download it into the editor; the pilot reviews it and taps Done. */
     fun loadWeGlide(task: WeGlideTask) {
         viewModelScope.launch {
+            changed = true
             val message = try {
                 core.loadWeGlideTask(task.id)
                 stateFlow.update { it.copy(selected = null) }
@@ -385,6 +450,7 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     }
 
     fun load(file: TaskFileInfo) = run(text(R.string.task_cannot_load, file.name)) {
+        changed = true
         core.loadTask(file)
         stateFlow.update { it.copy(task = core.task(true), selected = null) }
         null

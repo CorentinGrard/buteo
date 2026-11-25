@@ -947,6 +947,25 @@ caution).  From a fresh install tested on a Redmi 5 and the Pixel 7.
 
 ## Log
 
+- 2026-11-25 (night) — The pilot: "still bugs with the map … the
+  performances are quite poor, I need more fps … rethink the way
+  'task' work".  On `map-lab`, measured on the Redmi 5 (1x replay in
+  flight, compiled): the vector map drew 5 frames a second for 56 % of
+  a core; now about 10 (one per two pixels it moves, the screen's rate
+  for gestures and zooms) for 48 %.  MapLibre's OpenGL build (Vulkan
+  compiled pipelines in flight), the glider a location indicator and
+  the camera MapLibre's own animation (the location component laid all
+  labels out in every frame), paint without per-feature values
+  (MapLibre copies them in every frame), the landables' reach in a
+  small source.  The flight screen: a cheaper fit for the edge bars'
+  numbers, the tiles' height kept, tiles drawn with the state (UI
+  thread 31 % to 14 %).  Map bugs: the map not following at a replay's
+  start, the whole world before a fix (now the last place), dead zoom
+  buttons before a fix, streaks across the world (the relief beyond
+  the terrain), the credit under the cards, blinking landable labels,
+  an empty wind square, tile titles cut to "." ("MC").  The task is
+  the route (D32).  core-check and the app's tests pass.
+
 - 2026-11-23 — Buteo 1.2.0.  Checked on the Pixel 7 before it: an
   area task's targets (a tap in the area, the steppers, the next area,
   Done), terrain behind the task map and a flight's page, and the task

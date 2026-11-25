@@ -107,32 +107,32 @@
     <string name="menu_map_regions">%1$d regions</string>
     <string name="menu_map_glider_outside">The glider is beyond the stored map</string>
     <!-- the stored map has a hole on the task, near the task point %1$s -->
-    <string name="menu_map_task_gap">The stored map lacks part of the task, near %1$s</string>
+    <string name="menu_map_task_gap">The stored map lacks part of the route, near %1$s</string>
     <string name="menu_map_none">No map stored for the flight yet: it downloads on Wi-Fi</string>
     <!-- the pre-flight check: the data the flight needs (D31) -->
     <!-- %1$s: the task's points, "Montélimar – Vienne – Sagy" -->
-    <string name="preflight_along_task">Along the task: %1$s</string>
+    <string name="preflight_along_task">Along the route: %1$s</string>
     <!-- %1$s: a distance, "50 km" -->
-    <string name="preflight_around">No task: within %1$s of the glider</string>
-    <string name="preflight_no_area">No task and no position: the files alone</string>
+    <string name="preflight_around">No route: within %1$s of the glider</string>
+    <string name="preflight_no_area">No route and no position: the files alone</string>
     <string name="preflight_vector_map">Vector map</string>
-    <string name="preflight_covers_task">Covers the task</string>
+    <string name="preflight_covers_task">Covers the route</string>
     <string name="preflight_covers_around">Covers %1$s around</string>
     <string name="preflight_loaded">Loaded</string>
     <string name="preflight_no_terrain">No terrain</string>
     <!-- %1$s: the task point nearest to where the data ends -->
-    <string name="preflight_stops_near">Ends before the task does, near %1$s</string>
+    <string name="preflight_stops_near">Ends before the route does, near %1$s</string>
     <string name="preflight_stops_around">Ends within %1$s</string>
     <string name="preflight_no_regions">None on the phone yet: downloads on Wi-Fi</string>
     <!-- %1$s: a date -->
     <string name="preflight_data_of">Data of %1$s</string>
     <string name="preflight_no_airspace">No airspace</string>
     <string name="preflight_no_waypoints">No waypoints</string>
-    <string name="preflight_airspace_near_task">Airspaces near the task: %1$d</string>
+    <string name="preflight_airspace_near_task">Airspaces near the route: %1$d</string>
     <!-- %1$s: a distance, %2$d: how many -->
     <string name="preflight_airspace_around">Airspaces within %1$s: %2$d</string>
     <string name="preflight_airspace_none">None near the flight: does the file cover this region?</string>
-    <string name="preflight_landables_near_task">Landables near the task: %1$d</string>
+    <string name="preflight_landables_near_task">Landables near the route: %1$d</string>
     <string name="preflight_landables_around">Landables within %1$s: %2$d</string>
     <string name="preflight_landables_none">No landable near the flight: does the file cover this region?</string>
     <!-- %1$s: the date of the newer file -->
@@ -147,7 +147,7 @@
     <string name="preflight_check_again">Check again</string>
     <string name="preflight_checking">Checking…</string>
     <string name="preflight_downloading">Downloading %1$s…</string>
-    <string name="preflight_automatic">On Wi-Fi and on the ground, Buteo downloads newer files and the map for the task by itself while it is open.</string>
+    <string name="preflight_automatic">On Wi-Fi and on the ground, Buteo downloads newer files and the map for the route by itself while it is open.</string>
     <!-- %1$s: a time of day -->
     <string name="preflight_last_check">Last looked at %1$s</string>
     <string name="theme_system">System</string>
@@ -157,15 +157,15 @@
     <string name="menu_muted">Muted</string>
     <string name="menu_go_to">Go to waypoint</string>
     <string name="menu_go_to_detail">Nearest landable first</string>
-    <string name="menu_task">Task</string>
-    <string name="menu_task_detail">Edit, next, previous</string>
+    <string name="menu_task" po:msgctxt="Flight route">Route</string>
+    <string name="menu_task_detail">Plan it on the map, next point</string>
     <string name="menu_flight_setup">Flight setup</string>
     <string name="menu_flight_setup_detail">MacCready, ballast, bugs, QNH, wind</string>
     <string name="menu_analysis">Analysis</string>
     <string name="menu_analysis_detail">Barograph, thermals, polar, wind</string>
     <string name="menu_ground">Before and after the flight</string>
     <string name="menu_preflight">Pre-flight check</string>
-    <string name="menu_preflight_detail">Map, terrain, airspace, waypoints for the task</string>
+    <string name="menu_preflight_detail">Map, terrain, airspace, waypoints for the route</string>
     <string name="menu_crew">Aircraft &amp; crew</string>
     <string name="menu_crew_detail">Plane, co-pilot, pilot, WeGlide</string>
     <string name="menu_weather">Weather</string>
@@ -453,7 +453,7 @@
     <string name="voice_airspace">Ahead and inside: “Airspace ahead: Grenoble CTR, in 40 seconds”</string>
     <string name="voice_final_glide_title">Final glide</string>
     <string name="voice_final_glide">Above it, and dropped below: “Above final glide by 120 metres”</string>
-    <string name="voice_task_points_title">Task points</string>
+    <string name="voice_task_points_title">Route points</string>
     <string name="voice_task_points">Start, each turn point and the finish, with the next point</string>
     <string name="voice_climbs_title">Climbs</string>
     <string name="voice_climbs">Leaving a climb, its average and the height gained: “Climb 2.1, gained 450”</string>
@@ -683,29 +683,29 @@
     <string name="setup_mode_both_hint">The average climb, then on final glide the highest MacCready that still gets you home.</string>
 
     <!-- task messages -->
-    <string name="task_not_possible">Not possible for this task type</string>
-    <string name="task_cannot_edit">Cannot edit the task</string>
+    <string name="task_not_possible">Not possible for this type of route</string>
+    <string name="task_cannot_edit">Cannot edit the route</string>
     <string name="task_no_next">No next point</string>
     <string name="task_no_previous">No previous point</string>
-    <string name="task_invalid">The task is not valid</string>
-    <string name="task_full">The task is full</string>
+    <string name="task_invalid">The route is not valid</string>
+    <string name="task_full">The route is full</string>
     <string name="task_weglide_silent">WeGlide did not answer</string>
     <string name="task_weglide_not_loaded">%1$s: not loaded</string>
-    <string name="task_cannot_load">%1$s: cannot load the task</string>
+    <string name="task_cannot_load">%1$s: cannot load the route</string>
     <string name="task_not_file_name">Not a file name: %1$s</string>
     <string name="task_cannot_save">Cannot save %1$s</string>
     <string name="task_saved">Saved as %1$s</string>
 
     <!-- the task page -->
-    <string name="task_edit_title">Edit task</string>
+    <string name="task_edit_title">Edit route</string>
     <string name="task_dismiss">Dismiss</string>
     <string name="task_empty_editing">Add the start, the turn points and the finish, in order.</string>
-    <string name="task_empty">No task. Edit to build one from waypoints, or load a task file.</string>
+    <string name="task_empty">No route. Build one from waypoints, or load a task file.</string>
     <string name="task_save_dots">Save…</string>
     <string name="task_load_dots">Load…</string>
     <string name="task_previous">Previous</string>
     <string name="task_restart">Restart</string>
-    <string name="task_type">Task type</string>
+    <string name="task_type">Type of route</string>
     <string name="task_nominal">%1$s nominal</string>
     <string name="task_min_time_name">minimum time</string>
     <string name="task_min_time">Minimum time</string>
@@ -718,16 +718,16 @@
     <string name="task_radius">Radius</string>
     <string name="task_up">Up</string>
     <string name="task_down">Down</string>
-    <string name="task_save_title">Save task</string>
+    <string name="task_save_title">Save route</string>
     <string name="task_save_hint">In XCSoarData/tasks, as a .tsk file XCSoar reads too.</string>
 
     <!-- the load task page -->
-    <string name="task_load_title">Load task</string>
-    <string name="task_looking">Looking for tasks…</string>
-    <string name="task_no_files">No task files. Saved tasks go to XCSoarData/tasks; tasks in SeeYou .cup files there are found too.</string>
+    <string name="task_load_title">Load a route</string>
+    <string name="task_looking">Looking for routes…</string>
+    <string name="task_no_files">No route files. Saved routes go to XCSoarData/tasks; tasks in SeeYou .cup files there are found too.</string>
     <string name="task_load_name">Load %1$s</string>
-    <string name="task_no_tasks">No tasks</string>
-    <string name="task_numbered">Task %1$d</string>
+    <string name="task_no_tasks">No routes</string>
+    <string name="task_numbered">Route %1$d</string>
     <string name="task_turnpoints">%1$d TPs</string>
     <string name="task_list_mine">Mine</string>
     <string name="task_list_declared">Declared</string>
@@ -779,6 +779,10 @@
     <string name="task_area_delta">Delta T</string>
     <string name="task_speed_remaining">Speed remaining</string>
     <string name="task_speed_achieved">Speed achieved</string>
+    <string name="route_paused">Route paused</string>
+    <string name="route_going_to">Flying to %1$s (Go to waypoint)</string>
+    <string name="route_resume">Resume the route</string>
+    <string name="route_finish_at">Finish at %1$s</string>
 
     <!-- the flight log -->
     <string name="flights_cannot_delete">Could not delete %1$s</string>
@@ -878,7 +882,7 @@
     <string name="ana_climb_hint">Each bar is one climb, as wide as it lasted. Dashed: MacCready %1$s and the climb trend.</string>
     <string name="ana_climb_trend">Climb trend</string>
     <string name="ana_speed_title">Task speed over the flight</string>
-    <string name="ana_speed_needs_task">Needs a task: the chart starts once the task has started.</string>
+    <string name="ana_speed_needs_task">Needs a route: the chart starts once the route has started.</string>
     <string name="ana_speed_hint">Dashed: the trend in blue, and the speed the polar gives at the current MacCready (Vest) in grey.</string>
     <string name="ana_avg_task_speed">Average task speed</string>
     <string name="ana_estimated">Estimated (Vest)</string>
@@ -909,9 +913,9 @@
     <string name="ana_temp_hint">Black: air temperature; dashed red: the dry adiabat; dashed blue: dew point.</string>
     <string name="ana_thermal_height">Thermal height</string>
     <string name="ana_cloud_base">Cloud base</string>
-    <string name="ana_task_description">Task: its points and the flight</string>
-    <string name="ana_no_task">No task</string>
-    <string name="ana_make_task">Load or make a task in %1$s.</string>
+    <string name="ana_task_description">Route: its points and the flight</string>
+    <string name="ana_no_task">No route</string>
+    <string name="ana_make_task">Load or make a route in %1$s.</string>
     <string name="ana_task_to_go">Task to go</string>
     <string name="ana_aat_to_go">AAT to go</string>
     <string name="ana_distance_to_go">Distance to go</string>
@@ -932,9 +936,9 @@
     <string name="event_mc_not_set">MacCready not set: %1$s</string>
     <string name="event_takeoff">Take-off</string>
     <string name="event_landing">Landing</string>
-    <string name="event_task_started">Task started</string>
+    <string name="event_task_started">Route started</string>
     <string name="event_next_turnpoint">Next turnpoint</string>
-    <string name="event_task_finished">Task finished</string>
+    <string name="event_task_finished">Route finished</string>
     <string name="event_no_landable">No landable in reach</string>
 
     <!-- profile and download errors -->
