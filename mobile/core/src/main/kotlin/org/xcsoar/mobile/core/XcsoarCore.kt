@@ -236,6 +236,14 @@ interface XcsoarCore {
      */
     suspend fun mapFeatures(which: MapFeatures): String? = null
 
+    /**
+     * The terrain's heights (metres) over Web Mercator tile ([zoom],
+     * [x], [y]), [size] by [size] from the north-west, for the vector
+     * map's relief (`xcs_terrain_tile`); null without terrain there.
+     * Blocks while the core loads the detailed terrain.
+     */
+    suspend fun terrainTile(zoom: Int, x: Int, y: Int, size: Int): ShortArray? = null
+
     /** The plane files; null if the core has not started. */
     suspend fun planes(): PlaneList? = null
 

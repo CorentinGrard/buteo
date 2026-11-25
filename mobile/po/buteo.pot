@@ -229,6 +229,18 @@ msgstr ""
 msgid "Vector"
 msgstr ""
 
+#. menu_map_offline
+msgid "Offline map: %1$s, %2$s"
+msgstr ""
+
+#. menu_map_outside
+msgid "The flight leaves the stored map (%1$s)"
+msgstr ""
+
+#. menu_map_online
+msgid "Online map only: none stored for the flight"
+msgstr ""
+
 #. menu_vario_sound
 msgid "Vario sound"
 msgstr ""

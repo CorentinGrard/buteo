@@ -77,6 +77,7 @@ import org.xcsoar.mobile.ui.theme.ThemeChoice
 import org.xcsoar.mobile.ui.theme.XcsColors
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import org.xcsoar.mobile.ui.upperStringResource
+import java.io.File
 
 @Composable
 fun FlightScreen(
@@ -109,6 +110,8 @@ fun FlightScreen(
     /** the map MapLibre draws instead of the core's (prototype) */
     vectorMap: Boolean = false,
     onVectorMap: (Boolean) -> Unit = {},
+    /** where the vector map's region files are (XCSoarData/maps) */
+    vectorMapDir: File? = null,
     onEditTile: (TileLayout, Int) -> Unit = { _, _ -> },
     /** A tile was tapped: the page its InfoBox opens. */
     onTileAction: (TileAction) -> Unit = {},
@@ -201,10 +204,12 @@ fun FlightScreen(
             onTheme = onTheme,
             vectorMap = vectorMap.takeIf { taskPanel == null },
             onVectorMap = onVectorMap,
+            vectorMapCoverage = vectorState.coverage.takeIf { vectorMap },
         ),
         map = if (vectorMap && taskPanel == null) MapSlot(
             content = { modifier ->
-                VectorMap(vectorState, viewModel::mapFeatures, viewModel::nearbyLandables,
+                VectorMap(vectorState, vectorMapDir, viewModel::mapFeatures,
+                          viewModel::terrainTile, viewModel::nearbyLandables,
                           viewModel.liveState, mapOrientation, viewModel::showFeatureItems,
                           modifier)
             },
@@ -928,6 +933,7 @@ fun flightMenu(
     onTheme: (ThemeChoice) -> Unit = {},
     vectorMap: Boolean? = null,
     onVectorMap: (Boolean) -> Unit = {},
+    vectorMapCoverage: MapCoverage? = null,
 ) = FlightMenu(
     inFlight = listOf(
         menuAction(R.string.menu_go_to, R.string.menu_go_to_detail, onOpenWaypoints),
@@ -975,6 +981,7 @@ fun flightMenu(
     onTheme = onTheme,
     vectorMap = vectorMap,
     onVectorMap = onVectorMap,
+    vectorMapCoverage = vectorMapCoverage,
 )
 
 @Composable

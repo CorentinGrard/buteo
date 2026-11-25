@@ -1,7 +1,7 @@
 {
   "version": 8,
   "name": "Buteo vector map (prototype)",
-  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "glyphs": "asset://glyphs/{fontstack}/{range}.pbf",
   "sources": {
     "osm": {
       "type": "vector",
@@ -10,11 +10,10 @@
     },
     "dem": {
       "type": "raster-dem",
-      "tiles": ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+      "tiles": ["https://terrain.buteo.invalid/{z}/{x}/{y}.png"],
       "encoding": "terrarium",
       "tileSize": 256,
-      "maxzoom": 12,
-      "attribution": "Terrain Tiles, Mapzen / AWS Open Data"
+      "maxzoom": 10
     },
     "airspace": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
     "waypoints": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
@@ -132,7 +131,7 @@
                 ["all", ["==", ["get", "class"], "village"], [">=", ["zoom"], 11]]],
      "layout": {
        "text-field": ["coalesce", ["get", "name:latin"], ["get", "name"]],
-       "text-font": ["Noto Sans Regular"],
+       "text-font": ["NotoSans-Regular"],
        "text-size": ["match", ["get", "class"], "city", 14, "town", 12, 11],
        "text-padding": 6,
        "text-max-width": 8
@@ -145,7 +144,7 @@
        "symbol-placement": "line",
        "symbol-spacing": 320,
        "text-field": ["concat", ["get", "name"], "  ", ["get", "base"], " – ", ["get", "top"]],
-       "text-font": ["Noto Sans Bold"],
+       "text-font": ["NotoSans-Bold"],
        "text-size": 10.5,
        "text-max-angle": 30,
        "text-padding": 4,
@@ -178,7 +177,7 @@
      "filter": ["get", "landable"],
      "layout": {
        "text-field": ["get", "label"],
-       "text-font": ["Noto Sans Bold"],
+       "text-font": ["NotoSans-Bold"],
        "text-size": 12,
        "text-anchor": "top",
        "text-offset": [0, 0.7],

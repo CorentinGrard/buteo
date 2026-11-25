@@ -391,6 +391,14 @@ class NativeXcsoarCore(
     override suspend fun mapFeatures(which: MapFeatures) =
         query({ NativeCore.nativeMapFeatures(it, which.code) }) { it }
 
+    /** Beside the commands ([networkLock]): loading the terrain may take a while. */
+    override suspend fun terrainTile(zoom: Int, x: Int, y: Int, size: Int): ShortArray? =
+        networkLock.withLock {
+            val h = handle
+            if (h == 0L) return@withLock null
+            withContext(Dispatchers.IO) { NativeCore.nativeTerrainTile(h, zoom, x, y, size) }
+        }
+
     override suspend fun setTile(layout: TileLayout, tile: Int, type: Int) =
         command { NativeCore.nativeTilesSet(it, layout.code, tile, type) }
 

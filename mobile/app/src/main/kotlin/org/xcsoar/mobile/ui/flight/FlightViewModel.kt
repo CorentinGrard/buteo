@@ -621,6 +621,10 @@ class FlightViewModel(
     /** The vector map's layers (prototype): the core's data as GeoJSON. */
     suspend fun mapFeatures(which: MapFeatures): String? = core.mapFeatures(which)
 
+    /** The vector map's relief (prototype): the core's terrain heights. */
+    suspend fun terrainTile(zoom: Int, x: Int, y: Int, size: Int): ShortArray? =
+        core.terrainTile(zoom, x, y, size)
+
     /** The landables the vector map colours by reach (prototype). */
     suspend fun nearbyLandables(): List<WaypointInfo> =
         core.searchWaypoints("", WaypointFilter.LANDABLE, 150)

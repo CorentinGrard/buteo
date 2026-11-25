@@ -230,6 +230,18 @@ msgstr "Thème"
 msgid "Vector"
 msgstr "Vectorielle"
 
+#. menu_map_offline
+msgid "Offline map: %1$s, %2$s"
+msgstr "Carte hors ligne : %1$s, %2$s"
+
+#. menu_map_outside
+msgid "The flight leaves the stored map (%1$s)"
+msgstr "Le vol sort de la carte stockée (%1$s)"
+
+#. menu_map_online
+msgid "Online map only: none stored for the flight"
+msgstr "Carte en ligne seulement : rien de stocké pour le vol"
+
 #. menu_vario_sound
 msgid "Vario sound"
 msgstr "Son du vario"

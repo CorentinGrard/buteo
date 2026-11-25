@@ -63,6 +63,10 @@ import org.xcsoar.mobile.ui.SettingsGroup
 import org.xcsoar.mobile.ui.SwitchRow
 import org.xcsoar.mobile.ui.theme.ThemeChoice
 import org.xcsoar.mobile.ui.theme.XcsTheme
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.time.format.FormatStyle
 
 /** How long the menu takes to slide in or out. */
 private const val MENU_MILLIS = 250
@@ -115,6 +119,8 @@ class FlightMenu(
     /** the vector map instead of XCSoar's (prototype); null hides the choice */
     val vectorMap: Boolean? = null,
     val onVectorMap: (Boolean) -> Unit = {},
+    /** what the phone has of the vector map for this flight, under the choice */
+    val vectorMapCoverage: MapCoverage? = null,
 )
 
 /** The orientations the menu offers, in its order. */
@@ -223,6 +229,7 @@ fun FlightMenuSheet(visible: Boolean, menu: FlightMenu, onClose: () -> Unit,
                                                  stringResource(R.string.menu_map_vector)),
                                           selected = if (vector) 1 else 0,
                                           onSelect = { menu.onVectorMap(it == 1) })
+                        menu.vectorMapCoverage?.let { MapCoverageNote(it) }
                     }
                     menu.varioSound?.let { on ->
                         SettingsGroup {
@@ -280,6 +287,32 @@ private fun LabelledSegmented(label: String, options: List<String>, selected: In
              maxLines = 1, modifier = Modifier.width(72.dp).padding(start = 4.dp))
         Segmented(options, selected, onSelect, Modifier.weight(1f))
     }
+}
+
+/**
+ * Under the map choice: whether the vector map has this flight on the
+ * phone (its region's file, and the day of its data), a caution when
+ * the glider or the task leaves it.
+ */
+@Composable
+private fun MapCoverageNote(coverage: MapCoverage) {
+    val colors = XcsTheme.colors
+    val region = coverage.region
+    val text = when {
+        region == null -> stringResource(R.string.menu_map_online)
+        coverage.outside -> stringResource(R.string.menu_map_outside, region.name)
+        else -> stringResource(R.string.menu_map_offline, region.name,
+                               region.date?.let(::shortDate) ?: "?")
+    }
+    Text(text, color = if (coverage.outside) colors.caution else colors.textSecondary,
+         fontSize = 14.sp, modifier = Modifier.padding(start = 88.dp, top = 2.dp))
+}
+
+/** "2026-11-24" as the phone writes a date, else as it is. */
+private fun shortDate(iso: String): String = try {
+    LocalDate.parse(iso).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+} catch (e: DateTimeParseException) {
+    iso
 }
 
 /** A large in-flight button: the name, and what it holds underneath. */

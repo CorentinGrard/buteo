@@ -53,9 +53,20 @@ import org.xcsoar.mobile.core.MapItemInfo
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.core.WaypointInfo
 import org.xcsoar.mobile.ui.Format
+import java.io.File
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 private const val TAG = "VectorMap"
+
+/**
+ * Frames a second while the map follows the glider.  Unlimited,
+ * MapLibre drew 38 on the Redmi 5 in flight (its camera's animation)
+ * and the app took 73-82 % of a core at 1x replay; 52-60 % at 10 frames,
+ * 41-47 % at 5, against 24-28 % with XCSoar's map.  A pan or a pinch
+ * lifts the limit.
+ */
+private const val FOLLOW_FPS = 5
 
 /**
  * The vector map's camera and what the flight screen's buttons do to
@@ -66,6 +77,10 @@ class VectorMapState {
     /** Following the glider; a pan stops it, the centre button resumes. */
     var follows by mutableStateOf(true)
         private set
+
+    /** What the phone has of the map for this flight; null before the style. */
+    var coverage by mutableStateOf<MapCoverage?>(null)
+        internal set
 
     internal var map: MapLibreMap? = null
     internal var northUp = true
@@ -78,7 +93,14 @@ class VectorMapState {
     private var focusY = -1
 
     fun zoom(steps: Int) {
-        map?.animateCamera(CameraUpdateFactory.zoomBy(-steps.toDouble()), 250)
+        val map = map ?: return
+        val location = map.locationComponent
+        val target = map.cameraPosition.zoom - steps
+        if (follows && location.isLocationComponentActivated)
+            // a camera move of the map's own would end the tracking
+            location.zoomWhileTracking(target, 250)
+        else
+            map.animateCamera(CameraUpdateFactory.zoomTo(target), 250)
     }
 
     fun follow() {
@@ -142,13 +164,25 @@ class VectorMapState {
 }
 
 /**
+ * The stored map against this flight: [outside] when the glider or a
+ * point of the task is beyond the region's file (its bounds), or there
+ * is no file.
+ */
+data class MapCoverage(val region: RegionMap?, val outside: Boolean)
+
+/** "[longitude,latitude]" as the core writes GeoJSON coordinates. */
+private val COORDINATES = Regex("""\[(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)]""")
+
+/**
  * The map drawn by MapLibre (prototype): OpenStreetMap vector tiles
- * from OpenFreeMap and elevation tiles for the relief, both fetched and
- * cached as the map needs them, with the core's airspace, landables,
- * task and trail (`xcs_map_features`) drawn over them.  Pan, pinch and
- * rotate are MapLibre's own.
+ * from the region's file on the phone ([RegionMap], else OpenFreeMap
+ * over the network), the relief shaded from the core's terrain, with
+ * the core's airspace, landables, task and trail (`xcs_map_features`)
+ * drawn over them.  Pan, pinch and rotate are MapLibre's own.
  *
+ * @param regionDir where the region files are (XCSoarData/maps)
  * @param features one layer of the core's data as GeoJSON
+ * @param terrain the core's terrain heights for a tile of the relief
  * @param landables the nearest landables, with arrival heights
  * @param live the latest snapshot, for the glider
  * @param onItems what the pilot held, for the map's card
@@ -156,7 +190,9 @@ class VectorMapState {
 @Composable
 fun VectorMap(
     state: VectorMapState,
+    regionDir: File?,
     features: suspend (MapFeatures) -> String?,
+    terrain: suspend (zoom: Int, x: Int, y: Int, size: Int) -> ShortArray?,
     landables: suspend () -> List<WaypointInfo>,
     live: StateFlow<FlightState?>,
     orientation: MapOrientation?,
@@ -166,8 +202,11 @@ fun VectorMap(
     val context = LocalContext.current
     val mapView = remember {
         MapLibre.getInstance(context)
+        MapNetwork.install()
         MapView(context).apply { onCreate(null) }
     }
+    MapNetwork.terrain = terrain
+    val region = remember(regionDir) { RegionMap.find(regionDir) }
     var style by remember { mutableStateOf<Style?>(null) }
     val currentOnItems by rememberUpdatedState(onItems)
 
@@ -206,9 +245,16 @@ fun VectorMap(
                 currentOnItems(itemsAt(map, map.projection.toScreenLocation(point)))
                 true
             }
+            mapView.setMaximumFps(FOLLOW_FPS)
+            map.addOnCameraMoveStartedListener { reason ->
+                if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE)
+                    mapView.setMaximumFps((mapView.display?.refreshRate ?: 60f).roundToInt())
+            }
+            map.addOnCameraIdleListener { mapView.setMaximumFps(FOLLOW_FPS) }
             val json = context.resources.openRawResource(R.raw.vector_map_style)
                 .bufferedReader().use { it.readText() }
-            map.setStyle(Style.Builder().fromJson(json)) { loaded ->
+            Log.i(TAG, "region map: ${region?.file ?: "none, online"}")
+            map.setStyle(Style.Builder().fromJson(vectorMapStyle(json, region))) { loaded ->
                 activateGlider(context, map, loaded, state)
                 state.map = map
                 state.applyCamera()
@@ -235,15 +281,33 @@ fun VectorMap(
         // what changes in flight
         LaunchedEffect(loaded) {
             var tick = 0
+            var taskOutside = false
+            val changes = StyleChanges()
             while (true) {
-                features(MapFeatures.AIRSPACE_STATE)?.let { showWarnings(loaded, it) }
-                if (tick % 3 == 0) {
-                    features(MapFeatures.TASK)?.let { loaded.source("task")?.setGeoJson(it) }
-                    features(MapFeatures.TRAIL)?.let { loaded.source("trail")?.setGeoJson(it) }
+                features(MapFeatures.AIRSPACE_STATE)?.let { json ->
+                    changes.apply("warnings", json) { showWarnings(loaded, json) }
                 }
+                if (tick % 3 == 0) {
+                    features(MapFeatures.TASK)?.let { json ->
+                        changes.apply("task", json) {
+                            loaded.source("task")?.setGeoJson(json)
+                            taskOutside = region == null || COORDINATES.findAll(json).any { c ->
+                                !region.covers(c.groupValues[2].toDouble(),
+                                               c.groupValues[1].toDouble())
+                            }
+                        }
+                    }
+                    features(MapFeatures.TRAIL)?.let { json ->
+                        changes.apply("trail", json) { loaded.source("trail")?.setGeoJson(json) }
+                    }
+                }
+                val glider = live.value?.position
+                val gliderOutside = region == null ||
+                    (glider != null && !region.covers(glider.latitude, glider.longitude))
+                state.coverage = MapCoverage(region, taskOutside || gliderOutside)
                 if (tick % 5 == 0)
                     try {
-                        showReach(loaded, landables())
+                        showReach(loaded, landables(), changes)
                     } catch (e: Exception) {
                         Log.w(TAG, "landables", e)
                     }
@@ -258,6 +322,7 @@ fun VectorMap(
             live.filterNotNull().collect { s ->
                 if (s.sequence == lastSequence) return@collect
                 lastSequence = s.sequence
+                MapNetwork.inFlight = s.flying
                 val position = s.position ?: return@collect
                 val location = Location("xcsoar").apply {
                     latitude = position.latitude
@@ -292,6 +357,20 @@ fun VectorMap(
 
 private fun Style.source(id: String) = getSourceAs<GeoJsonSource>(id)
 
+/**
+ * A change of the style made only when it differs from the last one:
+ * each filter, property or data set has MapLibre lay out the layer
+ * again (for the warnings, all of the country's airspace), which kept
+ * the Redmi 5 at 41 % of a core with nothing moving.
+ */
+private class StyleChanges {
+    private val last = HashMap<String, String>()
+
+    fun apply(key: String, value: String, change: () -> Unit) {
+        if (last.put(key, value) != value) change()
+    }
+}
+
 @SuppressLint("MissingPermission") // fed by the core, not Android's location
 private fun activateGlider(context: Context, map: MapLibreMap, style: Style,
                            state: VectorMapState) {
@@ -313,7 +392,7 @@ private fun activateGlider(context: Context, map: MapLibreMap, style: Style,
     component.renderMode = RenderMode.GPS
     // the glider glides between fixes; at the screen's 90 Hz that cost
     // the app 84 % of a core in a replay (XCSoar's map: 30 %)
-    component.setMaxAnimationFps(15)
+    component.setMaxAnimationFps(FOLLOW_FPS)
     component.addOnCameraTrackingChangedListener(object : OnCameraTrackingChangedListener {
         override fun onCameraTrackingDismissed() = state.dismissed()
         override fun onCameraTrackingChanged(currentMode: Int) {}
@@ -350,7 +429,7 @@ private fun fadeFarAirspace(style: Style, altitude: Double) {
 }
 
 /** The landables' colour (reachable green, not orange) and arrival heights. */
-private fun showReach(style: Style, nearby: List<WaypointInfo>) {
+private fun showReach(style: Style, nearby: List<WaypointInfo>, changes: StyleChanges) {
     val reachable = nearby.filter { it.reachable == true }.map { it.id }
     val unreachable = nearby.filter { it.reachable == false }.map { it.id }
     fun among(ids: List<Int>) =
@@ -366,10 +445,14 @@ private fun showReach(style: Style, nearby: List<WaypointInfo>) {
         }
         append(""", ""]]""")
     }
-    style.getLayer("landable-circle")?.setProperties(
-        PropertyFactory.circleColor(Expression.raw(color)))
-    style.getLayer("landable-label")?.setProperties(
-        PropertyFactory.textField(Expression.raw(label)))
+    changes.apply("landable-color", color) {
+        style.getLayer("landable-circle")?.setProperties(
+            PropertyFactory.circleColor(Expression.raw(color)))
+    }
+    changes.apply("landable-label", label) {
+        style.getLayer("landable-label")?.setProperties(
+            PropertyFactory.textField(Expression.raw(label)))
+    }
 }
 
 /** What is at [point]: airspace and landables, for the map's card. */

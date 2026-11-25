@@ -588,6 +588,7 @@ class MainActivity : ComponentActivity() {
                             vectorMap = it
                             app.vectorMap = it
                         },
+                        vectorMapDir = File(app.xcsoarDataDir, "maps"),
                         theme = theme,
                         onTheme = {
                             theme = it
