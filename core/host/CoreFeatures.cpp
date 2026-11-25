@@ -40,6 +40,8 @@
 #include <limits>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace {
 
@@ -477,6 +479,126 @@ TerrainTile(unsigned zoom, unsigned x, unsigned y, unsigned size,
 
   FillGaps(heights, size);
   return true;
+}
+
+/**
+ * The points of @p lines ([[[lon, lat], ...], ...]) every @p step
+ * metres or closer, each line's ends included.
+ *
+ * @return empty if @p lines is not such a list, or a line has a
+ * position off the globe
+ */
+static std::vector<GeoPoint>
+SampleLines(std::string_view lines, double step)
+{
+  /* a task of a few thousand kilometres, every kilometre */
+  constexpr std::size_t MAX_SAMPLES = 100000;
+
+  std::vector<GeoPoint> samples;
+  boost::system::error_code ec;
+  const auto value = boost::json::parse(lines, ec);
+  if (ec || !value.is_array())
+    return {};
+
+  for (const auto &line : value.get_array()) {
+    if (!line.is_array())
+      return {};
+    GeoPoint previous = GeoPoint::Invalid();
+    for (const auto &position : line.get_array()) {
+      const auto *p = position.if_array();
+      if (p == nullptr || p->size() < 2 || !p->at(0).is_number() ||
+          !p->at(1).is_number())
+        return {};
+      const GeoPoint point{Angle::Degrees(p->at(0).to_number<double>()),
+                           Angle::Degrees(p->at(1).to_number<double>())};
+      if (!point.Check())
+        return {};
+
+      if (previous.IsValid()) {
+        const double n = std::ceil(previous.Distance(point) / step);
+        if (n > MAX_SAMPLES)
+          return {};
+        for (unsigned i = 1; i <= unsigned(std::max(n, 1.)); ++i)
+          samples.push_back(previous.Interpolate(point, i / std::max(n, 1.)));
+      } else
+        samples.push_back(point);
+      if (samples.size() > MAX_SAMPLES)
+        return {};
+      previous = point;
+    }
+  }
+  return samples;
+}
+
+/** Whether @p bounds holds everything within @p margin metres of @p p. */
+static bool
+HoldsAround(const GeoBounds &bounds, const GeoPoint &p, double margin) noexcept
+{
+  /* a degree of latitude, metres */
+  constexpr double METRES_PER_DEGREE = 6371000 * M_PI / 180;
+  const double cos_latitude = std::max(p.latitude.cos(), 0.01);
+  const Angle dlat = Angle::Degrees(margin / METRES_PER_DEGREE);
+  const Angle dlon = Angle::Degrees(margin / METRES_PER_DEGREE / cos_latitude);
+  return bounds.IsInside(GeoPoint{p.longitude - dlon, p.latitude - dlat}) &&
+    bounds.IsInside(GeoPoint{p.longitude + dlon, p.latitude + dlat});
+}
+
+std::string
+Coverage(std::string_view lines, double margin) noexcept
+try {
+  if (!(margin >= 0 && margin <= 1e6))
+    return {};
+  const auto samples = SampleLines(lines, std::max(margin, 1000.));
+  if (samples.empty())
+    return {};
+
+  boost::json::object result;
+
+  boost::json::value terrain = nullptr;
+  if (data_components->terrain != nullptr) {
+    RasterTerrain::Lease map{*data_components->terrain};
+    if (map->IsDefined()) {
+      const GeoBounds &b = map->GetBounds();
+      boost::json::object t{
+        {"bounds", {b.GetWest().Degrees(), b.GetSouth().Degrees(),
+                    b.GetEast().Degrees(), b.GetNorth().Degrees()}},
+      };
+      for (const GeoPoint &p : samples) {
+        if (!HoldsAround(b, p, margin)) {
+          t["gap"] = {p.longitude.Degrees(), p.latitude.Degrees()};
+          break;
+        }
+      }
+      terrain = std::move(t);
+    }
+  }
+  result["terrain"] = std::move(terrain);
+
+  std::unordered_set<const AbstractAirspace *> airspaces;
+  if (const auto *a = data_components->airspaces.get())
+    for (const GeoPoint &p : samples)
+      for (const auto &i : a->QueryWithinRange(p, margin))
+        airspaces.insert(&i.GetAirspace());
+  result["airspace"] = airspaces.size();
+
+  std::unordered_set<unsigned> waypoints;
+  unsigned landables = 0;
+  if (const auto *w = data_components->waypoints.get())
+    for (const GeoPoint &p : samples)
+      w->VisitWithinRange(p, margin, [&](const WaypointPtr &waypoint){
+        /* a square around the point: only those within the margin */
+        if (waypoint->location.Distance(p) <= margin &&
+            waypoints.insert(waypoint->id).second && waypoint->IsLandable())
+          ++landables;
+      });
+  result["waypoints"] = waypoints.size();
+  result["landables"] = landables;
+
+  StringOutputStream os;
+  Json::Serialize(os, result);
+  return std::move(os).GetValue();
+} catch (...) {
+  return {};
 }
 
 } // namespace CoreFeatures

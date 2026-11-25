@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 /**
  * What XCSoar's moving map draws over the terrain, as GeoJSON for a
@@ -44,5 +45,16 @@ Trail() noexcept;
 bool
 TerrainTile(unsigned zoom, unsigned x, unsigned y, unsigned size,
             int16_t *heights) noexcept;
+
+/**
+ * What the data files hold along @p lines, GeoJSON positions
+ * [[[lon, lat], ...], ...], within @p margin metres: the terrain's
+ * bounds and the first place where it ends, and how many airspaces,
+ * waypoints and landables (xcs_data_coverage()).
+ *
+ * @return empty if @p lines or @p margin is not valid
+ */
+std::string
+Coverage(std::string_view lines, double margin) noexcept;
 
 } // namespace CoreFeatures

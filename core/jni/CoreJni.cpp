@@ -816,6 +816,19 @@ Java_org_xcsoar_mobile_NativeCore_nativeMapFeatures(JNIEnv *env, jclass,
   return status == XCS_OK ? env->NewStringUTF(buffer.c_str()) : nullptr;
 }
 
+/** @return the JSON of xcs_data_coverage(), or null for bad lines */
+JNIEXPORT jstring JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeDataCoverage(JNIEnv *env, jclass,
+                                                     jlong core, jstring lines,
+                                                     jdouble margin)
+{
+  const auto l = Java::String::GetUTFChars(env, lines);
+  return GetJson(env, [&](char *buffer, size_t size, size_t *length){
+    return xcs_data_coverage(ToCore(core), l.c_str(), margin, buffer, size,
+                             length);
+  });
+}
+
 /** @return size * size heights (m) from the north-west, or null */
 JNIEXPORT jshortArray JNICALL
 Java_org_xcsoar_mobile_NativeCore_nativeTerrainTile(JNIEnv *env, jclass,

@@ -1147,6 +1147,25 @@ xcs_get_data_status(xcs_core *core, char *buffer, size_t size,
 }
 
 xcs_status
+xcs_data_coverage(xcs_core *core, const char *lines, double margin,
+                  char *buffer, size_t size, size_t *length_r)
+{
+  if (core == nullptr || lines == nullptr || buffer == nullptr ||
+      length_r == nullptr || !ValidateUTF8(lines))
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+  return RunOnMain(*core, [lines, margin, buffer, size, length_r]{
+    const auto json = CoreFeatures::Coverage(lines, margin);
+    if (json.empty()) {
+      /* not a buffer too small: nothing to retry with */
+      *length_r = 0;
+      return XCS_ERROR_INVALID_ARGUMENT;
+    }
+    return CopyJson(json, buffer, size, length_r);
+  });
+}
+
+xcs_status
 xcs_task_get(xcs_core *core, uint32_t which, char *buffer, size_t size,
              size_t *length_r)
 {

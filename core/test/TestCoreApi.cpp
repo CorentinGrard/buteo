@@ -191,6 +191,28 @@ DataCount(const std::string &status, const char *section)
   return std::strtol(status.c_str() + count + 8, nullptr, 10);
 }
 
+/** xcs_data_coverage(), or "" on error. */
+static std::string
+Coverage(xcs_core *core, const char *lines, double margin)
+{
+  char buffer[1024];
+  size_t length = 0;
+  if (xcs_data_coverage(core, lines, margin, buffer, sizeof(buffer),
+                        &length) != XCS_OK || length != std::strlen(buffer))
+    return {};
+  return buffer;
+}
+
+/** The number after "key": in @p json, or -1. */
+static long
+JsonNumber(const std::string &json, const char *key)
+{
+  const std::string k = std::string{"\""} + key + "\":";
+  const auto i = json.find(k);
+  return i == std::string::npos ? -1
+    : std::strtol(json.c_str() + i + k.size(), nullptr, 10);
+}
+
 /** xcs_map_features(), or "" on error. */
 static std::string
 Features(xcs_core *core, uint32_t which)
@@ -285,6 +307,44 @@ TestDataFiles(xcs_core *core)
         XCS_ERROR_FAILED);
   }
 
+  /* the data along a flight, for the check before it: Benalla to the
+     north-east within the terrain (143.8..147.7 E, 37.3..33.7 S), then
+     out to sea, where it ends 10 km before its southern edge */
+  {
+    const char *const inside = "[[[146.0,-36.55],[146.3,-36.4]]]";
+    const auto a = Coverage(core, inside, 10000);
+    ok1(a.find("\"bounds\":[") != std::string::npos &&
+        a.find("\"gap\"") == std::string::npos);
+    ok1(JsonNumber(a, "airspace") > 0);
+    ok1(JsonNumber(a, "landables") >= 1 &&
+        JsonNumber(a, "waypoints") > JsonNumber(a, "landables"));
+    ok1(JsonNumber(Coverage(core, inside, 30000), "waypoints") >
+        JsonNumber(a, "waypoints"));
+
+    const auto b = Coverage(core, "[[[146.0,-36.55],[150.0,-40.0]]]", 10000);
+    ok1(b.find("\"gap\":[1.468") != std::string::npos &&
+        b.find(",-3.727") != std::string::npos);
+    /* a point alone */
+    ok1(JsonNumber(Coverage(core, "[[[146.0,-36.55]]]", 10000), "waypoints") > 0);
+
+    char buffer[256];
+    size_t length = 99;
+    bool refused = true;
+    for (const char *lines : {"{}", "[[[146.0]]]", "[[[200,-36]]]", "[[\"x\"]]",
+                              "[[[146,-36],[146,", "\xff"})
+      refused = refused &&
+        xcs_data_coverage(core, lines, 10000, buffer, sizeof(buffer),
+                          &length) == XCS_ERROR_INVALID_ARGUMENT &&
+        length == 0;
+    ok1(refused &&
+        xcs_data_coverage(core, inside, -1, buffer, sizeof(buffer),
+                          &length) == XCS_ERROR_INVALID_ARGUMENT &&
+        xcs_data_coverage(core, inside, 2e6, buffer, sizeof(buffer),
+                          &length) == XCS_ERROR_INVALID_ARGUMENT &&
+        xcs_data_coverage(core, nullptr, 10000, buffer, sizeof(buffer),
+                          &length) == XCS_ERROR_INVALID_ARGUMENT);
+  }
+
   /* removing the files unloads their data */
   ok1(xcs_set_data_file(core, XCS_DATA_AIRSPACE, nullptr) == XCS_OK);
   ok1(xcs_set_data_file(core, XCS_DATA_MAP, "") == XCS_OK);
@@ -295,6 +355,8 @@ TestDataFiles(xcs_core *core)
     int16_t height;
     ok1(xcs_terrain_tile(core, 0, 0, 0, 1, &height) == XCS_ERROR_FAILED);
   }
+  ok1(Coverage(core, "[[[146.0,-36.55]]]", 10000) ==
+      "{\"terrain\":null,\"airspace\":0,\"waypoints\":0,\"landables\":0}");
 }
 
 static std::string
@@ -1785,7 +1847,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8);
 
   Recorder recorder;
   TestCreateArguments(recorder);

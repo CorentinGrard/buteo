@@ -1395,6 +1395,30 @@ xcs_get_data_status(xcs_core *core, char *buffer, size_t size,
                     size_t *length_r);
 
 /**
+ * What the data files hold along a flight, for a check before it:
+ * @p lines lists lines as GeoJSON positions, [[[lon, lat], ...], ...]
+ * (a task's legs and zones; a line of one point is that point, such
+ * as the glider's position).  JSON (UTF-8, null-terminated):
+ *
+ *   {"terrain": {"bounds": [w, s, e, n], "gap": [lon, lat]},
+ *    "airspace": 12, "waypoints": 40, "landables": 9}
+ *
+ * "terrain" is null without terrain.  "gap" is the first place along
+ * the lines where the terrain does not reach @p margin metres around,
+ * left out when it reaches everywhere.  "airspace", "waypoints" and
+ * "landables" count those within @p margin metres of the lines.
+ * Buffer rules as for xcs_get_data_status().
+ *
+ * @param margin metres, up to 1000 km
+ * @return XCS_ERROR_INVALID_ARGUMENT also for @p lines that are not
+ * such a list, or too long a list (a few thousand kilometres sampled
+ * every kilometre)
+ */
+XCS_EXPORT xcs_status
+xcs_data_coverage(xcs_core *core, const char *lines, double margin,
+                  char *buffer, size_t size, size_t *length_r);
+
+/**
  * The thermal assistant's data (upstream's ThermalAssistantRenderer),
  * JSON:
  *
