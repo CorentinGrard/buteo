@@ -234,6 +234,10 @@ msgstr "Vectorielle"
 msgid "Offline map: %1$s, %2$s"
 msgstr "Carte hors ligne : %1$s, %2$s"
 
+#. menu_map_regions
+msgid "%1$d regions"
+msgstr "%1$d régions"
+
 #. menu_map_glider_outside
 msgid "The glider is beyond the stored map"
 msgstr "Le planeur est hors de la carte stockée"

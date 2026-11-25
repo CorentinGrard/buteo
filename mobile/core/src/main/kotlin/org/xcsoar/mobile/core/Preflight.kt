@@ -308,7 +308,10 @@ data class PreflightCheck(
             data.regions?.let { stored ->
                 val gap = stored.gap.takeIf { area != null }
                 checks += DataCheck(
-                    DataKind.VECTOR_MAP, stored.dates.keys.sorted(),
+                    // as the server's index names them ("Bourgogne"), else by file
+                    DataKind.VECTOR_MAP, stored.dates.keys.sorted().map { name ->
+                        data.regionIndex?.firstOrNull { it.name == name }?.title ?: name
+                    },
                     ok = stored.dates.isNotEmpty() && gap == null,
                     gap = gap != null, gapNear = gap?.let { area?.nearest(it) },
                     date = stored.dates.values.filterNotNull().minOrNull(),

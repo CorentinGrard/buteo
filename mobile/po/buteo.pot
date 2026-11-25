@@ -233,6 +233,10 @@ msgstr ""
 msgid "Offline map: %1$s, %2$s"
 msgstr ""
 
+#. menu_map_regions
+msgid "%1$d regions"
+msgstr ""
+
 #. menu_map_glider_outside
 msgid "The glider is beyond the stored map"
 msgstr ""

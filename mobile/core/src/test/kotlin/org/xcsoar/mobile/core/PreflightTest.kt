@@ -194,7 +194,7 @@ class PreflightTest {
         val map = check.checks.single { it.kind == DataKind.VECTOR_MAP }
         assertFalse(map.ok)
         assertEquals("Sagy", map.gapNear)
-        assertEquals(listOf("ra-nord"), map.files)
+        assertEquals(listOf("RA-NORD"), map.files)  // the index's title
         // the task reaches the south and Burgundy, not Brittany
         assertEquals(listOf("ra-sud.pmtiles", "bourgogne.pmtiles"), map.updates.map { it.name })
         assertEquals(listOf("RA-SUD", "BOURGOGNE"), map.updates.map { it.title })

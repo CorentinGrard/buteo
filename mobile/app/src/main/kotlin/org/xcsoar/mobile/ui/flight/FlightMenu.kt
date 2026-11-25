@@ -300,7 +300,10 @@ private fun MapCoverageNote(coverage: MapCoverage) {
         coverage.regions.isEmpty() -> stringResource(R.string.menu_map_none)
         coverage.gliderOutside -> stringResource(R.string.menu_map_glider_outside)
         gapNear != null -> stringResource(R.string.menu_map_task_gap, gapNear)
-        else -> stringResource(R.string.menu_map_offline, coverage.regions.joinToString(" + "),
+        else -> stringResource(R.string.menu_map_offline,
+                               // a few by name ("france-rhone-alpes"), else how many
+                               if (coverage.regions.size <= 2) coverage.regions.joinToString(" + ")
+                               else stringResource(R.string.menu_map_regions, coverage.regions.size),
                                coverage.date?.let(Format::day) ?: "?")
     }
     val caution = coverage.regions.isNotEmpty() && !coverage.complete
