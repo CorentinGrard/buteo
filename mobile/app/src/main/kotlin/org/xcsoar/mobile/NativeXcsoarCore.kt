@@ -185,10 +185,12 @@ class NativeXcsoarCore(
     override suspend fun searchWaypoints(name: String, filter: WaypointFilter,
                                          max: Int): List<WaypointInfo> = lock.withLock {
         check(handle != 0L) { "core not started" }
-        val json = withContext(Dispatchers.IO) {
-            NativeCore.nativeWaypointsSearch(handle, name, filter.code, max)
+        // parsed there too: the list refreshes every second (Go to) and
+        // the vector map's landables every five
+        withContext(Dispatchers.IO) {
+            val json = NativeCore.nativeWaypointsSearch(handle, name, filter.code, max)
+            WaypointInfo.parseList(checkNotNull(json) { "xcs_waypoints_search failed" })
         }
-        WaypointInfo.parseList(checkNotNull(json) { "xcs_waypoints_search failed" })
     }
 
     override suspend fun gotoWaypoint(id: Int) =

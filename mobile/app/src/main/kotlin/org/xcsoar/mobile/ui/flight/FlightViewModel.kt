@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import org.xcsoar.mobile.R
@@ -137,13 +138,20 @@ class FlightViewModel(
     /* bumped when the pilot changes a tile */
     private val tilesChanged = MutableStateFlow(0)
 
-    /* once per second, like XCSoar's InfoBoxes (the GPS rate) */
-    private val tilesTicker = flow {
-        while (true) {
-            emit(Unit)
-            delay(TILES_INTERVAL_MS)
-        }
-    }
+    /*
+     * once per second, like XCSoar's InfoBoxes (the GPS rate): with each
+     * state the screen shows, so that both are drawn in one frame (apart,
+     * the whole screen was laid out and drawn twice a second), and every
+     * few seconds when no state comes (the clock tiles)
+     */
+    private val tilesTicker = merge(
+        flightState.map { },
+        flow {
+            while (true) {
+                delay(TILES_IDLE_MS)
+                emit(Unit)
+            }
+        })
 
     /**
      * The tiles of the layout shown, XCSoar's InfoBoxes computed by the
@@ -745,6 +753,7 @@ data class ReplaySpeed(val timeScale: Double = 10.0, val paused: Boolean = false
 }
 private const val VARIO_INTERVAL_MS = 200L
 private const val TILES_INTERVAL_MS = 1000L
+private const val TILES_IDLE_MS = 3000L
 
 private const val WARNING_POLL_MS = 1000L
 

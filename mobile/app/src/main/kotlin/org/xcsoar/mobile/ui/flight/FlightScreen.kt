@@ -756,13 +756,19 @@ private fun Instruments(
  */
 @Composable
 private fun TileGrid(spans: List<Int>, modifier: Modifier, content: @Composable () -> Unit) {
+    // the tiles' height at a width: every tile has a caption and a value
+    // line, so it changes with the layout only; each child's intrinsic
+    // height lays its text out once more, 7 % of the UI thread every second
+    val heights = remember(spans) { HashMap<Int, Int>() }
     Layout(content, modifier) { measurables, constraints ->
         val gap = 8.dp.roundToPx()
         val cell = (constraints.maxWidth - gap * (TILE_COLUMNS - 1)) / TILE_COLUMNS
         fun width(span: Int) = cell * span + gap * (span - 1)
 
-        val height = measurables.withIndex()
-            .maxOfOrNull { (i, m) -> m.minIntrinsicHeight(width(spans[i])) } ?: 0
+        val height = heights.getOrPut(constraints.maxWidth) {
+            measurables.withIndex()
+                .maxOfOrNull { (i, m) -> m.minIntrinsicHeight(width(spans[i])) } ?: 0
+        }
         // the column and row of each child
         var column = 0
         var row = 0
