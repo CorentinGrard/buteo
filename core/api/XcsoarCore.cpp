@@ -3269,6 +3269,12 @@ xcs_core::EndReplay() noexcept
   bc.merge_thread->Suspend();
   bc.calculation_thread->Suspend();
   bc.glide_computer->ResetFlight(true);
+  /* the replay's warnings and acknowledgements go with it: the warning
+     computer replaces them only at the next fix (none indoors), and an
+     airspace acknowledged "for the day" in a replay stayed silent in
+     that day's flight */
+  if (auto *warnings = bc.GetAirspaceWarnings())
+    warnings->Clear();
   if (mode == TaskType::NONE)
     ProtectedTaskManager::ExclusiveLease{*bc.protected_task_manager}
       ->ClearGoto();
