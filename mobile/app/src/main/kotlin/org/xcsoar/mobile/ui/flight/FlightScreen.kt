@@ -251,7 +251,6 @@ fun FlightScreen(
             onGoto = viewModel::gotoWaypoint,
             thermalAssistant = thermalAssistant,
             onThermalAssistant = vectorState::showThermalAssistant,
-            bearing = { vectorState.bearing },
         ),
         taskPanel = taskPanel,
     )
@@ -282,8 +281,6 @@ class ReplayControls(
  * @param onThermalAssistant the map draws the thermal assistant itself,
  * from this image (null hides it); without it, Compose draws it over
  * the map
- * @param bearing the direction at the top of the map as drawn, read
- * while drawing the north mark; null: from [orientation] and the state
  */
 class MapSlot(
     val content: @Composable (Modifier) -> Unit,
@@ -297,7 +294,6 @@ class MapSlot(
     val onGoto: (waypointId: Int) -> Unit = {},
     val thermalAssistant: TileGraphic? = null,
     val onThermalAssistant: ((Bitmap?) -> Unit)? = null,
-    val bearing: (() -> Float)? = null,
 )
 
 /**
@@ -617,12 +613,12 @@ private fun MapArea(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (map != null) {
-                    // a turned map shows where north is
-                    map.orientation?.takeIf { it != MapOrientation.NORTH_UP }?.let { up ->
-                        val bearing = map.bearing
-                        if (bearing != null) NorthMark({ bearing().toDouble() })
-                        else mapAngle(up, state)?.let { angle -> NorthMark({ angle }) }
-                    }
+                    // a turned map shows where north is (with each state:
+                    // turning with the map's frames, it had Compose draw
+                    // the whole screen five times more a second)
+                    map.orientation?.takeIf { it != MapOrientation.NORTH_UP }
+                        ?.let { mapAngle(it, state) }
+                        ?.let { NorthMark(it) }
                     if (!map.follows)
                         CentreButton(map.onFollow)
                     ZoomButtons(map.onZoom)
@@ -656,8 +652,13 @@ private fun ThermalAssistantOnMap(graphic: TileGraphic?, onImage: (Bitmap?) -> U
     val colors = XcsTheme.colors
     val density = LocalDensity.current
     val place = assistantPlace(cardsBottom, mapSize)
+    val image = remember { arrayOfNulls<Bitmap>(1) }
     LaunchedEffect(graphic, place.radius, colors) {
-        onImage(graphic?.let { thermalAssistantImage(it, place.radius, colors, density) })
+        val drawn = graphic?.let {
+            thermalAssistantImage(it, place.radius, colors, density, image[0])
+        }
+        if (drawn != null) image[0] = drawn
+        onImage(drawn)
     }
     DisposableEffect(Unit) { onDispose { onImage(null) } }
     if (graphic != null) {

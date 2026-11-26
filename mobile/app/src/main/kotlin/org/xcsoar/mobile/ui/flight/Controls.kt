@@ -338,7 +338,7 @@ fun CentreButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
  * the top)
  */
 @Composable
-fun NorthMark(mapAngle: () -> Double, modifier: Modifier = Modifier) {
+fun NorthMark(mapAngle: Double, modifier: Modifier = Modifier) {
     val colors = XcsTheme.colors
     val label = stringResource(R.string.north)
     Column(
@@ -350,8 +350,7 @@ fun NorthMark(mapAngle: () -> Double, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center,
     ) {
         Canvas(Modifier.size(14.dp)) {
-            // read while drawing: it turns with the map's frames
-            rotate(-mapAngle().toFloat()) {
+            rotate(-mapAngle.toFloat()) {
                 drawPath(Path().apply {
                     moveTo(size.width / 2, 0f)
                     lineTo(size.width * 0.9f, size.height * 0.8f)

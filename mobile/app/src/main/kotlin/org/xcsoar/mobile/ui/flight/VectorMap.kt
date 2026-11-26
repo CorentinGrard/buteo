@@ -13,7 +13,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -89,9 +88,6 @@ private const val FOLLOW_MAX_FPS = 30
 /** Two pixels is a sixth of a millimetre on the Redmi 5: a step the eye does not see. */
 private const val PIXELS_PER_FRAME = 2
 
-/** The north mark turns at most this often (see [VectorMapState.bearing]). */
-private const val BEARING_MILLIS = 200L
-
 /** The style's image of the thermal assistant. */
 private const val ASSISTANT_IMAGE = "thermal-assistant"
 
@@ -158,17 +154,6 @@ class VectorMapState(
     /** What the phone has of the map for this flight; null before the style. */
     var coverage by mutableStateOf<MapCoverage?>(null)
         internal set
-
-    /**
-     * The direction at the top of the map as drawn, degrees, at most
-     * every [BEARING_MILLIS]: the north mark reads it while drawing.
-     * Each change has Compose draw the whole screen again (the map is
-     * a surface of its own): in every map frame, that was half a core of
-     * the Redmi 5 while circling track up.
-     */
-    var bearing by mutableFloatStateOf(0f)
-        private set
-    private var bearingAt = 0L
 
     internal var map: MapLibreMap? = null
     internal var view: MapView? = null
@@ -352,16 +337,8 @@ class VectorMapState(
      * keeps the camera off the poles and the glider was drawn in Africa.
      */
     internal fun frameRendered() {
-        val map = map ?: return
+        if (map == null || fix == null) return
         val now = SystemClock.uptimeMillis()
-        if (now - bearingAt >= BEARING_MILLIS) {
-            val drawn = map.cameraPosition.bearing.toFloat()
-            if (drawn != bearing) {
-                bearing = drawn
-                bearingAt = now
-            }
-        }
-        if (fix == null) return
         if (following && gestures == 0) showGlider(gliderAt(now), gliderBearing(now))
     }
 

@@ -10,6 +10,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -69,20 +70,24 @@ fun Modifier.thermalAssistantSemantics(graphic: TileGraphic): Modifier {
  * The assistant north up, [radius] pixels, in an image of its own, for
  * the vector map to draw on the glider and turn with its frames (a
  * Compose overlay turning with the map redrew the whole screen in every
- * frame: half a core on the Redmi 5).
+ * frame: half a core on the Redmi 5).  Drawn into [reuse] when it has
+ * the size: the map copies the image, and a new one every second is
+ * garbage.
  */
 fun thermalAssistantImage(graphic: TileGraphic, radius: Float, colors: XcsColors,
-                          density: Density): Bitmap? {
+                          density: Density, reuse: Bitmap? = null): Bitmap? {
     if (radius <= 0f || liftPoints(graphic, Offset.Zero, radius, 0.0) == null) return null
     // the halo's stroke reaches past the outer ring
     val margin = with(density) { 4.dp.toPx() }
     val side = (2 * (radius + margin)).roundToInt()
-    val image = ImageBitmap(side, side)
-    CanvasDrawScope().draw(density, LayoutDirection.Ltr, Canvas(image),
+    val bitmap = reuse?.takeIf { it.width == side && it.height == side && it.isMutable }
+        ?.apply { eraseColor(android.graphics.Color.TRANSPARENT) }
+        ?: ImageBitmap(side, side).asAndroidBitmap()
+    CanvasDrawScope().draw(density, LayoutDirection.Ltr, Canvas(bitmap.asImageBitmap()),
                            Size(side.toFloat(), side.toFloat())) {
         thermalAssistant(graphic, center, radius, 0.0, colors, halo = true)
     }
-    return image.asAndroidBitmap()
+    return bitmap
 }
 
 /**
