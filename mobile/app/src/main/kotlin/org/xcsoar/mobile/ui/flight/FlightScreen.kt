@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.DisposableEffect
 import android.graphics.Bitmap
 import androidx.activity.compose.BackHandler
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -225,6 +226,7 @@ fun FlightScreen(
             theme = theme,
             onTheme = onTheme,
             mapCoverage = vectorState.coverage,
+            state = state,
         ),
         map = MapSlot(
             content = { modifier ->
@@ -562,12 +564,22 @@ private fun MapArea(
                 return@BoxWithConstraints
             }
 
+            // the buttons' width, to keep "Set MC" clear of them
+            var buttonsWidth by remember { mutableIntStateOf(0) }
+            val buttonsDp = with(LocalDensity.current) { buttonsWidth.toDp() }
+            val thermal = state?.currentThermal?.takeIf { circling && it.lift > 0 }
+            // "Set MC" beside the menu button, else above it
+            val setMcBeside = maxWidth - buttonsDp - MENU_ROOM >= SET_MC_ROOM
+            val setMcAbove = thermal != null && !setMcBeside
+
             // what is left above the map buttons
             val barSpace = maxHeight - 56.dp - 12.dp
-            // the vario stays, smaller, on short screens (EdgeBars.kt)
-            if (barSpace >= VARIO_MIN_HEIGHT)
+            // the vario stays, smaller, on short screens (EdgeBars.kt),
+            // and ends above "Set MC" when that sits over the menu button
+            val varioSpace = if (setMcAbove) barSpace - MENU_ROOM else barSpace
+            if (varioSpace >= VARIO_MIN_HEIGHT)
                 VarioSlot(vario, state, Modifier.align(Alignment.TopStart)
-                    .height(barSpace.coerceAtMost(300.dp)))
+                    .height(varioSpace.coerceAtMost(300.dp)))
             if (barSpace >= FINAL_GLIDE_MIN_HEIGHT)
                 FinalGlideBar(state?.finalGlide, Modifier.align(Alignment.TopEnd)
                     .height(barSpace.coerceAtMost(180.dp)))
@@ -592,19 +604,13 @@ private fun MapArea(
             // thumb; the target card keeps the whole width (D25)
             MenuButton(onMenu, Modifier.align(Alignment.BottomStart))
 
-            // the buttons' width, to keep "Set MC" clear of them
-            var buttonsWidth by remember { mutableIntStateOf(0) }
-            val buttonsDp = with(LocalDensity.current) { buttonsWidth.toDp() }
-            val thermal = state?.currentThermal
-            if (circling && thermal != null && thermal.lift > 0) {
-                val beside = maxWidth - buttonsDp - MENU_ROOM >= SET_MC_ROOM
+            if (thermal != null)
                 SetMacCreadyButton(thermal.lift,
                                    { onSetMacCready(Format.stepVerticalSpeed(thermal.lift, 0)) },
                                    Modifier
                                        .align(Alignment.BottomStart)
-                                       .padding(start = if (beside) MENU_ROOM else 0.dp,
-                                                bottom = if (beside) 0.dp else 64.dp))
-            }
+                                       .padding(start = if (setMcAbove) 0.dp else MENU_ROOM,
+                                                bottom = if (setMcAbove) MENU_ROOM else 0.dp))
 
             Row(
                 Modifier.align(Alignment.BottomEnd).onSizeChanged { buttonsWidth = it.width },
@@ -917,12 +923,15 @@ private fun MenuPreview() {
 }
 
 /**
- * The flight menu: in-flight actions, the flight screen's quick
- * settings, then what is done before and after the flight and the
- * settings.  Each page is listed once; related pages open from one
- * another (D25): the pilot from Aircraft & crew, the replay from
- * Flights, NOTAMs from Airspace, units from the map, the wind from
- * Flight setup.
+ * The flight menu (D34): in-flight actions at the bottom, the flight
+ * screen's quick settings, then what is done before and after the
+ * flight and the settings.  Each page is listed once; related pages
+ * open from one another (D25): the pilot from Aircraft & crew, the
+ * replay from Flights, NOTAMs from Airspace, units from the map, the
+ * wind from Flight setup.
+ *
+ * @param state what Flight setup's button shows (MacCready, ballast,
+ * bugs, QNH); null: what the page holds
  */
 @Composable
 fun flightMenu(
@@ -957,55 +966,96 @@ fun flightMenu(
     theme: ThemeChoice = ThemeChoice.SYSTEM,
     onTheme: (ThemeChoice) -> Unit = {},
     mapCoverage: MapCoverage? = null,
-) = FlightMenu(
-    inFlight = listOf(
-        menuAction(R.string.menu_go_to, R.string.menu_go_to_detail, onOpenWaypoints),
-        menuAction(R.string.menu_task, R.string.menu_task_detail, onOpenTask),
-        menuAction(R.string.menu_flight_setup, R.string.menu_flight_setup_detail,
-                   onOpenFlightSetup),
-        menuAction(R.string.menu_analysis, R.string.menu_analysis_detail, onOpenAnalysis),
-    ),
-    sections = listOf(
-        MenuSection(stringResource(R.string.menu_ground), listOf(
-            menuAction(R.string.menu_preflight, R.string.menu_preflight_detail, onOpenPreflight),
-            menuAction(R.string.menu_crew, R.string.menu_crew_detail, onOpenCrew),
-            // ICAO's abbreviations and names stay as they are
-            MenuAction(stringResource(R.string.menu_weather), "METAR, TAF, RASP",
-                       onClick = onOpenWeather),
-            menuAction(R.string.menu_flights, R.string.menu_flights_detail, onOpenFlights),
-        )),
-        MenuSection(stringResource(R.string.menu_settings), listOf(
-            // whether XCSoar warns: warnings off is shown nowhere else
-            menuAction(R.string.airspace,
-                       if (airspaceAlerts.warnings) R.string.menu_airspace_on
-                       else R.string.menu_airspace_off, onOpenAirspaceAlerts),
-            menuAction(R.string.menu_safety, R.string.menu_safety_detail, onOpenSafety),
-            menuAction(R.string.menu_sound, R.string.menu_sound_detail, onOpenSound),
-            onOpenMapSettings?.let {
-                menuAction(R.string.menu_map_units, R.string.menu_map_units_detail, it)
-            } ?: menuAction(R.string.menu_units, R.string.menu_units_detail, onOpenUnits),
-            MenuAction(stringResource(R.string.menu_tracking), "Cloud, SkyLines, LiveTrack24",
-                       onClick = onOpenTracking),
-            menuAction(R.string.menu_data_files, R.string.menu_data_files_detail,
-                       onOpenDataFiles),
-            menuAction(R.string.menu_profiles, R.string.menu_profiles_detail, onOpenProfiles),
-            // what XCSoar sees, for when something looks wrong
-            menuAction(R.string.menu_status, R.string.menu_status_detail, onOpenStatus),
-        )),
-    ),
-    tileLayout = tileLayout,
-    onTileLayout = onTileLayout,
-    tileRows = tileRows,
-    onTileRows = onTileRows,
-    orientation = orientation,
-    onOrientation = onOrientation,
-    varioSound = varioSound,
-    onVarioSound = onVarioSound,
-    theme = theme,
-    onTheme = onTheme,
-    mapCoverage = mapCoverage,
-)
+    state: FlightState? = null,
+): FlightMenu {
+    val mapCaution = mapCoverageCaution(mapCoverage)
+    return FlightMenu(
+        inFlight = listOf(
+            menuAction(R.string.menu_go_to, R.string.menu_go_to_detail, R.drawable.ic_menu_go_to,
+                       onOpenWaypoints),
+            menuAction(R.string.menu_task, R.string.menu_task_detail, R.drawable.ic_menu_route,
+                       onOpenTask),
+            MenuAction(stringResource(R.string.menu_flight_setup),
+                       state?.let { flightSetupNow(it) }
+                           ?: stringResource(R.string.menu_flight_setup_detail),
+                       icon = R.drawable.ic_menu_setup, onClick = onOpenFlightSetup),
+            menuAction(R.string.menu_analysis, R.string.menu_analysis_detail,
+                       R.drawable.ic_menu_analysis, onOpenAnalysis),
+        ),
+        sections = listOf(
+            MenuSection(stringResource(R.string.menu_ground), listOf(
+                // the map missing for the flight is said here, in orange
+                MenuAction(stringResource(R.string.menu_preflight),
+                           mapCaution ?: stringResource(R.string.menu_preflight_detail),
+                           icon = R.drawable.ic_menu_preflight, caution = mapCaution != null,
+                           onClick = onOpenPreflight),
+                menuAction(R.string.menu_crew, R.string.menu_crew_detail, R.drawable.ic_menu_crew,
+                           onOpenCrew),
+                // ICAO's abbreviations and names stay as they are
+                MenuAction(stringResource(R.string.menu_weather), "METAR, TAF, RASP",
+                           icon = R.drawable.ic_menu_weather, onClick = onOpenWeather),
+                menuAction(R.string.menu_flights, R.string.menu_flights_detail,
+                           R.drawable.ic_menu_flights, onOpenFlights),
+            )),
+            MenuSection(stringResource(R.string.menu_settings), listOf(
+                // whether XCSoar warns: warnings off is shown nowhere else
+                menuAction(R.string.airspace,
+                           if (airspaceAlerts.warnings) R.string.menu_airspace_on
+                           else R.string.menu_airspace_off, R.drawable.ic_menu_airspace,
+                           onOpenAirspaceAlerts),
+                menuAction(R.string.menu_safety, R.string.menu_safety_detail,
+                           R.drawable.ic_menu_safety, onOpenSafety),
+                menuAction(R.string.menu_sound, R.string.menu_sound_detail,
+                           R.drawable.ic_menu_sound, onOpenSound),
+                onOpenMapSettings?.let {
+                    menuAction(R.string.menu_map_units, R.string.menu_map_units_detail,
+                               R.drawable.ic_menu_map, it)
+                } ?: menuAction(R.string.menu_units, R.string.menu_units_detail,
+                                R.drawable.ic_menu_map, onOpenUnits),
+                MenuAction(stringResource(R.string.menu_tracking), "Cloud, SkyLines, LiveTrack24",
+                           icon = R.drawable.ic_menu_tracking, onClick = onOpenTracking),
+                menuAction(R.string.menu_data_files, R.string.menu_data_files_detail,
+                           R.drawable.ic_menu_files, onOpenDataFiles),
+                menuAction(R.string.menu_profiles, R.string.menu_profiles_detail,
+                           R.drawable.ic_menu_profiles, onOpenProfiles),
+                // what XCSoar sees, for when something looks wrong
+                menuAction(R.string.menu_status, R.string.menu_status_detail,
+                           R.drawable.ic_menu_status, onOpenStatus),
+            )),
+        ),
+        tileLayout = tileLayout,
+        onTileLayout = onTileLayout,
+        tileRows = tileRows,
+        onTileRows = onTileRows,
+        orientation = orientation,
+        onOrientation = onOrientation,
+        varioSound = varioSound,
+        onVarioSound = onVarioSound,
+        theme = theme,
+        onTheme = onTheme,
+        mapCoverage = mapCoverage,
+    )
+}
+
+/**
+ * Flight setup's values now, as its page sets them: "MC 1.5 · Bugs 5 %
+ * · QNH 1013", with the ballast while there is some on board.
+ */
+@Composable
+private fun flightSetupNow(s: FlightState): String {
+    val parts = mutableListOf<String>()
+    // ICAO's and XCSoar's abbreviations stay as they are
+    parts += (if (s.autoMacCready) "MC ${stringResource(R.string.auto)} " else "MC ") +
+        Format.macCready(s.macCready).text
+    if (s.ballast > 0)
+        parts += "${stringResource(R.string.setup_ballast)} ${Format.ballast(s.ballast).text} l"
+    parts += "${stringResource(R.string.setup_bugs)} ${Format.bugs(s.bugs).text} %"
+    s.qnh?.let { parts += "QNH ${Format.pressure(it).text}" }
+    // a line breaks between the values, not within one ("0" / "%")
+    return parts.joinToString(" · ") { it.replace(' ', '\u00A0') }
+}
 
 @Composable
-private fun menuAction(@StringRes label: Int, @StringRes detail: Int, onClick: () -> Unit) =
-    MenuAction(stringResource(label), stringResource(detail), onClick = onClick)
+private fun menuAction(@StringRes label: Int, @StringRes detail: Int, @DrawableRes icon: Int,
+                       onClick: () -> Unit) =
+    MenuAction(stringResource(label), stringResource(detail), icon = icon, onClick = onClick)

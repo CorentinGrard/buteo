@@ -245,7 +245,8 @@ class FlightScreenScreenshotTest {
         XcsTheme(dark = false) {
             FlightContent(FakeXcsoarCore.syntheticState(120), null, circling = false, {},
                           menu = flightMenu(orientation = MapOrientation.TRACK_UP,
-                                            varioSound = true),
+                                            varioSound = true,
+                                            state = FakeXcsoarCore.syntheticState(120)),
                           menuOpen = true)
         }
     }
@@ -356,7 +357,8 @@ class FrenchFlightScreenshotTest {
         XcsTheme(dark = false) {
             FlightContent(FakeXcsoarCore.syntheticState(120), null, circling = false, {},
                           menu = flightMenu(orientation = MapOrientation.TRACK_UP,
-                                            varioSound = true),
+                                            varioSound = true,
+                                            state = FakeXcsoarCore.syntheticState(120)),
                           menuOpen = true)
         }
     }

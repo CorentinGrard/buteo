@@ -712,3 +712,37 @@ library: the map's options and orientation are stored through it, and
 the analysis pages draw their terrain with it (`xcs_map_terrain_image`).
 Moving those into the host and dropping the renderer, its fonts and
 drawables, is the next step.
+
+## D34 — The menu: in-flight buttons under the thumb, an icon per entry
+**Status:** Proposed (2026-11-26), the pilot to confirm
+
+Amends D21 and D25.  The pilot (2026-11-26): "do an overall of the UX,
+make it more clear, especially the menu".  The menu button is at the
+bottom left of the map, but the sheet it opened was taller than the
+screen and began with the in-flight buttons: they sat in the top half,
+far from the thumb that opened it, and everything was text.
+
+- The in-flight buttons (Go to, Route, Flight setup, Analysis) are a
+  band at the bottom of the sheet that does not scroll, right above
+  where the menu button was; four in a row on a wide sheet (landscape,
+  tablets).  What is not needed in the air scrolls above them, from the
+  top: Quick settings, Before and after the flight, Settings.  A fade
+  at the bottom of that part says when there is more below.
+- Every entry has an icon (Buteo's own line icons, `ic_menu_*`), above
+  the name on the large buttons (the name keeps the button's width: no
+  word broken, "Configuration vol"), left of it in the lists, which are
+  grouped on panels.
+- Flight setup's button shows its values now ("MC 0.5 · Bugs 0 % ·
+  QNH 1013", the ballast while there is some) instead of what the page
+  holds.
+- Quick settings: Map up, then the vario sound as one more row of
+  segments (On / Muted), the two used in the air, then Tiles, Rows and
+  Theme.
+- The vector map's coverage is no longer a row of its own: when it has
+  something to see to (no map stored, the glider beyond it, a hole on
+  the route) Pre-flight check's row says it in orange; the map's credit
+  is at the end of the lists.
+- On the flight screen, "No target" says what a tap does ("Choose where
+  to go", the Go to icon) on one compact card instead of dashes; "Set
+  MC" over the menu button (short screens) shortens the vario bar
+  instead of covering its bottom.

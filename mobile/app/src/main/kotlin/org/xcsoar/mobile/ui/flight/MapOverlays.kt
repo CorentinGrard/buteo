@@ -3,6 +3,10 @@
 
 package org.xcsoar.mobile.ui.flight
 
+import org.xcsoar.mobile.ui.Chevron
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -123,6 +127,27 @@ fun NextWaypointCard(
                                    "${arrival.text} ${arrival.unit}")
         },
     ) {
+        // no target: what a tap does, rather than dashes for nothing
+        if (next == null) {
+            Row(Modifier.padding(horizontal = 14.dp, vertical = 8.dp).heightIn(min = 40.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Image(painterResource(R.drawable.ic_menu_go_to), contentDescription = null,
+                      colorFilter = ColorFilter.tint(colors.textSecondary),
+                      modifier = Modifier.size(22.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(noTarget, color = colors.text, fontSize = 17.sp,
+                         fontWeight = FontWeight.Bold, maxLines = 1,
+                         overflow = TextOverflow.Ellipsis)
+                    if (onClick != null)
+                        Text(stringResource(R.string.flight_choose_target),
+                             color = colors.textSecondary, fontSize = 13.sp, maxLines = 1,
+                             overflow = TextOverflow.Ellipsis)
+                }
+                if (onClick != null) Chevron()
+            }
+            return@FloatingCard
+        }
         Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {

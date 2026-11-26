@@ -229,14 +229,6 @@ msgstr ""
 msgid "Map data © OpenStreetMap contributors, Protomaps"
 msgstr ""
 
-#. menu_map_offline
-msgid "Offline map: %1$s, %2$s"
-msgstr ""
-
-#. menu_map_regions
-msgid "%1$d regions"
-msgstr ""
-
 #. menu_map_glider_outside
 msgid "The glider is beyond the stored map"
 msgstr ""
@@ -391,7 +383,7 @@ msgid "Route"
 msgstr ""
 
 #. menu_task_detail
-msgid "Plan it on the map, next point"
+msgid "Saved routes, plan one, stop"
 msgstr ""
 
 #. menu_flight_setup

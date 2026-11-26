@@ -97,13 +97,8 @@
     <string name="menu_rows">Rows</string>
     <string name="menu_map_up">Map up</string>
     <string name="menu_theme">Theme</string>
-    <!-- the map MapLibre draws, a prototype beside XCSoar's (map review, 2026-11-24) -->
-    <string name="menu_map_engine">Map</string>
+    <!-- the vector map's credit, at the end of the menu (no "i" on the map) -->
     <string name="menu_map_credit">Map data © OpenStreetMap contributors, Protomaps</string>
-    <!-- under the map choice: the vector map's region files on the phone (their names, the day of their data) -->
-    <string name="menu_map_offline">Offline map: %1$s, %2$s</string>
-    <!-- %1$d: how many region files of the vector map are on the phone -->
-    <string name="menu_map_regions">%1$d regions</string>
     <string name="menu_map_glider_outside">The glider is beyond the stored map</string>
     <!-- the stored map has a hole on the task, near the task point %1$s -->
     <string name="menu_map_task_gap">The stored map lacks part of the route, near %1$s</string>
@@ -157,7 +152,7 @@
     <string name="menu_go_to">Go to waypoint</string>
     <string name="menu_go_to_detail">Nearest landable first</string>
     <string name="menu_task" po:msgctxt="Flight route">Route</string>
-    <string name="menu_task_detail">Plan it on the map, next point</string>
+    <string name="menu_task_detail">Saved routes, plan one, stop</string>
     <string name="menu_flight_setup">Flight setup</string>
     <string name="menu_flight_setup_detail">MacCready, ballast, bugs, QNH, wind</string>
     <string name="menu_analysis">Analysis</string>

@@ -230,14 +230,6 @@ msgstr "Thème"
 msgid "Map data © OpenStreetMap contributors, Protomaps"
 msgstr "Données cartographiques © contributeurs OpenStreetMap, Protomaps"
 
-#. menu_map_offline
-msgid "Offline map: %1$s, %2$s"
-msgstr "Carte hors ligne : %1$s, %2$s"
-
-#. menu_map_regions
-msgid "%1$d regions"
-msgstr "%1$d régions"
-
 #. menu_map_glider_outside
 msgid "The glider is beyond the stored map"
 msgstr "Le planeur est hors de la carte stockée"
@@ -392,8 +384,8 @@ msgid "Route"
 msgstr "Circuit"
 
 #. menu_task_detail
-msgid "Plan it on the map, next point"
-msgstr "Le tracer sur la carte, point suivant"
+msgid "Saved routes, plan one, stop"
+msgstr "Circuits enregistrés, en préparer un, arrêter"
 
 #. menu_flight_setup
 msgid "Flight setup"
