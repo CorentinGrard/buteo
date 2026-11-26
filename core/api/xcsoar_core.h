@@ -1475,6 +1475,8 @@ enum {
   XCS_FEATURES_TRAIL = 4,
   /** The task being edited (XCS_TASK_BEGIN): as XCS_FEATURES_TASK. */
   XCS_FEATURES_TASK_EDITED = 5,
+  /** XCS_FEATURES_TRAIL's last two minutes, for every fix. */
+  XCS_FEATURES_TRAIL_RECENT = 6,
 };
 
 /**
@@ -1502,6 +1504,9 @@ enum {
  * - XCS_FEATURES_TASK_EDITED: the task being edited as the map draws
  *   it in XCS_MAP_MODE_TASK (its last point a finish, as on "Done"),
  *   none "active"; no features without an edit in progress.
+ * - XCS_FEATURES_TRAIL_RECENT: as XCS_FEATURES_TRAIL, at most its last
+ *   two minutes (unthinned, a point per fix): a map can draw it over
+ *   the whole trail at every fix, and the whole trail less often.
  *
  * Buffer rules as for xcs_get_data_status().
  */

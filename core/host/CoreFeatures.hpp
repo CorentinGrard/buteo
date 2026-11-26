@@ -36,9 +36,15 @@ Task() noexcept;
 std::string
 EditedTask() noexcept;
 
-/** The last 20 minutes of the flight, in segments of like climb. */
+/** The flight as long as the trail option says, in segments of like
+    climb. */
 std::string
 Trail() noexcept;
+
+/** As Trail(), the last two minutes only: small enough to send with
+    every fix. */
+std::string
+RecentTrail() noexcept;
 
 /**
  * The terrain's heights (metres) over tile (zoom, x, y) of the Web

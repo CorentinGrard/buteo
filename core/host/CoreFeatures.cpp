@@ -375,8 +375,12 @@ EditedTask() noexcept
   return std::move(w).Finish();
 }
 
-std::string
-Trail() noexcept
+/**
+ * The trail's lines by climb class, at most @p max_age long (zero: as
+ * long as the pilot's trail setting).
+ */
+static std::string
+TrailSince(TracePoint::Time max_age) noexcept
 {
   FeatureWriter w;
   if (!backend_components->glide_computer)
@@ -402,6 +406,8 @@ Trail() noexcept
   case TrailSettings::Length::FULL:
     break;
   }
+  if (max_age.count() > 0 && (span.count() == 0 || max_age < span))
+    span = max_age;
   const auto since = span.count() > 0 && trace.back().GetTime() > span
     ? trace.back().GetTime() - span
     : TracePoint::Time{};
@@ -434,6 +440,20 @@ Trail() noexcept
   }
   flush();
   return std::move(w).Finish();
+}
+
+std::string
+Trail() noexcept
+{
+  return TrailSince({});
+}
+
+std::string
+RecentTrail() noexcept
+{
+  /* the part of the trace XCSoar does not thin
+     (TraceComputer's full_trace_no_thin_time) */
+  return TrailSince(TracePoint::Time{2 * 60});
 }
 
 /** The latitude of row @p y (fractional) of a Web Mercator tile grid

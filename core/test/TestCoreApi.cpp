@@ -272,8 +272,14 @@ TestDataFiles(xcs_core *core)
   ok1(Features(core, XCS_FEATURES_AIRSPACE_STATE) == "[]");
   ok1(Features(core, XCS_FEATURES_TASK).find("\"features\":[]") !=
       std::string::npos);
-  ok1(Features(core, XCS_FEATURES_TRAIL).starts_with(
-        "{\"type\":\"FeatureCollection\""));
+  const auto trail = Features(core, XCS_FEATURES_TRAIL);
+  ok1(trail.starts_with("{\"type\":\"FeatureCollection\""));
+  /* its last two minutes: a part of it, ending where it ends */
+  const auto recent = Features(core, XCS_FEATURES_TRAIL_RECENT);
+  ok1(recent.starts_with("{\"type\":\"FeatureCollection\"") &&
+      recent.size() <= trail.size() &&
+      (recent.size() < 100 ||
+       trail.ends_with(recent.substr(recent.size() - 60))));
   {
     char small[8];
     size_t length = 0;
@@ -1878,7 +1884,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1);
 
   Recorder recorder;
   TestCreateArguments(recorder);
