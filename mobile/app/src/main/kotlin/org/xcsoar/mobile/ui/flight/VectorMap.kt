@@ -65,6 +65,7 @@ import org.xcsoar.mobile.core.TaskOutline
 import org.xcsoar.mobile.core.WaypointInfo
 import org.xcsoar.mobile.ui.Format
 import java.io.File
+import java.io.IOException
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.hypot
@@ -421,8 +422,15 @@ class VectorMapState(
         if (following) glide(MOVE_MILLIS)
     }
 
-    /** The map view is gone (a new one may come with new region files). */
+    /** Where the last map view looked when it went. */
+    private var lastCamera: CameraPosition? = null
+
+    /**
+     * The map view goes (before its onDestroy): a new one comes with
+     * new region files, or when the phone turns to landscape.
+     */
     internal fun detached() {
+        lastCamera = map?.cameraPosition
         view?.removeCallbacks(restoreFps)
         map = null
         view = null
@@ -431,18 +439,27 @@ class VectorMapState(
     }
 
     /**
-     * The style is loaded: the camera as the flight screen wants it;
-     * before a fix where the glider was last, else over [regions] (the
-     * middle of the map files, as XCSoar's map).
+     * The style is loaded: the camera at once where the flight screen
+     * wants it (MapLibre refuses an ease of no time): the glider while
+     * following, else where the last map view looked; the first time
+     * where the glider was last, else over [regions] (the middle of the
+     * map files).  A task mode frames its own ([applyPadding]).
      */
     internal fun attached(regions: LatLng?) {
         applyPadding()
         val map = map ?: return
-        if (fix == null)
-            (lastPlace ?: regions)?.let {
-                ownMove { map.moveCamera(CameraUpdateFactory.newLatLngZoom(it, zoomGoal)) }
+        if (taskMode != null) return
+        val at = fix
+        val last = lastCamera
+        val camera = when {
+            at != null && following -> camera(map, at)
+            last != null -> CameraPosition.Builder(map.cameraPosition).target(last.target)
+                .zoom(last.zoom).bearing(last.bearing).build()
+            else -> (lastPlace ?: regions)?.let {
+                CameraPosition.Builder(map.cameraPosition).target(it).zoom(zoomGoal).build()
             }
-        else if (following) glide(0)
+        } ?: return
+        ownMove { map.moveCamera(CameraUpdateFactory.newCameraPosition(camera)) }
     }
 
     /**
@@ -608,11 +625,12 @@ fun VectorMap(
         }
         lifecycle.addObserver(observer)
         onDispose {
+            // while the view still tells where it looks
+            state.detached()
             lifecycle.removeObserver(observer)
             if (resumed) mapView.onPause()
             if (started) mapView.onStop()
             mapView.onDestroy()
-            state.detached()
         }
     }
 
@@ -755,7 +773,17 @@ fun VectorMap(
                         changes.apply("trail", json) { loaded.source("trail")?.setGeoJson(json) }
                     }
                 }
-                state.coverage = MapCoverage.of(offline, task, live.value?.position)
+                // reads the region files' directories: not on the UI
+                // thread, and a damaged file only leaves the last answer
+                val outline = task
+                val glider = live.value?.position
+                try {
+                    state.coverage = withContext(Dispatchers.IO) {
+                        MapCoverage.of(offline, outline, glider)
+                    }
+                } catch (e: IOException) {
+                    Log.w(TAG, "map coverage", e)
+                }
                 if (tick % 5 == 0 && landablesAt.isNotEmpty())
                     try {
                         val nearby = landables()

@@ -121,9 +121,16 @@ object MapNetwork {
         val zoom = path.getOrNull(0)?.toIntOrNull()
         val x = path.getOrNull(1)?.toIntOrNull()
         val y = path.getOrNull(2)?.removeSuffix(".png")?.toIntOrNull()
-        val heights = if (zoom != null && x != null && y != null)
-            runBlocking { terrain?.invoke(zoom, x, y, TERRAIN_SIZE) }
-        else null
+        val heights = try {
+            if (zoom != null && x != null && y != null)
+                runBlocking { terrain?.invoke(zoom, x, y, TERRAIN_SIZE) }
+            else null
+        } catch (e: Exception) {
+            // thrown on OkHttp's thread, anything but an IOException
+            // would end the app: the map goes without this tile
+            Log.w(TAG, "terrain $zoom/$x/$y", e)
+            null
+        }
         val response = Response.Builder().request(request).protocol(Protocol.HTTP_1_1)
         if (heights == null || heights.size != TERRAIN_SIZE * TERRAIN_SIZE)
             return response.code(404).message("No terrain")
