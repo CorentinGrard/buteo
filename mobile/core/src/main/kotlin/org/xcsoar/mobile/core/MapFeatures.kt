@@ -25,10 +25,12 @@ enum class MapFeatures(val code: Int) {
     WAYPOINTS(2),
     /** The ordered task: legs, zones and points. */
     TASK(3),
-    /** The last 20 minutes of the flight, by climb. */
+    /** The flight, by climb, as long as the trail option says. */
     TRAIL(4),
     /** The task being edited, as the map draws it while building it. */
     TASK_EDITED(5),
+    /** [TRAIL]'s last two minutes: small enough for every fix. */
+    TRAIL_RECENT(6),
 }
 
 /** An airspace with a warning (`XCS_FEATURES_AIRSPACE_STATE`). */

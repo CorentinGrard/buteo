@@ -4,6 +4,7 @@
 package org.xcsoar.mobile.ui.flight
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.PointF
 import android.os.SystemClock
 import android.util.Log
@@ -12,6 +13,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -56,6 +58,7 @@ import org.maplibre.android.style.sources.GeoJsonSource
 import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.AirspaceState
 import org.xcsoar.mobile.core.FlightState
+import org.xcsoar.mobile.core.GeoPosition
 import org.xcsoar.mobile.core.MapCoverage
 import org.xcsoar.mobile.core.MapFeatures
 import org.xcsoar.mobile.core.MapItemInfo
@@ -85,6 +88,12 @@ private const val FOLLOW_MIN_FPS = 4
 private const val FOLLOW_MAX_FPS = 30
 /** Two pixels is a sixth of a millimetre on the Redmi 5: a step the eye does not see. */
 private const val PIXELS_PER_FRAME = 2
+
+/** The north mark turns at most this often (see [VectorMapState.bearing]). */
+private const val BEARING_MILLIS = 200L
+
+/** The style's image of the thermal assistant. */
+private const val ASSISTANT_IMAGE = "thermal-assistant"
 
 /** How long the zoom buttons, the centre button and the orientation animate. */
 private const val MOVE_MILLIS = 300
@@ -150,10 +159,25 @@ class VectorMapState(
     var coverage by mutableStateOf<MapCoverage?>(null)
         internal set
 
+    /**
+     * The direction at the top of the map as drawn, degrees, at most
+     * every [BEARING_MILLIS]: the north mark reads it while drawing.
+     * Each change has Compose draw the whole screen again (the map is
+     * a surface of its own): in every map frame, that was half a core of
+     * the Redmi 5 while circling track up.
+     */
+    var bearing by mutableFloatStateOf(0f)
+        private set
+    private var bearingAt = 0L
+
     internal var map: MapLibreMap? = null
     internal var view: MapView? = null
     /** The style's glider layer (a location indicator). */
     internal var glider: Layer? = null
+    /** The thermal assistant's layer, on the glider (a location indicator too). */
+    internal var assistantLayer: Layer? = null
+    /** The assistant's image while circling, else null. */
+    private var assistant: Bitmap? = null
     private var orientation: MapOrientation? = MapOrientation.NORTH_UP
     /** Around what the task modes frame: the sides and the map's buttons, pixels. */
     internal var frameMargin = 0
@@ -328,8 +352,16 @@ class VectorMapState(
      * keeps the camera off the poles and the glider was drawn in Africa.
      */
     internal fun frameRendered() {
-        if (map == null || fix == null) return
+        val map = map ?: return
         val now = SystemClock.uptimeMillis()
+        if (now - bearingAt >= BEARING_MILLIS) {
+            val drawn = map.cameraPosition.bearing.toFloat()
+            if (drawn != bearing) {
+                bearing = drawn
+                bearingAt = now
+            }
+        }
+        if (fix == null) return
         if (following && gestures == 0) showGlider(gliderAt(now), gliderBearing(now))
     }
 
@@ -351,13 +383,38 @@ class VectorMapState(
         val layer = glider ?: return
         if (at == shownAt && bearing == shownBearing) return
         if (shownAt == null) layer.setProperties(PropertyFactory.visibility(Property.VISIBLE))
+        val moved = at != shownAt
         shownAt = at
         shownBearing = bearing
         // the location indicator's own properties (MapLibre's factory for
         // them is not public)
-        layer.setProperties(
-            PaintPropertyValue("location", arrayOf(at.latitude, at.longitude, 0.0)),
-            PaintPropertyValue("bearing", bearing))
+        layer.setProperties(location(at), PaintPropertyValue("bearing", bearing))
+        if (moved && assistant != null) assistantLayer?.setProperties(location(at))
+    }
+
+    private fun location(at: LatLng) =
+        PaintPropertyValue("location", arrayOf(at.latitude, at.longitude, 0.0))
+
+    /**
+     * The thermal assistant on the glider, drawn north up in [image]: the
+     * map turns it with its own frames; null hides it.
+     */
+    fun showThermalAssistant(image: Bitmap?) {
+        assistant = image
+        applyAssistant()
+    }
+
+    private fun applyAssistant() {
+        val layer = assistantLayer ?: return
+        val style = map?.style ?: return
+        val image = assistant
+        if (image == null) {
+            layer.setProperties(PropertyFactory.visibility(Property.NONE))
+            return
+        }
+        style.addImage(ASSISTANT_IMAGE, image)
+        layer.setProperties(PropertyFactory.visibility(Property.VISIBLE),
+                            location(shownAt ?: fix ?: return))
     }
 
     /** The glider's bearing at [now], turning evenly from one fix's track to the next. */
@@ -379,8 +436,8 @@ class VectorMapState(
         val moved = hypot((b.x - a.x).toDouble(), (b.y - a.y).toDouble())
         // turning track up, the map's corners move the most
         val turned = abs(shortest(map.cameraPosition.bearing, bearing)) * PI / 180 * height / 2
-        // the glider's turn in steps of a few degrees
-        val tips = abs(bearingTo - bearingFrom) * PI / 180 * gliderRadius / 2
+        // the glider's wing tips as it turns (circling, 15-20 degrees a second)
+        val tips = abs(bearingTo - bearingFrom) * PI / 180 * gliderRadius
         val perSecond = (moved + turned + tips) * 1000 / interval
         followFps = (perSecond / PIXELS_PER_FRAME).roundToInt()
             .coerceIn(FOLLOW_MIN_FPS, FOLLOW_MAX_FPS)
@@ -438,6 +495,7 @@ class VectorMapState(
         map = null
         view = null
         glider = null
+        assistantLayer = null
         shownAt = null
     }
 
@@ -450,6 +508,7 @@ class VectorMapState(
      */
     internal fun attached(regions: LatLng?) {
         applyPadding()
+        applyAssistant()
         val map = map ?: return
         if (taskMode != null) return
         val at = fix
@@ -695,6 +754,7 @@ fun VectorMap(
                     loaded.addImage("glider", it.toBitmap())
                 }
                 state.glider = loaded.getLayer("glider")
+                state.assistantLayer = loaded.getLayer("thermal-assistant")
                 state.view = mapView
                 state.map = map
                 state.attached(offline?.bounds?.let { b ->
@@ -777,10 +837,13 @@ fun VectorMap(
                             state.frameTask(taskBounds(json, (mode as? TaskMapMode.Target)?.index))
                         }
                     }
+                }
+                // the whole trail now and then: its last two minutes come
+                // with every fix (below)
+                if (tick % 10 == 0)
                     features(MapFeatures.TRAIL)?.let { json ->
                         changes.apply("trail", json) { loaded.source("trail")?.setGeoJson(json) }
                     }
-                }
                 // reads the region files' directories: not on the UI
                 // thread, and a damaged file only leaves the last answer
                 val outline = task
@@ -807,14 +870,25 @@ fun VectorMap(
         }
         LaunchedEffect(loaded) {
             var lastSequence = -1L
+            var lastPosition: GeoPosition? = null
+            var recentTrail: String? = null
             live.filterNotNull().collect { s ->
                 if (s.sequence == lastSequence) return@collect
                 lastSequence = s.sequence
                 MapNetwork.inFlight = s.flying
                 val position = s.position ?: return@collect
                 state.onFix(position.latitude, position.longitude, s.track, s.next?.bearing)
-                val altitude = s.navAltitude ?: return@collect
-                airspace.altitude(loaded, altitude)
+                s.navAltitude?.let { airspace.altitude(loaded, it) }
+                // the trail's end with each fix, where the glider is going
+                // (it glides there until the next one): the trail grows
+                // behind it instead of in steps of seconds
+                if (s.flying && position != lastPosition) {
+                    lastPosition = position
+                    features(MapFeatures.TRAIL_RECENT)?.takeIf { it != recentTrail }?.let {
+                        recentTrail = it
+                        loaded.source("trail-recent")?.setGeoJson(it)
+                    }
+                }
             }
         }
     }

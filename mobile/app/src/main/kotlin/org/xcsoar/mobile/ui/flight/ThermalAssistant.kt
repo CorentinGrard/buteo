@@ -3,8 +3,16 @@
 
 package org.xcsoar.mobile.ui.flight
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
@@ -23,6 +31,7 @@ import org.xcsoar.mobile.ui.theme.XcsColors
 import org.xcsoar.mobile.ui.theme.XcsTheme
 import kotlin.math.cos
 import kotlin.math.max
+import kotlin.math.roundToInt
 import kotlin.math.sin
 import org.xcsoar.mobile.R
 
@@ -30,6 +39,8 @@ import org.xcsoar.mobile.R
  * The thermal assistant around the glider while circling: where on its
  * circle the climb was stronger, in the map's directions.  The map
  * turns with [upBearing] (the direction at the top of the screen).
+ * Drawn by Compose only without the vector map (previews, tests): the
+ * vector map draws [thermalAssistantImage] itself, in its own frames.
  */
 @Composable
 fun ThermalAssistantOverlay(
@@ -40,13 +51,38 @@ fun ThermalAssistantOverlay(
     modifier: Modifier = Modifier,
 ) {
     val colors = XcsTheme.colors
-    val strongest = strongestBearing(graphic)
-    val spoken = strongest?.let {
-        stringResource(R.string.flight_thermal_assistant_lift, "${Format.bearing(it).text}°")
-    } ?: stringResource(R.string.flight_thermal_assistant)
-    Canvas(modifier.clearAndSetSemantics { contentDescription = spoken }) {
+    Canvas(modifier.thermalAssistantSemantics(graphic)) {
         thermalAssistant(graphic, centre, radius.toPx(), upBearing, colors, halo = true)
     }
+}
+
+/** What the assistant tells TalkBack: where the lift is strongest. */
+@Composable
+fun Modifier.thermalAssistantSemantics(graphic: TileGraphic): Modifier {
+    val spoken = strongestBearing(graphic)?.let {
+        stringResource(R.string.flight_thermal_assistant_lift, "${Format.bearing(it).text}°")
+    } ?: stringResource(R.string.flight_thermal_assistant)
+    return clearAndSetSemantics { contentDescription = spoken }
+}
+
+/**
+ * The assistant north up, [radius] pixels, in an image of its own, for
+ * the vector map to draw on the glider and turn with its frames (a
+ * Compose overlay turning with the map redrew the whole screen in every
+ * frame: half a core on the Redmi 5).
+ */
+fun thermalAssistantImage(graphic: TileGraphic, radius: Float, colors: XcsColors,
+                          density: Density): Bitmap? {
+    if (radius <= 0f || liftPoints(graphic, Offset.Zero, radius, 0.0) == null) return null
+    // the halo's stroke reaches past the outer ring
+    val margin = with(density) { 4.dp.toPx() }
+    val side = (2 * (radius + margin)).roundToInt()
+    val image = ImageBitmap(side, side)
+    CanvasDrawScope().draw(density, LayoutDirection.Ltr, Canvas(image),
+                           Size(side.toFloat(), side.toFloat())) {
+        thermalAssistant(graphic, center, radius, 0.0, colors, halo = true)
+    }
+    return image.asAndroidBitmap()
 }
 
 /**

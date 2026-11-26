@@ -3,6 +3,12 @@
 
 package org.xcsoar.mobile.ui.flight
 
+import kotlin.math.roundToInt
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.DisposableEffect
+import android.graphics.Bitmap
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -70,7 +76,6 @@ import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.core.TileAction
 import org.xcsoar.mobile.core.TileLayout
 import org.xcsoar.mobile.core.TileGraphic
-import kotlinx.coroutines.flow.StateFlow
 import org.xcsoar.mobile.core.TileValue
 import org.xcsoar.mobile.R
 import org.xcsoar.mobile.ui.Format
@@ -243,7 +248,8 @@ fun FlightScreen(
             onCloseItems = viewModel::hideMapItems,
             onGoto = viewModel::gotoWaypoint,
             thermalAssistant = thermalAssistant,
-            liveState = viewModel.liveState,
+            onThermalAssistant = vectorState::showThermalAssistant,
+            bearing = { vectorState.bearing },
         ),
         taskPanel = taskPanel,
     )
@@ -271,8 +277,11 @@ class ReplayControls(
  * @param items what is at the held point; null when not shown
  * @param onGoto fly directly to a waypoint of [items]
  * @param thermalAssistant drawn around the glider while circling
- * @param liveState the state at the vario's rate, which the thermal
- * assistant turns with
+ * @param onThermalAssistant the map draws the thermal assistant itself,
+ * from this image (null hides it); without it, Compose draws it over
+ * the map
+ * @param bearing the direction at the top of the map as drawn, read
+ * while drawing the north mark; null: from [orientation] and the state
  */
 class MapSlot(
     val content: @Composable (Modifier) -> Unit,
@@ -285,7 +294,8 @@ class MapSlot(
     val onCloseItems: () -> Unit = {},
     val onGoto: (waypointId: Int) -> Unit = {},
     val thermalAssistant: TileGraphic? = null,
-    val liveState: StateFlow<FlightState?>? = null,
+    val onThermalAssistant: ((Bitmap?) -> Unit)? = null,
+    val bearing: (() -> Float)? = null,
 )
 
 /**
@@ -462,7 +472,12 @@ private fun MapArea(
         if (map != null) {
             map.content(Modifier.fillMaxSize())
             val assistant = map.thermalAssistant
-            if (assistant != null && circling && map.follows && mapSize != IntSize.Zero)
+            val onImage = map.onThermalAssistant
+            if (onImage != null) {
+                if (mapSize != IntSize.Zero)
+                    ThermalAssistantOnMap(assistant?.takeIf { circling }, onImage, cardsBottom,
+                                          mapSize)
+            } else if (assistant != null && circling && map.follows && mapSize != IntSize.Zero)
                 ThermalAssistantSlot(assistant, map, state, cardsBottom, mapSize)
         } else
             MapPlaceholder(state?.track, cardsBottom, Modifier.fillMaxSize())
@@ -597,9 +612,11 @@ private fun MapArea(
             ) {
                 if (map != null) {
                     // a turned map shows where north is
-                    map.orientation?.takeIf { it != MapOrientation.NORTH_UP }
-                        ?.let { mapAngle(it, state) }
-                        ?.let { NorthMark(it) }
+                    map.orientation?.takeIf { it != MapOrientation.NORTH_UP }?.let { up ->
+                        val bearing = map.bearing
+                        if (bearing != null) NorthMark({ bearing().toDouble() })
+                        else mapAngle(up, state)?.let { angle -> NorthMark({ angle }) }
+                    }
                     if (!map.follows)
                         CentreButton(map.onFollow)
                     ZoomButtons(map.onZoom)
@@ -609,23 +626,56 @@ private fun MapArea(
     }
 }
 
+/** The assistant's centre and radius: the middle of the map the cards leave free. */
+private class AssistantPlace(val centre: Offset, val radius: Float)
+
+@Composable
+private fun assistantPlace(cardsBottom: Int, mapSize: IntSize): AssistantPlace {
+    val top = cardsBottom.coerceAtMost(mapSize.height)
+    val radius = with(LocalDensity.current) {
+        val free = minOf((mapSize.height - top) / 2f, mapSize.width / 2f) - 28.dp.toPx()
+        free.coerceIn(36.dp.toPx(), 110.dp.toPx())
+    }
+    return AssistantPlace(Offset(mapSize.width / 2f, (top + mapSize.height) / 2f), radius)
+}
+
 /**
- * The thermal assistant on the glider, where the core draws it (the
- * middle of the map the cards leave free), as large as that part
- * allows; it turns with the map at the vario's rate.
+ * The thermal assistant drawn by the map on the glider while circling
+ * ([graphic] not null): an image of it each time it changes, which the
+ * map turns with its own frames.  Only its words are Compose's.
+ */
+@Composable
+private fun ThermalAssistantOnMap(graphic: TileGraphic?, onImage: (Bitmap?) -> Unit,
+                                  cardsBottom: Int, mapSize: IntSize) {
+    val colors = XcsTheme.colors
+    val density = LocalDensity.current
+    val place = assistantPlace(cardsBottom, mapSize)
+    LaunchedEffect(graphic, place.radius, colors) {
+        onImage(graphic?.let { thermalAssistantImage(it, place.radius, colors, density) })
+    }
+    DisposableEffect(Unit) { onDispose { onImage(null) } }
+    if (graphic != null) {
+        val size = with(density) { (2 * place.radius).toDp() }
+        Box(Modifier
+                .offset { IntOffset((place.centre.x - place.radius).roundToInt(),
+                                    (place.centre.y - place.radius).roundToInt()) }
+                .size(size)
+                .thermalAssistantSemantics(graphic))
+    }
+}
+
+/**
+ * Without the vector map (previews, tests): the thermal assistant drawn
+ * by Compose on the glider, in the map's directions.
  */
 @Composable
 private fun ThermalAssistantSlot(graphic: TileGraphic, map: MapSlot, state: FlightState?,
                                  cardsBottom: Int, mapSize: IntSize) {
-    val live = map.liveState?.collectAsStateWithLifecycle()?.value ?: state
-    val up = map.orientation?.let { mapAngle(it, live) } ?: live?.track ?: 0.0
-    val top = cardsBottom.coerceAtMost(mapSize.height)
-    val centre = Offset(mapSize.width / 2f, (top + mapSize.height) / 2f)
-    val radius = with(LocalDensity.current) {
-        val free = minOf((mapSize.height - top) / 2f, mapSize.width / 2f) - 28.dp.toPx()
-        free.coerceIn(36.dp.toPx(), 110.dp.toPx()).toDp()
-    }
-    ThermalAssistantOverlay(graphic, centre, radius, up, Modifier.fillMaxSize().graphicsLayer())
+    val up = map.orientation?.let { mapAngle(it, state) } ?: state?.track ?: 0.0
+    val place = assistantPlace(cardsBottom, mapSize)
+    val radius = with(LocalDensity.current) { place.radius.toDp() }
+    ThermalAssistantOverlay(graphic, place.centre, radius, up,
+                            Modifier.fillMaxSize().graphicsLayer())
 }
 
 /**

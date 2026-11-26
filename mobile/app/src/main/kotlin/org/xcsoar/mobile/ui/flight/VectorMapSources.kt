@@ -40,7 +40,30 @@ fun vectorMapStyle(json: String, offline: OfflineMap?): String {
             .put("maxzoom", offline.maxZoom)
             .put("bounds", JSONArray().put(b[0]).put(b[1]).put(b[2]).put(b[3]))
     }
+    addRecentTrail(style)
     return style.toString()
+}
+
+/**
+ * The trail's last two minutes (`MapFeatures.TRAIL_RECENT`), sent with
+ * every fix, as a source and layer of their own over the whole trail,
+ * which is sent less often: drawn alike, so the two look as one line
+ * that follows the glider.
+ */
+private fun addRecentTrail(style: JSONObject) {
+    val sources = style.getJSONObject("sources")
+    val trail = sources.optJSONObject("trail") ?: return
+    sources.put("trail-recent", JSONObject(trail.toString()))
+    val layers = style.getJSONArray("layers")
+    val withRecent = JSONArray()
+    for (i in 0 until layers.length()) {
+        val layer = layers.getJSONObject(i)
+        withRecent.put(layer)
+        if (layer.optString("id") == "trail")
+            withRecent.put(JSONObject(layer.toString())
+                .put("id", "trail-recent").put("source", "trail-recent"))
+    }
+    style.put("layers", withRecent)
 }
 
 /**

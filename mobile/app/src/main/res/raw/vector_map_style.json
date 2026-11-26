@@ -229,6 +229,12 @@
      },
      "paint": {"text-color": "#0e1210", "text-halo-color": "#ffffff", "text-halo-width": 1.6}},
 
+    {"id": "thermal-assistant", "type": "location-indicator",
+     "layout": {"visibility": "none", "bearing-image": "thermal-assistant",
+                "perspective-compensation": 0, "image-tilt-displacement": 0},
+     "paint": {"location": [0, 0, 0], "bearing": 0, "bearing-image-size": 1,
+               "accuracy-radius": 0}},
+
     {"id": "glider", "type": "location-indicator",
      "layout": {"visibility": "none", "bearing-image": "glider",
                 "perspective-compensation": 0, "image-tilt-displacement": 0},
