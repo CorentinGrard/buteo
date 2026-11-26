@@ -67,28 +67,39 @@ fun Modifier.thermalAssistantSemantics(graphic: TileGraphic): Modifier {
 }
 
 /**
- * The assistant north up, [radius] pixels, in an image of its own, for
- * the vector map to draw on the glider and turn with its frames (a
- * Compose overlay turning with the map redrew the whole screen in every
- * frame: half a core on the Redmi 5).  Drawn into [reuse] when it has
- * the size: the map copies the image, and a new one every second is
+ * The thermal's core marked by a dot, and around it the assistant
+ * ([graphic], when there is one) north up, [radius] pixels, in an image
+ * for the vector map to draw where the lift is and turn with its frames
+ * (a Compose overlay turning with the map redrew the whole screen in
+ * every frame: half a core on the Redmi 5).  Drawn into [reuse] when it
+ * has the size: the map copies the image, and a new one every second is
  * garbage.
  */
-fun thermalAssistantImage(graphic: TileGraphic, radius: Float, colors: XcsColors,
-                          density: Density, reuse: Bitmap? = null): Bitmap? {
-    if (radius <= 0f || liftPoints(graphic, Offset.Zero, radius, 0.0) == null) return null
+fun thermalAssistantImage(graphic: TileGraphic?, radius: Float, colors: XcsColors,
+                          density: Density, reuse: Bitmap? = null): Bitmap {
+    val assistant = graphic?.takeIf {
+        radius > 0f && liftPoints(it, Offset.Zero, radius, 0.0) != null
+    }
+    val core = with(density) { CORE_RADIUS.toPx() }
     // the halo's stroke reaches past the outer ring
     val margin = with(density) { 4.dp.toPx() }
-    val side = (2 * (radius + margin)).roundToInt()
+    val side = (2 * ((if (assistant != null) radius else core) + margin)).roundToInt()
     val bitmap = reuse?.takeIf { it.width == side && it.height == side && it.isMutable }
         ?.apply { eraseColor(android.graphics.Color.TRANSPARENT) }
         ?: ImageBitmap(side, side).asAndroidBitmap()
     CanvasDrawScope().draw(density, LayoutDirection.Ltr, Canvas(bitmap.asImageBitmap()),
                            Size(side.toFloat(), side.toFloat())) {
-        thermalAssistant(graphic, center, radius, 0.0, colors, halo = true)
+        if (assistant != null)
+            thermalAssistant(assistant, center, radius, 0.0, colors, halo = true)
+        // the core: updraft data, sky blue, outlined for any ground
+        drawCircle(colors.sheet, core + 2.dp.toPx(), center)
+        drawCircle(colors.updraft, core, center)
     }
     return bitmap
 }
+
+/** The thermal's core mark. */
+private val CORE_RADIUS = 6.dp
 
 /**
  * ThermalAssistantRenderer: the climb measured on each heading of the

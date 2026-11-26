@@ -21,7 +21,8 @@
     "waypoints": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
     "task": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
     "trail": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
-    "reach": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}}
+    "reach": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
+    "thermals": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}}
   },
   "layers": [
     {"id": "background", "type": "background", "paint": {"background-color": "#eef0ea"}},
@@ -228,6 +229,22 @@
        "symbol-sort-key": ["case", ["get", "airport"], 0, 1]
      },
      "paint": {"text-color": "#0e1210", "text-halo-color": "#ffffff", "text-halo-width": 1.6}},
+
+    {"id": "thermal-past", "type": "circle", "source": "thermals",
+     "minzoom": 7,
+     "paint": {"circle-radius": 6, "circle-color": "#1a6fa8",
+               "circle-stroke-color": "#ffffff", "circle-stroke-width": 2}},
+    {"id": "thermal-past-label", "type": "symbol", "source": "thermals",
+     "minzoom": 8,
+     "layout": {
+       "text-field": ["get", "text"],
+       "text-font": ["NotoSans-Bold"],
+       "text-size": 12,
+       "text-anchor": "top",
+       "text-offset": [0, 0.7],
+       "text-padding": 3
+     },
+     "paint": {"text-color": "#1a6fa8", "text-halo-color": "#ffffff", "text-halo-width": 1.6}},
 
     {"id": "thermal-assistant", "type": "location-indicator",
      "layout": {"visibility": "none", "bearing-image": "thermal-assistant",

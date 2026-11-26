@@ -91,6 +91,12 @@ private const val PIXELS_PER_FRAME = 2
 /** The style's image of the thermal assistant. */
 private const val ASSISTANT_IMAGE = "thermal-assistant"
 
+/**
+ * Circling, the camera looks at the thermal's core as long as the
+ * glider stays this far from it, a share of the free part of the map.
+ */
+private const val FOCUS_OFFSET = 0.3
+
 /** How long the zoom buttons, the centre button and the orientation animate. */
 private const val MOVE_MILLIS = 300
 
@@ -191,6 +197,13 @@ class VectorMapState(
     private var fix: LatLng? = null
     /** Where the glider was drawn when [fix] came: it glides from there. */
     private var fixFrom: LatLng? = null
+    /**
+     * Where the lift is while circling (XCSoar's thermal locator), else
+     * null: the camera looks there, and the thermal assistant sits there.
+     */
+    private var thermal: LatLng? = null
+    /** Where the thermal's core was drawn when [fix] came. */
+    private var thermalFrom: LatLng? = null
     private var fixTrack: Double? = null
     private var fixTime = 0L
     private var fixInterval = 0L
@@ -263,13 +276,15 @@ class VectorMapState(
     /**
      * A snapshot: the glider at [latitude], [longitude] going [track]
      * (null: unknown); [target] is the next point's bearing, for target
-     * up.  Nothing happens while the fix stays the same.
+     * up; [core] where the lift is while circling.  Nothing happens
+     * while the fix stays the same.
      */
-    internal fun onFix(latitude: Double, longitude: Double, track: Double?, target: Double?) {
+    internal fun onFix(latitude: Double, longitude: Double, track: Double?, target: Double?,
+                       core: LatLng? = null) {
         val map = map ?: return
         val at = LatLng(latitude, longitude)
         val previous = fix
-        if (at == previous && track == fixTrack) return
+        if (at == previous && track == fixTrack && core == thermal) return
         val now = SystemClock.uptimeMillis()
         // the glider turns from where it is drawn now, the short way
         val start = gliderBearing(now)
@@ -277,6 +292,9 @@ class VectorMapState(
         bearingTo = track?.let { start + shortest(start, it) } ?: start
         val interval = if (previous == null) 0L else (now - fixTime).coerceIn(100L, 2000L)
         fixFrom = previous?.let { gliderAt(now) }
+        // the core glides too, from where it is drawn, unless it is new
+        thermalFrom = if (core != null) thermalAt(now) else null
+        thermal = core
         fix = at
         fixTrack = track
         fixTime = now
@@ -296,6 +314,7 @@ class VectorMapState(
         if (!following || gestures > 0) {
             // the map stays: the glider moves on it
             showGlider(at, bearingTo)
+            placeAssistant(core)
             return
         }
         if (previous == null || interval == 0L || previous.distanceTo(at) > JUMP_METRES) {
@@ -303,11 +322,14 @@ class VectorMapState(
             Log.i(TAG, "glider at $latitude $longitude")
             fixInterval = 0
             fixFrom = null
+            thermalFrom = null
             ownMove { map.moveCamera(CameraUpdateFactory.newCameraPosition(camera(map, at))) }
             showGlider(at, bearingTo)
+            placeAssistant(core)
             return
         }
-        // the camera glides to the fix until the next one comes
+        // the camera glides to the fix (circling, the thermal) until the
+        // next one comes
         val camera = camera(map, at)
         adaptFps(map, previous, at, camera.bearing, interval)
         ownMove {
@@ -315,10 +337,33 @@ class VectorMapState(
         }
     }
 
-    /** The camera on [at]: the flight mode's zoom, which way is up. */
+    /** The camera on the glider at [at] ([focus]): the flight mode's zoom, which way is up. */
     private fun camera(map: MapLibreMap, at: LatLng) =
-        CameraPosition.Builder(map.cameraPosition).target(at).zoom(zoomGoal)
+        CameraPosition.Builder(map.cameraPosition).target(focus(map, at)).zoom(zoomGoal)
             .bearing(upBearing).tilt(0.0).build()
+
+    /**
+     * Where the camera looks while following the glider at [at]: while
+     * circling the thermal's core, as XCSoar's map
+     * (GlueMapWindow::UpdateProjection()), so that the map and the
+     * thermal stay and the glider circles on them; towards the glider
+     * when the core is so far that it would leave the free part of the
+     * map.
+     */
+    private fun focus(map: MapLibreMap, at: LatLng): LatLng {
+        val core = thermal ?: return at
+        val view = view ?: return at
+        val a = map.projection.toScreenLocation(at)
+        val b = map.projection.toScreenLocation(core)
+        val apart = hypot((b.x - a.x).toDouble(), (b.y - a.y).toDouble())
+        if (apart <= 0) return at
+        val cards = (2 * focusY - height).coerceAtLeast(0)
+        val most = minOf(view.width, height - cards) * FOCUS_OFFSET
+        if (apart <= most) return core
+        val t = most / apart
+        return LatLng(at.latitude + (core.latitude - at.latitude) * t,
+                      at.longitude + (core.longitude - at.longitude) * t)
+    }
 
     /** Back to the glider in [millis], at the screen's frame rate. */
     private fun glide(millis: Int) {
@@ -339,14 +384,21 @@ class VectorMapState(
     internal fun frameRendered() {
         if (map == null || fix == null) return
         val now = SystemClock.uptimeMillis()
-        if (following && gestures == 0) showGlider(gliderAt(now), gliderBearing(now))
+        if (following && gestures == 0) {
+            showGlider(gliderAt(now), gliderBearing(now))
+            placeAssistant(thermalAt(now))
+        }
     }
 
     /** The glider at [now], gliding evenly from [fixFrom] to [fix]. */
-    private fun gliderAt(now: Long): LatLng {
-        val to = fix ?: return LatLng()
-        val from = fixFrom ?: return to
-        if (fixInterval <= 0) return to
+    private fun gliderAt(now: Long): LatLng = between(fixFrom, fix ?: return LatLng(), now)
+
+    /** The thermal's core at [now], as the camera eases to it. */
+    private fun thermalAt(now: Long): LatLng? = thermal?.let { between(thermalFrom, it, now) }
+
+    /** [from] to [to] evenly from the last fix to the next. */
+    private fun between(from: LatLng?, to: LatLng, now: Long): LatLng {
+        if (from == null || fixInterval <= 0) return to
         val t = ((now - fixTime).toDouble() / fixInterval).coerceIn(0.0, 1.0)
         return LatLng(from.latitude + (to.latitude - from.latitude) * t,
                       from.longitude + (to.longitude - from.longitude) * t)
@@ -360,21 +412,20 @@ class VectorMapState(
         val layer = glider ?: return
         if (at == shownAt && bearing == shownBearing) return
         if (shownAt == null) layer.setProperties(PropertyFactory.visibility(Property.VISIBLE))
-        val moved = at != shownAt
         shownAt = at
         shownBearing = bearing
         // the location indicator's own properties (MapLibre's factory for
         // them is not public)
         layer.setProperties(location(at), PaintPropertyValue("bearing", bearing))
-        if (moved && assistant != null) assistantLayer?.setProperties(location(at))
     }
 
     private fun location(at: LatLng) =
         PaintPropertyValue("location", arrayOf(at.latitude, at.longitude, 0.0))
 
     /**
-     * The thermal assistant on the glider, drawn north up in [image]: the
-     * map turns it with its own frames; null hides it.
+     * The thermal assistant and the core's mark, drawn north up in
+     * [image], on the thermal's core while circling: the map turns it
+     * with its own frames; null hides it.
      */
     fun showThermalAssistant(image: Bitmap?) {
         assistant = image
@@ -382,16 +433,26 @@ class VectorMapState(
     }
 
     private fun applyAssistant() {
-        val layer = assistantLayer ?: return
         val style = map?.style ?: return
-        val image = assistant
-        if (image == null) {
-            layer.setProperties(PropertyFactory.visibility(Property.NONE))
-            return
+        assistant?.let { style.addImage(ASSISTANT_IMAGE, it) }
+        placeAssistant(thermalAt(SystemClock.uptimeMillis()))
+    }
+
+    /** Where the assistant's layer is; null while hidden. */
+    private var assistantAt: LatLng? = null
+
+    /** The assistant at [at] when there is one to show, else hidden. */
+    private fun placeAssistant(at: LatLng?) {
+        val layer = assistantLayer ?: return
+        val where = at?.takeIf { assistant != null }
+        if (where == assistantAt) return
+        when {
+            where == null -> layer.setProperties(PropertyFactory.visibility(Property.NONE))
+            assistantAt == null ->
+                layer.setProperties(PropertyFactory.visibility(Property.VISIBLE), location(where))
+            else -> layer.setProperties(location(where))
         }
-        style.addImage(ASSISTANT_IMAGE, image)
-        layer.setProperties(PropertyFactory.visibility(Property.VISIBLE),
-                            location(shownAt ?: fix ?: return))
+        assistantAt = where
     }
 
     /** The glider's bearing at [now], turning evenly from one fix's track to the next. */
@@ -473,6 +534,7 @@ class VectorMapState(
         view = null
         glider = null
         assistantLayer = null
+        assistantAt = null
         shownAt = null
     }
 
@@ -832,6 +894,15 @@ fun VectorMap(
                 } catch (e: IOException) {
                     Log.w(TAG, "map coverage", e)
                 }
+                // the earlier thermals, at the glider's altitude: they move
+                // as it climbs or sinks, and come at the end of each climb
+                if (tick % 3 == 0)
+                    features(MapFeatures.THERMALS)?.let { json ->
+                        // twenty points at most: labelled here
+                        changes.apply("thermals", json) {
+                            loaded.source("thermals")?.setGeoJson(thermalsJson(json))
+                        }
+                    }
                 if (tick % 5 == 0 && landablesAt.isNotEmpty())
                     try {
                         val nearby = landables()
@@ -849,12 +920,28 @@ fun VectorMap(
             var lastSequence = -1L
             var lastPosition: GeoPosition? = null
             var recentTrail: String? = null
+            var wasFlying: Boolean? = null
+            var wasCircling: Boolean? = null
             live.filterNotNull().collect { s ->
                 if (s.sequence == lastSequence) return@collect
                 lastSequence = s.sequence
                 MapNetwork.inFlight = s.flying
+                // in and out of a flight or a climb, the trail at once: a
+                // replay's goes when it stops (also without a fix), and the
+                // trail starts or stops drifting with the wind (the whole
+                // of it comes with every fix then, the core says which)
+                if (s.flying != wasFlying || s.circling != wasCircling) {
+                    wasFlying = s.flying
+                    wasCircling = s.circling
+                    features(MapFeatures.TRAIL)?.let { loaded.source("trail")?.setGeoJson(it) }
+                    features(MapFeatures.TRAIL_RECENT)?.let {
+                        recentTrail = it
+                        loaded.source("trail-recent")?.setGeoJson(it)
+                    }
+                }
                 val position = s.position ?: return@collect
-                state.onFix(position.latitude, position.longitude, s.track, s.next?.bearing)
+                state.onFix(position.latitude, position.longitude, s.track, s.next?.bearing,
+                            s.thermal?.let { LatLng(it.latitude, it.longitude) })
                 s.navAltitude?.let { airspace.altitude(loaded, it) }
                 // the trail's end with each fix, where the glider is going
                 // (it glides there until the next one): the trail grows
@@ -866,6 +953,7 @@ fun VectorMap(
                         loaded.source("trail-recent")?.setGeoJson(it)
                     }
                 }
+
             }
         }
     }
@@ -956,6 +1044,28 @@ internal fun reachJson(nearby: List<WaypointInfo>, at: Map<Int, Landable>): Stri
                 .put("text", where.label + arrival)))
     }
     return JSONObject().put("type", "FeatureCollection").put("features", features).toString()
+}
+
+/**
+ * The earlier thermals (`MapFeatures.THERMALS`) with their average
+ * climb in the pilot's unit, for the map's label.
+ */
+internal fun thermalsJson(json: String): String {
+    val out = JSONArray()
+    try {
+        val features = JSONObject(json).getJSONArray("features")
+        for (i in 0 until features.length()) {
+            val f = features.getJSONObject(i)
+            val lift = f.getJSONObject("properties").getDouble("lift")
+            out.put(JSONObject()
+                .put("type", "Feature")
+                .put("geometry", f.getJSONObject("geometry"))
+                .put("properties", JSONObject().put("text", Format.vario(lift).text)))
+        }
+    } catch (e: JSONException) {
+        Log.w(TAG, "thermals", e)
+    }
+    return JSONObject().put("type", "FeatureCollection").put("features", out).toString()
 }
 
 /**

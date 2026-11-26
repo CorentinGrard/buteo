@@ -473,8 +473,7 @@ private fun MapArea(
             val onImage = map.onThermalAssistant
             if (onImage != null) {
                 if (mapSize != IntSize.Zero)
-                    ThermalAssistantOnMap(assistant?.takeIf { circling }, onImage, cardsBottom,
-                                          mapSize)
+                    ThermalAssistantOnMap(assistant, circling, onImage, cardsBottom, mapSize)
             } else if (assistant != null && circling && map.follows && mapSize != IntSize.Zero)
                 ThermalAssistantSlot(assistant, map, state, cardsBottom, mapSize)
         } else
@@ -642,26 +641,28 @@ private fun assistantPlace(cardsBottom: Int, mapSize: IntSize): AssistantPlace {
 }
 
 /**
- * The thermal assistant drawn by the map on the glider while circling
- * ([graphic] not null): an image of it each time it changes, which the
- * map turns with its own frames.  Only its words are Compose's.
+ * The thermal's core and its assistant, drawn by the map where the
+ * lift is while circling ([circling]; [graphic] when the assistant is
+ * on): an image of them each time they change, which the map turns
+ * with its own frames.  Only their words are Compose's.
  */
 @Composable
-private fun ThermalAssistantOnMap(graphic: TileGraphic?, onImage: (Bitmap?) -> Unit,
-                                  cardsBottom: Int, mapSize: IntSize) {
+private fun ThermalAssistantOnMap(graphic: TileGraphic?, circling: Boolean,
+                                  onImage: (Bitmap?) -> Unit, cardsBottom: Int,
+                                  mapSize: IntSize) {
     val colors = XcsTheme.colors
     val density = LocalDensity.current
     val place = assistantPlace(cardsBottom, mapSize)
     val image = remember { arrayOfNulls<Bitmap>(1) }
-    LaunchedEffect(graphic, place.radius, colors) {
-        val drawn = graphic?.let {
-            thermalAssistantImage(it, place.radius, colors, density, image[0])
-        }
+    LaunchedEffect(graphic, circling, place.radius, colors) {
+        val drawn = if (circling)
+            thermalAssistantImage(graphic, place.radius, colors, density, image[0])
+        else null
         if (drawn != null) image[0] = drawn
         onImage(drawn)
     }
     DisposableEffect(Unit) { onDispose { onImage(null) } }
-    if (graphic != null) {
+    if (graphic != null && circling) {
         val size = with(density) { (2 * place.radius).toDp() }
         Box(Modifier
                 .offset { IntOffset((place.centre.x - place.radius).roundToInt(),

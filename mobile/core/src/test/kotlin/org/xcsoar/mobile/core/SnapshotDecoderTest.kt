@@ -32,15 +32,15 @@ class SnapshotDecoderTest {
         // doubles 368..392: 2000 + field index
         for (i in 0 until 4)
             b.putDouble(368 + i * 8, 2000.0 + i)
-        // doubles 400..408: 3000 + field index
-        for (i in 0 until 2)
+        // doubles 400..424: 3000 + field index
+        for (i in 0 until 4)
             b.putDouble(400 + i * 8, 3000.0 + i)
         return b
     }
 
     @Test
     fun decodesAllValidFields() {
-        val s = SnapshotDecoder.decode(snapshot(0x3ffffff, 0x1f, "Saint-Crépin"))
+        val s = SnapshotDecoder.decode(snapshot(0x7ffffff, 0x1f, "Saint-Crépin"))
 
         assertEquals(42L, s.sequence)
         assertEquals(1.0, s.timeUtc!!, 0.0)
@@ -85,6 +85,7 @@ class SnapshotDecoderTest {
         assertEquals(2003.0, s.wingLoading!!, 0.0)
         assertEquals(3000.0, s.qnh!!, 0.0)
         assertEquals(3001.0, s.staticPressure!!, 0.0)
+        assertEquals(GeoPosition(3002.0, 3003.0), s.thermal)
     }
 
     @Test
@@ -102,6 +103,7 @@ class SnapshotDecoderTest {
         assertNull(s.currentThermal)
         assertNull(s.qnh)
         assertNull(s.staticPressure)
+        assertNull(s.thermal)
         // always valid
         assertEquals(181.0, s.macCready, 0.0)
         assertFalse(s.flying)

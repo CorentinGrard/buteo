@@ -90,6 +90,11 @@ data class FlightState(
     val qnh: Double? = null,
     /** Static pressure, hPa; null without a barometer. */
     val staticPressure: Double? = null,
+    /**
+     * Where the lift is while circling: XCSoar's thermal locator's
+     * estimate at the glider's altitude; null otherwise.
+     */
+    val thermal: GeoPosition? = null,
 ) {
     companion object {
         /** The QNH range of XCSoar's flight setup, hPa. */

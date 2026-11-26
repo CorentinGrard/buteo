@@ -14,7 +14,7 @@ import java.nio.ByteOrder
  */
 object SnapshotDecoder {
     const val API_VERSION = 1
-    const val SIZE = 416
+    const val SIZE = 432
 
     // xcs_flight_snapshot field offsets
     private const val STRUCT_SIZE = 0
@@ -65,6 +65,8 @@ object SnapshotDecoder {
     private const val WING_LOADING = 392
     private const val QNH = 400
     private const val STATIC_PRESSURE = 408
+    private const val THERMAL_LATITUDE = 416
+    private const val THERMAL_LONGITUDE = 424
 
     // XCS_VALID_* bits
     const val VALID_TIME = 1 shl 0
@@ -93,6 +95,7 @@ object SnapshotDecoder {
     const val VALID_STATIC_PRESSURE = 1 shl 23
     const val VALID_NEXT_NAME = 1 shl 24
     const val VALID_NEXT_ARRIVAL = 1 shl 25
+    const val VALID_THERMAL = 1 shl 26
 
     // XCS_FLAG_* bits
     const val FLAG_GPS_REAL = 1 shl 0
@@ -176,6 +179,8 @@ object SnapshotDecoder {
             wingLoading = d(WING_LOADING).takeIf { it > 0 },
             qnh = ifValid(VALID_QNH, QNH),
             staticPressure = ifValid(VALID_STATIC_PRESSURE, STATIC_PRESSURE),
+            thermal = if (valid and VALID_THERMAL != 0)
+                GeoPosition(d(THERMAL_LATITUDE), d(THERMAL_LONGITUDE)) else null,
             gpsReal = flags and FLAG_GPS_REAL != 0,
             flying = flags and FLAG_FLYING != 0,
             circling = flags and FLAG_CIRCLING != 0,

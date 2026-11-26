@@ -746,3 +746,35 @@ far from the thumb that opened it, and everything was text.
   to go", the Go to icon) on one compact card instead of dashes; "Set
   MC" over the menu button (short screens) shortens the vario bar
   instead of covering its bottom.
+
+## D35 — Circling, the map holds the thermal
+**Status:** Proposed (2026-11-27), the pilot to confirm in flight
+
+The pilot (2026-11-26), on the thermal assistant drawn on the glider:
+"It feels like it should be static on the map and updated depending on
+the climbing rate on the thermal".  XCSoar's own map does that: while
+circling it centres on its thermal locator's estimate of the core
+(GlueMapWindow::UpdateProjection()), and its assistant gauge has the
+circle's centre in the middle and the glider on the ring.
+
+- While circling, the camera looks at the thermal's core
+  (`xcs_flight_snapshot.thermal_*`, the locator's estimate, sent only
+  while circling) instead of the glider: the map and the thermal stay,
+  the glider circles on them.  Track up, the map turns round the core
+  and the glider stays on the side of it, as on XCSoar's gauge.  When
+  the core is so far that the glider would leave the free part of the
+  map, the camera looks between them (30 % of that part at most).  The
+  camera eases to each new estimate with the fix, as to the glider.
+- The thermal assistant sits on the core (north up, turned by the map),
+  with the core marked by a sky blue dot (updraft data); with the
+  assistant off (Map & units), the dot alone.  No core yet (the first
+  seconds of a climb): neither.
+- The earlier climbs: XCSoar's thermal sources (the last 20, kept only
+  where the terrain gives their ground) carried downwind to the glider's
+  altitude, as XCSoar's map shows them, a dark sky blue dot with the
+  average climb in the pilot's unit, from zoom 7 (the label from 8).
+- The trail drift option (Wind page) now applies: circling, each point
+  moves downwind by the wind times its age (XCSoar's TrailRenderer), so
+  the circles of one thermal stack over its core.  Every point moves
+  with each fix then, so the whole trail comes with every fix (the
+  recent part's layer) until the climb ends.

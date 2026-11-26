@@ -29,8 +29,13 @@ enum class MapFeatures(val code: Int) {
     TRAIL(4),
     /** The task being edited, as the map draws it while building it. */
     TASK_EDITED(5),
-    /** [TRAIL]'s last two minutes: small enough for every fix. */
+    /**
+     * [TRAIL]'s last two minutes: small enough for every fix; all of it
+     * while the trail drifts with the wind (then [TRAIL] is empty).
+     */
     TRAIL_RECENT(6),
+    /** The flight's earlier thermals at the glider's altitude: points, "lift" (m/s). */
+    THERMALS(7),
 }
 
 /** An airspace with a warning (`XCS_FEATURES_AIRSPACE_STATE`). */
