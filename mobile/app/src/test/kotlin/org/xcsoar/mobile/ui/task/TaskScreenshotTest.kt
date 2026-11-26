@@ -70,19 +70,27 @@ class TaskScreenshotTest {
         rules = TaskRules(startOpen = 12 * 60 + 35, startMaxHeight = 1500.0,
                           startHeightRef = "msl"))
 
+    private val savedRoutes = listOf(
+        TaskFileInfo("Le Versoud - Dent de Crolles", "/x/tasks/Le Versoud - Dent de Crolles.tsk"),
+        TaskFileInfo("Vercors 300", "/x/tasks/Vercors 300.tsk"),
+        TaskFileInfo("Chartreuse triangle", "/x/tasks/Chartreuse triangle.tsk"))
+
     @Test
     fun activeRacingTask() = captureRoboImage("src/test/screenshots/task_active.png") {
         XcsTheme(dark = false) {
-            // flown from the pilot's list of routes
+            // alone: the saved routes come after Stop
             TaskContent(TaskState(TaskInfo(4, "Racing", name = "Le Versoud - Dent de Crolles",
                                            valid = true, distance = 64_700.0,
                                            active = 2, points = points),
-                                  files = listOf(
-                                      TaskFileInfo("Le Versoud - Dent de Crolles",
-                                                   "/x/tasks/Le Versoud - Dent de Crolles.tsk"),
-                                      TaskFileInfo("Vercors 300", "/x/tasks/Vercors 300.tsk"),
-                                      TaskFileInfo("Chartreuse triangle",
-                                                   "/x/tasks/Chartreuse triangle.tsk"))), {})
+                                  files = savedRoutes), {})
+        }
+    }
+
+    /** No route flown: the saved ones, a tap shows one on the map. */
+    @Test
+    fun savedRoutes() = captureRoboImage("src/test/screenshots/task_routes.png") {
+        XcsTheme(dark = false) {
+            TaskContent(TaskState(TaskInfo(4, "Racing", valid = true), files = savedRoutes), {})
         }
     }
 
@@ -146,6 +154,17 @@ class TaskScreenshotTest {
             TaskEditPanelContent(TaskState(
                 TaskInfo(4, "Racing", editing = true, distance = 64_700.0, points = points),
                 selected = 1))
+        }
+    }
+
+    /** A saved route on the map, before flying it. */
+    @Test
+    @Config(qualifiers = "w390dp-h420dp-xxhdpi")
+    fun previewOnTheMap() = captureRoboImage("src/test/screenshots/task_map_preview.png") {
+        Sheet {
+            RoutePreviewPanelContent(TaskState(
+                TaskInfo(4, "Racing", name = "Le Versoud - Dent de Crolles", editing = true,
+                         valid = true, distance = 64_700.0, points = points)))
         }
     }
 

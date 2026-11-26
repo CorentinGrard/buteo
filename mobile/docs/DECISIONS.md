@@ -678,6 +678,18 @@ word; most flights are a club pilot's out-and-return or triangle.
   loaded is named after the file (core).  Delete with a second tap.
   "New route" at the bottom; WeGlide and other files behind one button.
   The editor lost Save, Load and Clear: the list does those.
+- **A route flown is not changed by a slip** (the pilot, 2026-11-26: "if
+  a route is selected don't let the user change easily … if it close
+  the route/cancel it, then show him all the saved routes … on the route
+  details we could show a preview map of it"): while a route is flown
+  the page shows it alone (Edit, Stop, "to fly another, stop this
+  one"); the saved routes, "New route" and the files come only without
+  one.  With none flown and none saved the page still opens on building
+  one.  A tap on a saved route loads it into the editor and shows it on
+  the flight screen's map, framed north up (`TaskMapMode.Preview`, the
+  edited task's features), with its points under the map: "Fly this
+  route" applies it, Back drops it and returns to the list.  The real
+  map, not a second MapLibre view: one region reader and one GL map.
 - Not done: the name on the flight screen's next-point card ("NEXT" also
   under Go to).
 

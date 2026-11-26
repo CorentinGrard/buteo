@@ -776,8 +776,10 @@
     <string name="route_new">New route</string>
     <string name="route_yours">Your routes</string>
     <string name="route_yours_empty">The routes you fly are kept here.</string>
-    <string name="route_flown">Flying</string>
-    <string name="route_fly">Fly %1$s</string>
+    <string name="route_switch_hint">To fly another of your routes, stop this one.</string>
+    <string name="route_show">Show %1$s on the map</string>
+    <string name="route_saved">Saved route</string>
+    <string name="route_fly_this">Fly this route</string>
     <string name="route_delete">Delete</string>
     <string name="route_delete_confirm">Delete?</string>
     <string name="route_more">WeGlide and other files…</string>

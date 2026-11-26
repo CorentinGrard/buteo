@@ -139,6 +139,45 @@ fun TaskEditPanelContent(state: TaskState, actions: TaskMapActions = TaskMapActi
     }
 }
 
+/**
+ * A saved route on the map before flying it: the map frames it (the
+ * edited task, MainActivity); this is under the map.  "Fly this route"
+ * makes it the active one; Back returns to the list without it.
+ */
+@Composable
+fun RoutePreviewPanel(viewModel: TaskViewModel, onList: () -> Unit, onClose: () -> Unit) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    DisposableEffect(Unit) {
+        viewModel.open()
+        onDispose { viewModel.close() }
+    }
+    // flown (or something else ended the edit)
+    val editing = state.task?.editing
+    LaunchedEffect(editing) { if (editing == false) onClose() }
+    val back = { viewModel.cancel(onList) }
+    BackHandler(onBack = back)
+    RoutePreviewPanelContent(state, onFly = viewModel::flyPreviewed, onBack = back)
+}
+
+@Composable
+fun RoutePreviewPanelContent(state: TaskState, onFly: () -> Unit = {}, onBack: () -> Unit = {}) {
+    val colors = XcsTheme.colors
+    val task = state.task ?: return
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Caption(stringResource(R.string.route_saved))
+        RouteHeading(task)
+        RoutePoints(task)
+        state.message?.let {
+            Text(it.text(), color = colors.caution, fontSize = 15.sp)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TaskButton(stringResource(R.string.back), outlined = true, onClick = onBack)
+            TaskButton(stringResource(R.string.route_fly_this), primary = true,
+                       modifier = Modifier.weight(1f), onClick = onFly)
+        }
+    }
+}
+
 /** "S", "1", "2", "F" with the names: tap one to change its zone. */
 @Composable
 private fun PointChips(task: TaskInfo, selected: Int?, onSelect: (Int) -> Unit) {

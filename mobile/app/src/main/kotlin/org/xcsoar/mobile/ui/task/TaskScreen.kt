@@ -93,8 +93,8 @@ class TaskActions(
     val save: (String) -> Unit = {},
     val openFiles: () -> Unit = {},
     val dismissMessage: () -> Unit = {},
-    /** fly a saved route now */
-    val fly: (TaskFileInfo) -> Unit = {},
+    /** a saved route on the map, to fly it or not */
+    val preview: (TaskFileInfo) -> Unit = {},
     /** fly without a route */
     val stop: () -> Unit = {},
     /** build a new one */
@@ -102,10 +102,11 @@ class TaskActions(
     val delete: (TaskFileInfo) -> Unit = {},
 )
 
+/** @param onPreview a saved route is loaded: show it on the map ([RoutePreviewPanel]) */
 @Composable
 fun TaskScreen(viewModel: TaskViewModel, onAddPoint: () -> Unit, onAddStart: () -> Unit,
                onOpenRules: () -> Unit, onOpenFiles: () -> Unit, onOpenMap: () -> Unit,
-               onOpenTargets: (Int) -> Unit, onBack: () -> Unit) {
+               onOpenTargets: (Int) -> Unit, onPreview: () -> Unit, onBack: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     DisposableEffect(Unit) {
         viewModel.open()
@@ -128,31 +129,37 @@ fun TaskScreen(viewModel: TaskViewModel, onAddPoint: () -> Unit, onAddStart: () 
         openRules = onOpenRules, openMap = onOpenMap, openTargets = onOpenTargets,
         save = viewModel::save, openFiles = onOpenFiles,
         dismissMessage = viewModel::dismissMessage,
-        fly = viewModel::fly, stop = viewModel::stop, newRoute = viewModel::newRoute,
-        delete = viewModel::delete,
+        preview = { viewModel.preview(it, onPreview) }, stop = viewModel::stop,
+        newRoute = viewModel::newRoute, delete = viewModel::delete,
     ))
 }
 
 /**
  * The route: the one flown (next or previous point, restart, edit,
- * stop) and the pilot's saved routes, one tap to fly another; or the
- * one being built, which replaces the flown one on "Done" or Back.
+ * stop), alone, so that it does not change by a slip of the finger;
+ * without one the pilot's saved routes, a tap shows one on the map to
+ * fly it; or the one being built, which replaces the flown one on
+ * "Done" or Back.
  */
 @Composable
 fun TaskContent(state: TaskState, onBack: () -> Unit, actions: TaskActions = TaskActions()) {
     val colors = XcsTheme.colors
     val task = state.task
     val editing = task?.editing == true
+    val flying = task != null && task.points.isNotEmpty()
 
-    PageLayout(bottom = if (task == null) null else ({
+    PageLayout(bottom = when {
         // the edit replaces the flown route on "Done"
-        if (editing)
+        editing -> ({
             TaskButton(stringResource(R.string.done), primary = true, modifier = Modifier.weight(1f),
                        onClick = actions.done)
-        else
+        })
+        task != null && !flying -> ({
             TaskButton(stringResource(R.string.route_new), primary = true,
                        modifier = Modifier.weight(1f), onClick = actions.newRoute)
-    })) {
+        })
+        else -> null
+    }) {
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (editing) {
@@ -185,16 +192,16 @@ fun TaskContent(state: TaskState, onBack: () -> Unit, actions: TaskActions = Tas
             return@PageLayout
         }
 
-        // "Go to" flies elsewhere: the route waits, and says so
-        if (task.paused) Paused(task.goto?.name.orEmpty(), actions.resume)
-
-        if (task.points.isEmpty())
-            Text(stringResource(R.string.route_none), color = colors.textSecondary, fontSize = 16.sp,
-                 modifier = Modifier.padding(horizontal = 4.dp))
-        else
+        if (flying) {
+            // "Go to" flies elsewhere: the route waits, and says so
+            if (task.paused) Paused(task.goto?.name.orEmpty(), actions.resume)
             Current(task, actions)
+            return@PageLayout
+        }
 
-        Routes(state.files, task.name.takeIf { task.points.isNotEmpty() }, actions)
+        Text(stringResource(R.string.route_none), color = colors.textSecondary, fontSize = 16.sp,
+             modifier = Modifier.padding(horizontal = 4.dp))
+        Routes(state.files, actions)
 
         // WeGlide's lists and the files of other names: loaded to review
         TaskButton(stringResource(R.string.route_more), outlined = true,
@@ -247,32 +254,8 @@ private fun Current(task: TaskInfo, actions: TaskActions) {
                .padding(14.dp),
            verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Caption(stringResource(R.string.route_current))
-        Text(task.name.ifBlank { routeName(task.points) }, color = colors.text, fontSize = 20.sp,
-             fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        val length = if (task.points.size >= 2)
-            Format.distance(task.distance).let { "${it.text} ${it.unit} · " } else ""
-        Text(length + task.typeName, color = colors.textSecondary, fontSize = 15.sp)
-
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            task.points.forEachIndexed { index, point ->
-                val flown = !task.paused && task.active == index
-                Row(Modifier.fillMaxWidth().heightIn(min = 28.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(pointMark(index, point), color = if (flown) colors.task else colors.textSecondary,
-                         fontSize = 15.sp, fontWeight = FontWeight.Bold,
-                         modifier = Modifier.widthIn(min = 18.dp))
-                    Text(point.name.trim(), color = if (flown) colors.task else colors.text,
-                         fontSize = 16.sp, fontWeight = if (flown) FontWeight.Bold else FontWeight.Normal,
-                         maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                    if (index > 0)
-                        Format.distance(point.leg).let {
-                            Text("${it.text} ${it.unit}", color = colors.textSecondary,
-                                 style = XcsTheme.numberStyle, fontSize = 15.sp)
-                        }
-                }
-            }
-        }
+        RouteHeading(task)
+        RoutePoints(task, flown = task.active.takeIf { !task.paused })
 
         // an area task: its targets, from the area flown to
         val areas = movableTargets(task)
@@ -297,15 +280,55 @@ private fun Current(task: TaskInfo, actions: TaskActions) {
             ConfirmButton(stringResource(R.string.route_stop), stringResource(R.string.route_stop_confirm),
                           Modifier.weight(1f), onConfirm = actions.stop)
         }
+        // the saved routes come with Stop, not by a slip of the finger
+        Text(stringResource(R.string.route_switch_hint), color = colors.textSecondary,
+             fontSize = 14.sp)
+    }
+}
+
+/** A route's name, and its length and kind. */
+@Composable
+internal fun RouteHeading(task: TaskInfo) {
+    val colors = XcsTheme.colors
+    Text(task.name.ifBlank { routeName(task.points) }, color = colors.text, fontSize = 20.sp,
+         fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    val length = if (task.points.size >= 2)
+        Format.distance(task.distance).let { "${it.text} ${it.unit} · " } else ""
+    Text(length + task.typeName, color = colors.textSecondary, fontSize = 15.sp)
+}
+
+/** A route's points with their legs; the one [flown] to in the task's colour. */
+@Composable
+internal fun RoutePoints(task: TaskInfo, flown: Int? = null) {
+    val colors = XcsTheme.colors
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        task.points.forEachIndexed { index, point ->
+            val now = flown == index
+            Row(Modifier.fillMaxWidth().heightIn(min = 28.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(pointMark(index, point), color = if (now) colors.task else colors.textSecondary,
+                     fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                     modifier = Modifier.widthIn(min = 18.dp))
+                Text(point.name.trim(), color = if (now) colors.task else colors.text,
+                     fontSize = 16.sp, fontWeight = if (now) FontWeight.Bold else FontWeight.Normal,
+                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                if (index > 0)
+                    Format.distance(point.leg).let {
+                        Text("${it.text} ${it.unit}", color = colors.textSecondary,
+                             style = XcsTheme.numberStyle, fontSize = 15.sp)
+                    }
+            }
+        }
     }
 }
 
 /**
- * The pilot's saved routes, the last first: a tap flies one; the one
- * flown says so.  Each route applied is kept (TaskViewModel.commit).
+ * The pilot's saved routes, the last first: a tap shows one on the
+ * map, to fly it.  Each route applied is kept (TaskViewModel.commit).
  */
 @Composable
-private fun Routes(files: List<TaskFileInfo>?, current: String?, actions: TaskActions) {
+private fun Routes(files: List<TaskFileInfo>?, actions: TaskActions) {
     val colors = XcsTheme.colors
     Caption(stringResource(R.string.route_yours), Modifier.padding(start = 4.dp, top = 8.dp))
     if (files == null) return
@@ -316,25 +339,20 @@ private fun Routes(files: List<TaskFileInfo>?, current: String?, actions: TaskAc
     }
     for (file in files) {
         val name = file.routeName
-        val flown = current != null && current == name
         Row(Modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp)
                 .background(colors.panel, RoundedCornerShape(14.dp))
-                .then(if (flown) Modifier.border(2.dp, colors.task, RoundedCornerShape(14.dp))
-                      else Modifier)
-                .clickable(enabled = !flown,
-                           onClickLabel = stringResource(R.string.route_fly, name)) { actions.fly(file) }
+                .clickable(onClickLabel = stringResource(R.string.route_show, name)) {
+                    actions.preview(file)
+                }
                 .padding(start = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(name, color = colors.text, fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
                  maxLines = 2, overflow = TextOverflow.Ellipsis,
                  modifier = Modifier.weight(1f).padding(vertical = 12.dp))
-            if (flown)
-                Text(stringResource(R.string.route_flown), color = colors.task, fontSize = 14.sp,
-                     fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 14.dp))
-            else if (file.path.endsWith(".tsk", ignoreCase = true))
+            if (file.path.endsWith(".tsk", ignoreCase = true))
                 ConfirmButton(stringResource(R.string.route_delete),
                               stringResource(R.string.route_delete_confirm),
                               plain = true) { actions.delete(file) }

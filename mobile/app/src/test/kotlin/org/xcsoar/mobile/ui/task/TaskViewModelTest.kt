@@ -20,6 +20,7 @@ import org.junit.Before
 import org.junit.Test
 import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.FakeXcsoarCore
+import org.xcsoar.mobile.core.TaskFileInfo
 import org.xcsoar.mobile.core.TaskInfo
 import org.xcsoar.mobile.core.TaskOp
 import org.xcsoar.mobile.core.TaskPointInfo
@@ -62,7 +63,7 @@ class TaskViewModelTest {
     @Test
     fun overlappingScreensKeepTheRefresh() = runTest(dispatcher) {
         val core = Core(this)
-        val viewModel = TaskViewModel(core)
+        val viewModel = TaskViewModel(core, dispatcher)
         try {
             // the task page opens before the panel under the map closes
             viewModel.open()
@@ -91,7 +92,7 @@ class TaskViewModelTest {
     @Test
     fun tapAddsTheWaypointThere() = runTest(dispatcher) {
         val core = Core(this)
-        val viewModel = TaskViewModel(core)
+        val viewModel = TaskViewModel(core, dispatcher)
         viewModel.addWaypoint(42)
         runCurrent()
         assertEquals(listOf(Triple(TaskOp.APPEND, 0, 42.0)), core.edits)
@@ -107,7 +108,7 @@ class TaskViewModelTest {
     @Test
     fun leavingAppliesTheChangesOnly() = runTest(dispatcher) {
         val core = Core(this)
-        val viewModel = TaskViewModel(core)
+        val viewModel = TaskViewModel(core, dispatcher)
         var left = 0
         // nothing changed: the edit goes, the active route stays
         viewModel.beginEdit()
@@ -140,7 +141,7 @@ class TaskViewModelTest {
                 check(op != TaskOp.COMMIT) { "not valid" }
             }
         }
-        val viewModel = TaskViewModel(core)
+        val viewModel = TaskViewModel(core, dispatcher)
         var left = false
         viewModel.beginEdit()
         runCurrent()
@@ -172,7 +173,7 @@ class TaskViewModelTest {
     @Test
     fun resumeFliesTheRouteAgain() = runTest(dispatcher) {
         val core = Core(this)
-        val viewModel = TaskViewModel(core)
+        val viewModel = TaskViewModel(core, dispatcher)
         viewModel.resume()
         runCurrent()
         assertEquals(listOf(Triple(TaskOp.RESUME, 0, 0.0)), core.edits)
@@ -191,7 +192,7 @@ class TaskViewModelTest {
                 if (op == TaskOp.SET_RADIUS) radii += value
             }
         }
-        val viewModel = TaskViewModel(core)
+        val viewModel = TaskViewModel(core, dispatcher)
         viewModel.open()
         try {
             runCurrent()
@@ -206,9 +207,74 @@ class TaskViewModelTest {
     }
 
     @Test
+    fun noRouteOpensOnTheSavedOnes() = runTest(dispatcher) {
+        var files = emptyList<TaskFileInfo>()
+        val core = object : XcsoarCore by Core(this) {
+            override suspend fun taskFiles() = files
+        }
+        val viewModel = TaskViewModel(core, dispatcher)
+        try {
+            // none saved: straight to building one
+            viewModel.open()
+            runCurrent()
+            assertEquals(true, viewModel.state.value.task?.editing)
+            viewModel.close()
+
+            // some saved: the list, not the editor
+            files = listOf(TaskFileInfo("Vercors 300", "/x/tasks/Vercors 300.tsk"))
+            val other = TaskViewModel(core, dispatcher)
+            other.open()
+            runCurrent()
+            assertEquals(false, other.state.value.task?.editing)
+            assertEquals(files, other.state.value.files)
+            other.close()
+        } finally {
+            viewModel.close()
+        }
+    }
+
+    @Test
+    fun aSavedRouteFliesOnlyFromItsPreview() = runTest(dispatcher) {
+        val loaded = mutableListOf<TaskFileInfo>()
+        val base = Core(this)
+        val core = object : XcsoarCore by base {
+            override suspend fun loadTask(file: TaskFileInfo) {
+                loaded += file
+            }
+        }
+        val viewModel = TaskViewModel(core, dispatcher)
+        val file = TaskFileInfo("Vercors 300", "/x/tasks/Vercors 300.tsk")
+        var shown = 0
+        viewModel.preview(file) { shown++ }
+        runCurrent()
+        // in the editor, the route flown untouched
+        assertEquals(listOf(file), loaded)
+        assertEquals(1, shown)
+        assertEquals(emptyList<TaskOp>(), base.edits.map { it.first })
+        assertEquals(true, viewModel.state.value.task?.editing)
+
+        // back to the list: dropped
+        var listed = 0
+        viewModel.cancel { listed++ }
+        runCurrent()
+        assertEquals(listOf(TaskOp.CANCEL), base.edits.map { it.first })
+        assertEquals(1, listed)
+
+        // flown
+        base.edits.clear()
+        viewModel.preview(file) { shown++ }
+        runCurrent()
+        viewModel.flyPreviewed()
+        runCurrent()
+        assertEquals(listOf(TaskOp.COMMIT), base.edits.map { it.first })
+        assertEquals(false, viewModel.state.value.task?.editing)
+        assertNull(viewModel.state.value.message)
+    }
+
+    @Test
     fun tapMovesTheTarget() = runTest(dispatcher) {
         val core = Core(this)
-        val viewModel = TaskViewModel(core)
+        val viewModel = TaskViewModel(core, dispatcher)
         viewModel.moveTarget(2, 44.5, 5.25)
         runCurrent()
         assertEquals(listOf(Triple(2, 44.5, 5.25)), core.targets)

@@ -2084,9 +2084,21 @@ msgstr "Vos circuits"
 msgid "The routes you fly are kept here."
 msgstr "Les circuits que vous volez sont gardés ici."
 
-#. route_flown
-msgid "Flying"
-msgstr "En cours"
+#. route_switch_hint
+msgid "To fly another of your routes, stop this one."
+msgstr "Pour voler un autre de vos circuits, arrêtez celui-ci."
+
+#. route_show
+msgid "Show %1$s on the map"
+msgstr "Voir %1$s sur la carte"
+
+#. route_saved
+msgid "Saved route"
+msgstr "Circuit enregistré"
+
+#. route_fly_this
+msgid "Fly this route"
+msgstr "Voler ce circuit"
 
 #. route_delete
 msgid "Delete"

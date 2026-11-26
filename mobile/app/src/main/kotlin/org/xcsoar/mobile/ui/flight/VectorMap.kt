@@ -106,6 +106,9 @@ sealed interface TaskMapMode {
 
     /** Moving the target of the active task's area [index]: a tap puts it there. */
     data class Target(val index: Int) : TaskMapMode
+
+    /** A saved route before flying it (the edited task): framed, taps do nothing. */
+    data object Preview : TaskMapMode
 }
 
 /**
@@ -657,6 +660,7 @@ fun VectorMap(
             }
             map.addOnMapClickListener { point ->
                 val mode = state.taskMode ?: return@addOnMapClickListener false
+                if (mode == TaskMapMode.Preview) return@addOnMapClickListener true
                 val waypoint = if (mode == TaskMapMode.Edit)
                     waypointAt(map, map.projection.toScreenLocation(point), 24 * density)
                 else null
@@ -744,6 +748,7 @@ fun VectorMap(
             var task: TaskOutline? = null
             // the task mode framed last, framed once on entering it
             var framed: TaskMapMode? = null
+            var lastShown: MapFeatures? = null
             val changes = StyleChanges()
             while (true) {
                 features(MapFeatures.AIRSPACE_STATE)?.let { json ->
@@ -751,9 +756,12 @@ fun VectorMap(
                 }
                 val mode = state.taskMode
                 if (mode == null) framed = null
-                // the edited task while building it, else the active one
-                val shown = if (mode == TaskMapMode.Edit) MapFeatures.TASK_EDITED else MapFeatures.TASK
-                if (tick % 3 == 0 || mode != null) {
+                // the edited task while building or previewing it, else the active one
+                val shown = if (mode == TaskMapMode.Edit || mode == TaskMapMode.Preview)
+                    MapFeatures.TASK_EDITED else MapFeatures.TASK
+                // back from the edited one: the active one at once
+                if (tick % 3 == 0 || mode != null || shown != lastShown) {
+                    lastShown = shown
                     features(shown)?.let { json ->
                         changes.apply("task", json) {
                             loaded.source("task")?.setGeoJson(json)

@@ -2083,8 +2083,20 @@ msgstr ""
 msgid "The routes you fly are kept here."
 msgstr ""
 
-#. route_flown
-msgid "Flying"
+#. route_switch_hint
+msgid "To fly another of your routes, stop this one."
+msgstr ""
+
+#. route_show
+msgid "Show %1$s on the map"
+msgstr ""
+
+#. route_saved
+msgid "Saved route"
+msgstr ""
+
+#. route_fly_this
+msgid "Fly this route"
 msgstr ""
 
 #. route_delete

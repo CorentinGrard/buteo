@@ -118,6 +118,7 @@ import org.xcsoar.mobile.ui.task.TaskEditPanel
 import org.xcsoar.mobile.ui.task.TaskRulesScreen
 import org.xcsoar.mobile.ui.task.TaskScreen
 import org.xcsoar.mobile.ui.task.TaskViewModel
+import org.xcsoar.mobile.ui.task.RoutePreviewPanel
 import org.xcsoar.mobile.ui.task.TargetPanel
 import org.xcsoar.mobile.ui.units.UnitsScreen
 import org.xcsoar.mobile.ui.units.UnitsViewModel
@@ -614,6 +615,12 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onClose = { showTaskOnMap(null, Screen.FLIGHT) })
                             })
+                            TaskMapMode.Preview -> ({
+                                RoutePreviewPanel(
+                                    taskViewModel,
+                                    onList = { showTaskOnMap(null, Screen.TASK) },
+                                    onClose = { showTaskOnMap(null, Screen.FLIGHT) })
+                            })
                         },
                         taskMapMode = taskOnMap,
                         onTaskMapTap = { latitude, longitude, waypointId ->
@@ -621,7 +628,7 @@ class MainActivity : ComponentActivity() {
                                 TaskMapMode.Edit -> taskViewModel.addWaypoint(waypointId)
                                 is TaskMapMode.Target ->
                                     taskViewModel.moveTarget(mode.index, latitude, longitude)
-                                null -> {}
+                                TaskMapMode.Preview, null -> {}
                             }
                         },
                     )
@@ -792,6 +799,7 @@ class MainActivity : ComponentActivity() {
                                 onOpenTargets = {
                                     showTaskOnMap(TaskMapMode.Target(it), Screen.FLIGHT)
                                 },
+                                onPreview = { showTaskOnMap(TaskMapMode.Preview, Screen.FLIGHT) },
                                 onBack = { screen = Screen.FLIGHT })
                             Screen.TASK_RULES -> TaskRulesScreen(
                                 taskViewModel, onBack = { screen = Screen.TASK })

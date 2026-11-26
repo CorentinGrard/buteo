@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +52,11 @@ data class TaskState(
  * becomes the active one on [done].  Without an edit, the active task
  * is shown and can be advanced or restarted.
  */
-class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
+class TaskViewModel(
+    private val core: XcsoarCore,
+    /** Where files are listed and deleted (tests run it at once). */
+    private val io: CoroutineDispatcher = Dispatchers.IO,
+) : ViewModel() {
     private val stateFlow = MutableStateFlow(TaskState())
     val state: StateFlow<TaskState> = stateFlow.asStateFlow()
 
@@ -69,12 +74,15 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     /** Shown: read the task, and the active one again while flying it. */
     fun open() {
         if (openCount++ > 0) return
-        listFiles()
         job = viewModelScope.launch {
             refresh()
-            // no route yet: straight to building one
-            val task = stateFlow.value.task
-            if (task != null && !task.editing && task.points.isEmpty()) beginEdit()
+            readFiles()
+            // no route and none saved: straight to building one
+            val state = stateFlow.value
+            val task = state.task
+            if (task != null && !task.editing && task.points.isEmpty() &&
+                state.files.isNullOrEmpty())
+                beginEdit()
             while (isActive) {
                 delay(REFRESH_MS)
                 refresh()
@@ -141,10 +149,12 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
 
     /* editing */
 
-    fun cancel() = run(null) {
+    /** Drop the edit (or the route previewed); then [onDone]. */
+    fun cancel(onDone: () -> Unit = {}) = run(null) {
         changed = false
         core.editTask(TaskOp.CANCEL)
         stateFlow.update { it.copy(task = core.task(false), selected = null) }
+        onDone()
         null
     }
 
@@ -222,16 +232,38 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     }
 
     /**
-     * Fly one of the saved routes ([TaskState.files]) now, instead of
-     * the current one: no editing, no "Done".
+     * One of the saved routes ([TaskState.files]) into the editor, to
+     * look at on the map before flying it ([flyPreviewed]) or not
+     * ([cancel]); [onLoaded] once it is there.  The route flown, if any,
+     * stays meanwhile.
      */
-    fun fly(file: TaskFileInfo) = run(text(R.string.task_cannot_load, file.name)) {
-        if (editing) core.editTask(TaskOp.CANCEL)
-        core.loadTask(file)
-        core.editTask(TaskOp.COMMIT)
-        changed = false
-        stateFlow.update { it.copy(task = core.task(false), selected = null) }
-        null
+    fun preview(file: TaskFileInfo, onLoaded: () -> Unit) =
+        run(text(R.string.task_cannot_load, file.name)) {
+            if (editing) core.editTask(TaskOp.CANCEL)
+            core.loadTask(file)
+            changed = false
+            stateFlow.update { it.copy(task = core.task(true), selected = null, message = null) }
+            onLoaded()
+            null
+        }
+
+    /** Fly the route [preview]ed, as it was saved; else XCSoar's reason, as on "Done". */
+    fun flyPreviewed() = run(text(R.string.task_invalid)) {
+        val flown = try {
+            core.editTask(TaskOp.COMMIT)
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            false
+        }
+        if (flown) {
+            changed = false
+            stateFlow.update { it.copy(task = core.task(false), selected = null) }
+            null
+        } else
+            core.task(true)?.errors?.trim()?.takeIf { it.isNotEmpty() }?.asText()
+                ?: text(R.string.task_invalid)
     }
 
     /** Fly without a route; it stays in the list. */
@@ -256,7 +288,7 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
     /** Forget a saved route (only Buteo's and XCSoar's own .tsk files). */
     fun delete(file: TaskFileInfo) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(io) {
                 File(file.path).takeIf { it.name.endsWith(".tsk", ignoreCase = true) }?.delete()
             }
             listFiles()
@@ -431,21 +463,23 @@ class TaskViewModel(private val core: XcsoarCore) : ViewModel() {
      * (SeeYou's); not XCSoar's copy of the current one (Default.tsk).
      */
     fun listFiles() {
-        viewModelScope.launch {
-            val files = try {
-                val all = core.taskFiles()
-                withContext(Dispatchers.IO) {
-                    all.filterNot { File(it.path).name.equals("Default.tsk", ignoreCase = true) }
-                        .sortedWith(compareBy<TaskFileInfo> { !it.path.endsWith(".tsk", true) }
-                                        .thenByDescending { File(it.path).lastModified() })
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                emptyList()
+        viewModelScope.launch { readFiles() }
+    }
+
+    private suspend fun readFiles() {
+        val files = try {
+            val all = core.taskFiles()
+            withContext(io) {
+                all.filterNot { File(it.path).name.equals("Default.tsk", ignoreCase = true) }
+                    .sortedWith(compareBy<TaskFileInfo> { !it.path.endsWith(".tsk", true) }
+                                    .thenByDescending { File(it.path).lastModified() })
             }
-            stateFlow.update { it.copy(files = files) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            emptyList()
         }
+        stateFlow.update { it.copy(files = files) }
     }
 
     /* WeGlide, as upstream's WeGlide tasks panel */
