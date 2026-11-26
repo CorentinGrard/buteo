@@ -93,6 +93,9 @@ enum {
   XCS_VALID_NEXT_NAME = 1u << 24,
   /** next_altitude_difference: needs a glide polar too. */
   XCS_VALID_NEXT_ARRIVAL = 1u << 25,
+  /** thermal_latitude/longitude: circling, once XCSoar's thermal
+      locator has an estimate (a few seconds in). */
+  XCS_VALID_THERMAL = 1u << 26,
 };
 
 /** Bits of xcs_flight_snapshot.flags. */
@@ -229,6 +232,12 @@ typedef struct xcs_flight_snapshot {
   /** Static pressure, hPa (XCS_VALID_STATIC_PRESSURE): from a
       barometer, the phone's or a device's. */
   double static_pressure;
+
+  /** Where the lift is while circling: XCSoar's thermal locator's
+      estimate of the thermal's core at the glider's altitude, degrees
+      (XCS_VALID_THERMAL).  XCSoar's map centres on it then. */
+  double thermal_latitude;
+  double thermal_longitude;
 } xcs_flight_snapshot;
 
 /*
@@ -1477,6 +1486,9 @@ enum {
   XCS_FEATURES_TASK_EDITED = 5,
   /** XCS_FEATURES_TRAIL's last two minutes, for every fix. */
   XCS_FEATURES_TRAIL_RECENT = 6,
+  /** The flight's earlier thermals, where they are at the glider's
+      altitude. */
+  XCS_FEATURES_THERMALS = 7,
 };
 
 /**
@@ -1507,6 +1519,16 @@ enum {
  * - XCS_FEATURES_TRAIL_RECENT: as XCS_FEATURES_TRAIL, at most its last
  *   two minutes (unthinned, a point per fix): a map can draw it over
  *   the whole trail at every fix, and the whole trail less often.
+ *   While the trail drifts (circling with the trail drift option, as
+ *   XCSoar's map: each point moved downwind by the wind times its age,
+ *   so that the circles of a thermal stack up), every point moves with
+ *   each fix: then XCS_FEATURES_TRAIL_RECENT is the whole trail and
+ *   XCS_FEATURES_TRAIL has no features.
+ * - XCS_FEATURES_THERMALS: points, the sources of the flight's climbs
+ *   (XCSoar's thermal locator, the last 20) moved to the glider's
+ *   altitude with the wind, as XCSoar's map shows them; "lift" (m/s,
+ *   the climb's average) and "age" (s).  None below the glider's
+ *   altitude's ground source, none without an altitude.
  *
  * Buffer rules as for xcs_get_data_status().
  */

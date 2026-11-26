@@ -1609,6 +1609,35 @@ TestReplayControls(xcs_core *core)
                "\"graphic\":{\"kind\":\"thermal_assistant\",\"circling\":true,"));
   xcs_tiles_set(core, XCS_TILES_CIRCLING, 5, InfoBoxFactory::e_WindSpeed_Est);
 
+  /* circling: where the thermal locator puts the lift; with the trail
+     drift option and a wind, the trail drifts, all of it with each fix */
+  int32_t drift = 0;
+  xcs_wind_get_option(core, XCS_WIND_TRAIL_DRIFT, &drift);
+  xcs_wind_set_option(core, XCS_WIND_TRAIL_DRIFT, 1);
+  bool located = false, drifting = false;
+  for (unsigned i = 0; i < 300 && !(located && drifting); ++i) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    xcs_flight_snapshot s{};
+    s.struct_size = sizeof(s);
+    if (xcs_get_snapshot(core, &s) != XCS_OK || !(s.flags & XCS_FLAG_CIRCLING))
+      continue;
+    located = located || ((s.valid & XCS_VALID_THERMAL) &&
+                          std::fabs(s.thermal_latitude - s.latitude) < 0.02 &&
+                          std::fabs(s.thermal_longitude - s.longitude) < 0.02);
+    if (s.valid & XCS_VALID_WIND)
+      drifting = drifting ||
+        (!Contains(Features(core, XCS_FEATURES_TRAIL), "LineString") &&
+         Contains(Features(core, XCS_FEATURES_TRAIL_RECENT), "LineString"));
+  }
+  ok1(located);
+  ok1(drifting);
+  xcs_wind_set_option(core, XCS_WIND_TRAIL_DRIFT, drift);
+
+  /* the earlier climbs' sources: XCSoar keeps one only where the
+     terrain gives its ground (this flight leaves benalla9's terrain) */
+  ok1(Features(core, XCS_FEATURES_THERMALS).starts_with(
+        "{\"type\":\"FeatureCollection\""));
+
   /* 0 pauses */
   ok1(xcs_replay_set_time_scale(core, 0) == XCS_OK);
   ok1(xcs_replay_set_time_scale(core, 20) == XCS_OK);
@@ -1889,7 +1918,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1 + 1);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1 + 1 + 3);
 
   Recorder recorder;
   TestCreateArguments(recorder);

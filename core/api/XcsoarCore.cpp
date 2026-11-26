@@ -138,7 +138,8 @@ static_assert(offsetof(xcs_flight_snapshot, speed_to_fly) == 280);
 static_assert(offsetof(xcs_flight_snapshot, last_thermal_duration) == 360);
 static_assert(offsetof(xcs_flight_snapshot, ballast) == 368);
 static_assert(offsetof(xcs_flight_snapshot, qnh) == 400);
-static_assert(sizeof(xcs_flight_snapshot) == 416);
+static_assert(offsetof(xcs_flight_snapshot, thermal_latitude) == 416);
+static_assert(sizeof(xcs_flight_snapshot) == 432);
 static_assert(offsetof(xcs_plane_details, max_takeoff_mass) == 56);
 static_assert(sizeof(xcs_plane_details) == 64);
 
@@ -384,6 +385,14 @@ FillSnapshot(xcs_flight_snapshot &s) noexcept
   if (basic.static_pressure_available) {
     valid |= XCS_VALID_STATIC_PRESSURE;
     s.static_pressure = basic.static_pressure.GetHectoPascal();
+  }
+
+  /* the locator keeps its last estimate after the climb: only while
+     circling, as XCSoar's map (GlueMapWindow::UpdateProjection()) */
+  if (calculated.circling && calculated.thermal_locator.estimate_valid) {
+    valid |= XCS_VALID_THERMAL;
+    s.thermal_latitude = calculated.thermal_locator.estimate_location.latitude.Degrees();
+    s.thermal_longitude = calculated.thermal_locator.estimate_location.longitude.Degrees();
   }
 
   /* the conditions of the matching InfoBoxes (src/InfoBoxes/Content) */
@@ -1466,6 +1475,9 @@ xcs_map_features(xcs_core *core, uint32_t which, char *buffer, size_t size,
     break;
   case XCS_FEATURES_TRAIL_RECENT:
     describe = CoreFeatures::RecentTrail;
+    break;
+  case XCS_FEATURES_THERMALS:
+    describe = CoreFeatures::Thermals;
     break;
   default:
     return XCS_ERROR_INVALID_ARGUMENT;

@@ -29,6 +29,8 @@
 #include "Formatter/AirspaceFormatter.hpp"
 #include "Geo/GeoBounds.hpp"
 #include "Geo/GeoPoint.hpp"
+#include "Geo/Math.hpp"
+#include "NMEA/ThermalLocator.hpp"
 #include "Terrain/RasterTerrain.hpp"
 #include "io/StringOutputStream.hxx"
 #include "json/Serialize.hxx"
@@ -376,15 +378,44 @@ EditedTask() noexcept
 }
 
 /**
+ * The trail drifts with the wind, as on XCSoar's map
+ * (GlueMapWindow::RenderTrail()): while circling, with the trail drift
+ * option and a wind.
+ */
+static bool
+TrailDrifts() noexcept
+{
+  const auto &basic = CommonInterface::Basic();
+  const auto &calculated = CommonInterface::Calculated();
+  return CommonInterface::GetMapSettings().trail.wind_drift_enabled &&
+    calculated.circling && calculated.wind_available &&
+    basic.location_available && basic.time_available;
+}
+
+/**
  * The trail's lines by climb class, at most @p max_age long (zero: as
- * long as the pilot's trail setting).
+ * long as the pilot's trail setting); each point moved downwind by the
+ * wind times its age when @p drift (TrailRenderer's TrailGeoPoint()).
  */
 static std::string
-TrailSince(TracePoint::Time max_age) noexcept
+TrailSince(TracePoint::Time max_age, bool drift) noexcept
 {
   FeatureWriter w;
   if (!backend_components->glide_computer)
     return std::move(w).Finish();
+
+  const auto &basic = CommonInterface::Basic();
+  GeoPoint traildrift = GeoPoint::Zero();
+  if (drift) {
+    const auto &wind = CommonInterface::Calculated().wind;
+    traildrift = basic.location -
+      FindLatitudeLongitude(basic.location, wind.bearing, wind.norm);
+  }
+  const auto location = [&](const TracePoint &p){
+    return drift
+      ? p.GetLocation().Parametric(traildrift, p.CalculateDrift(basic.time))
+      : p.GetLocation();
+  };
 
   TracePointVector trace;
   backend_components->glide_computer->GetTraceComputer().LockedCopyTo(trace);
@@ -432,11 +463,11 @@ TrailSince(TracePoint::Time max_age) noexcept
       continue;
     const int c = ClimbClass(p.GetVario());
     if (!line.empty() && c != current) {
-      line.push_back(p.GetLocation());
+      line.push_back(location(p));
       flush();
     }
     current = c;
-    line.push_back(p.GetLocation());
+    line.push_back(location(p));
   }
   flush();
   return std::move(w).Finish();
@@ -445,15 +476,56 @@ TrailSince(TracePoint::Time max_age) noexcept
 std::string
 Trail() noexcept
 {
-  return TrailSince({});
+  /* drifting, every point moves with each fix: all of it is
+     RecentTrail()'s then */
+  if (TrailDrifts())
+    return std::move(FeatureWriter{}).Finish();
+  return TrailSince({}, false);
 }
 
 std::string
 RecentTrail() noexcept
 {
+  if (TrailDrifts())
+    return TrailSince({}, true);
   /* the part of the trace XCSoar does not thin
      (TraceComputer's full_trace_no_thin_time) */
-  return TrailSince(TracePoint::Time{2 * 60});
+  return TrailSince(TracePoint::Time{2 * 60}, false);
+}
+
+std::string
+Thermals() noexcept
+{
+  FeatureWriter w;
+  const auto &basic = CommonInterface::Basic();
+  if (!basic.NavAltitudeAvailable() || !basic.time_available)
+    return std::move(w).Finish();
+
+  /* as XCSoar's map (CollectVisibleThermals()): each source carried
+     downwind from its ground as the air rises to the glider's altitude */
+  const auto &calculated = CommonInterface::Calculated();
+  const SpeedVector wind = calculated.GetWindOrZero();
+  for (const auto &source : calculated.thermal_locator.sources) {
+    if (!source.location.IsValid() || source.lift_rate <= 0 ||
+        basic.nav_altitude < source.ground_height)
+      continue;
+
+    const GeoPoint at = wind.IsNonZero()
+      ? source.CalculateAdjustedLocation(basic.nav_altitude, wind)
+      : source.location;
+    if (!at.IsValid())
+      continue;
+
+    w.Begin("Point");
+    w.Position(at);
+    w.Properties({
+      {"lift", source.lift_rate},
+      {"age", source.time.IsDefined() && basic.time >= source.time
+        ? std::chrono::duration<double>(basic.time - source.time).count()
+        : 0.},
+    });
+  }
+  return std::move(w).Finish();
 }
 
 /** The latitude of row @p y (fractional) of a Web Mercator tile grid

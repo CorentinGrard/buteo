@@ -37,14 +37,19 @@ std::string
 EditedTask() noexcept;
 
 /** The flight as long as the trail option says, in segments of like
-    climb. */
+    climb; none while the trail drifts (RecentTrail() has it then). */
 std::string
 Trail() noexcept;
 
 /** As Trail(), the last two minutes only: small enough to send with
-    every fix. */
+    every fix.  While the trail drifts with the wind, all of it (and
+    Trail() none). */
 std::string
 RecentTrail() noexcept;
+
+/** The flight's earlier thermals at the glider's altitude, as points. */
+std::string
+Thermals() noexcept;
 
 /**
  * The terrain's heights (metres) over tile (zoom, x, y) of the Web
