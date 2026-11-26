@@ -938,6 +938,63 @@ caution).  From a fresh install tested on a Redmi 5 and the Pixel 7.
 - Translations of the app's own text (needs a decision: XCSoar's
   catalogues only cover XCSoar's wording).
 
+## Ideas after the UX and circling pass (2026-11-26)
+
+Proposals, not decisions; from replays on the Redmi 5 (test app).  The
+list of 2026-11-19 above still holds for what it leaves open (theme
+from the light, swipe pages, a live notification, haptics, a briefing
+page, checklists, a widget, a message after landing away).
+
+**Thermals**
+
+- The trail drift switch (Wind page, XCSoar's TrailDrift) does nothing
+  on the vector map: `CoreFeatures::Trail` draws the trail where it was
+  flown.  XCSoar shifts each point downwind by the wind times its age
+  while circling (TrailRenderer, near zoom only), so that the circles of
+  one thermal stack over its core instead of smearing downwind.  Every
+  point moves with the air, so while drifting the whole trail (not only
+  its last two minutes) must come with every fix.
+- The thermal's core on the map: XCSoar's ThermalLocator estimate (the
+  centre of the lift while circling), a marker the glider can circle
+  round; and past climbs as small markers with their average along the
+  flight, to find a thermal again on the way back.  Both are in the
+  core (`calculated.thermal_locator`, the climbs of the analysis).
+
+**Flight screen**
+
+- Airspace alarms on the ground: XCSoar warns while the glider stands
+  on a field inside a CTR ("Inside airspace CTR Montpellier" at the
+  start).  Arming the banner and its sounds only from the take-off is a
+  safety choice for the pilot.
+- Found: after a replay stops, its last warning ("Inside TMA Lyon 4")
+  stays on the flight screen while the glider is on the ground
+  elsewhere, until the phone's next fix (the warning computer only runs
+  with a fix).
+- Room on short phones: an airspace warning, the replay bar or the
+  target card and the chips leave a short band of map (Redmi 5, 720 dp)
+  and the vario bar shrinks to its number.  The target card could go
+  to one line while a warning shows, the wind chip join it.
+- The Route button could show the route flown ("Montelimar - Sagy -
+  Grenoble"), as Flight setup shows its values; the core would need to
+  tell a route from a Go to in the snapshot.
+
+**Pages**
+
+- Flights lists each file by its modification time: a flight copied in
+  shows the day of the copy (a 2010 flight as "Nov 26, 2026").  The
+  IGC's date and take-off time, its duration and distance (the core's
+  flight file reader has them) would say which flight it is.
+
+**Engineering**
+
+- The baseline profile is a wildcard over the app's classes: a
+  Macrobenchmark flying the demo replay would give a real one, with a
+  startup profile to lay the dex out.
+- A battery benchmark: a whole replay at 1x with the screen on,
+  measured by the phone's charge counter, kept as a regression check
+  for each release (the map, the trail and the assistant are the cost:
+  about 70 % of a Redmi 5 core while circling track up).
+
 ## M8 — iOS
 - [ ] Move `:core` + ViewModels to Kotlin Multiplatform; UI to Compose Multiplatform
 - [ ] Build `libxcsoar_core` for iOS (the Makefile already supports iOS targets)
@@ -946,6 +1003,24 @@ caution).  From a fresh install tested on a Redmi 5 and the Pixel 7.
 ---
 
 ## Log
+
+- 2026-11-26 (evening) — The pilot: "do an overall of the UX, make it
+  more clear, especially the menu. Then look for optimisations
+  performance wise. Then look at the thermal marking when spiraling,
+  it's not really fluid. And finally propose me ideas".  Circling (1x
+  replay of a 4 m/s thermal on the Redmi 5): the trail's end now comes
+  with every fix (XCS_FEATURES_TRAIL_RECENT) instead of every 3 s, and
+  the thermal assistant is a layer of the map, turned in its frames
+  (it jumped 18 degrees with each fix track up).  The menu (D34): the
+  in-flight buttons at the bottom under the thumb, icons, Flight
+  setup's values, the vario sound by Map up; "No target" says what a
+  tap does; "Set MC" no longer covers the vario bar.  Performance: an
+  app baseline profile (main thread 26 % to 16 % of a core while
+  circling, compiled); measured and dropped: a Compose overlay turning
+  with the map (hwui 48 %), a north mark at 5 Hz, one trail layer per
+  climb class (more draw calls).  Circling track up: 71 % of a core
+  (67 % before the changes, without the profile).  Ideas above.
+  core-check, the app's tests and screenshots pass.
 
 - 2026-11-25 (late) — The pilot: "remove all together the xcsoar map,
   can you remove the information icon on the map?  Can you make the
