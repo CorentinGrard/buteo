@@ -953,12 +953,16 @@ page, checklists, a widget, a message after landing away).
   while circling (TrailRenderer, near zoom only), so that the circles of
   one thermal stack over its core instead of smearing downwind.  Every
   point moves with the air, so while drifting the whole trail (not only
-  its last two minutes) must come with every fix.
+  its last two minutes) must come with every fix.  **Done**
+  (2026-11-27, D35): the whole trail comes with every fix while it
+  drifts.
 - The thermal's core on the map: XCSoar's ThermalLocator estimate (the
   centre of the lift while circling), a marker the glider can circle
   round; and past climbs as small markers with their average along the
   flight, to find a thermal again on the way back.  Both are in the
   core (`calculated.thermal_locator`, the climbs of the analysis).
+  **Done** (2026-11-27, D35), and more: circling, the map centres on
+  the core as XCSoar's does, the assistant on it.
 
 **Flight screen**
 
@@ -969,7 +973,8 @@ page, checklists, a widget, a message after landing away).
 - Found: after a replay stops, its last warning ("Inside TMA Lyon 4")
   stays on the flight screen while the glider is on the ground
   elsewhere, until the phone's next fix (the warning computer only runs
-  with a fix).
+  with a fix).  **Fixed** (2026-11-27): the replay's warnings, and
+  what was acknowledged "for the day" in it, end with it.
 - Room on short phones: an airspace warning, the replay bar or the
   target card and the chips leave a short band of map (Redmi 5, 720 dp)
   and the vario bar shrinks to its number.  The target card could go
@@ -983,7 +988,8 @@ page, checklists, a widget, a message after landing away).
 - Flights lists each file by its modification time: a flight copied in
   shows the day of the copy (a 2010 flight as "Nov 26, 2026").  The
   IGC's date and take-off time, its duration and distance (the core's
-  flight file reader has them) would say which flight it is.
+  flight file reader has them) would say which flight it is.  **Done**
+  for the date (2026-11-27): listed and sorted by the first fix.
 
 **Engineering**
 
@@ -1003,6 +1009,21 @@ page, checklists, a widget, a message after landing away).
 ---
 
 ## Log
+
+- 2026-11-27 — The pilot, on the thermal assistant: "is it normal it is
+  centered on the screen?  It feels like it should be static on the map
+  and updated depending on the climbing rate", then "do the trail
+  drift, mark the thermal core and show the previous one, fix the bug,
+  sort the flights by igc own date".  Circling, the map centres on
+  XCSoar's thermal locator's estimate as XCSoar's map does (D35): the
+  map and the thermal stay, the glider circles; the assistant sits on
+  the core with a sky blue dot; the earlier climbs' sources at the
+  glider's altitude, labelled with their climb; the trail drifts with
+  the wind when the option is on.  A replay's warnings and "Day"
+  acknowledgements end with it (a "Day" in a replay silenced that
+  airspace in the day's flight), its trail too.  Flights by the IGC's
+  date.  Checked on the Redmi 5 (1x replay, north and track up).
+  core-check (552), the app's tests and screenshots pass.
 
 - 2026-11-26 (evening) — The pilot: "do an overall of the UX, make it
   more clear, especially the menu. Then look for optimisations
