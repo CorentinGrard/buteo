@@ -21,6 +21,7 @@ import kotlinx.coroutines.withContext
 import org.xcsoar.AppPermissionManager
 import org.xcsoar.CoreBattery
 import org.xcsoar.CoreGraphics
+import org.xcsoar.mobile.core.IgcFile
 import org.xcsoar.mobile.core.DataFile
 import org.xcsoar.mobile.core.FakeXcsoarCore
 import org.xcsoar.mobile.core.GeoPosition
@@ -336,14 +337,16 @@ class XcsoarApp : Application() {
         return if (base.isBlank() || base == "." || base == "..") "imported" else base
     }
 
-    /** The IGC files XCSoar's logger wrote. */
+    /** The IGC files XCSoar's logger wrote, and when each flight began. */
     suspend fun flightLogs(): List<FlightLog> = withContext(Dispatchers.IO) {
         val logs = File(xcsoarDataDir, "logs")
         // the demo flight the app copied there until 2026-11-21
         File(logs, OLD_DEMO_FLIGHT).delete()
         logs.listFiles { f ->
             f.isFile && f.name.endsWith(".igc", ignoreCase = true)
-        }.orEmpty().map { FlightLog(it.path, it.name, it.lastModified(), it.length()) }
+        }.orEmpty().map {
+            FlightLog(it.path, it.name, it.lastModified(), it.length(), IgcFile.start(it))
+        }
     }
 
     private companion object {

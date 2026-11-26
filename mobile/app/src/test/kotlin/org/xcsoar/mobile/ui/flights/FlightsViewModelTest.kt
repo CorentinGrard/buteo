@@ -107,4 +107,22 @@ class FlightsViewModelTest {
         assertEquals(emptyList<FlightLog>(), viewModel.flights.value)
         dir.deleteRecursively()
     }
+
+    /* newest flight first by the file's own date: a 2010 flight copied
+       in today goes after a flight of last month */
+    @Test
+    fun byTheFlightsDate() = runTest {
+        val copied = FlightLog("/d/logs/2010-01-21-TEST-01.igc", "2010-01-21-TEST-01.igc",
+                               modified = 1_795_000_000_000, size = 1,
+                               started = 1_264_033_565_000)
+        val flown = FlightLog("/d/logs/2026-10-02-XCS-AAA-01.igc", "2026-10-02-XCS-AAA-01.igc",
+                              modified = 1_791_000_000_000, size = 1,
+                              started = 1_790_990_000_000)
+        // a file without a fix: by when it was written
+        val empty = FlightLog("/d/logs/empty.igc", "empty.igc", modified = 1_700_000_000_000,
+                              size = 1)
+        val viewModel = FlightsViewModel({ listOf(copied, empty, flown) })
+        viewModel.refresh()
+        assertEquals(listOf(flown, empty, copied), viewModel.flights.value)
+    }
 }

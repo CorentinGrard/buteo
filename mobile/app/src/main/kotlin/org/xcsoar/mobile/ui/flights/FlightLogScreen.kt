@@ -166,14 +166,14 @@ fun FlightLogContent(
         )
 }
 
-/** The take-off's day, else the day the file was written. */
+/** The take-off's day, else the first fix's, else the day the file was written. */
 private fun title(detail: FlightDetail, timeZone: TimeZone): String =
     detail.date?.let {
         runCatching {
             LocalDate.parse(it).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
         }.getOrNull()
     } ?: DateFormat.getDateInstance(DateFormat.MEDIUM).apply { this.timeZone = timeZone }
-        .format(Date(detail.log.modified))
+        .format(Date(detail.log.time))
 
 @Composable
 private fun Hint(text: String) {

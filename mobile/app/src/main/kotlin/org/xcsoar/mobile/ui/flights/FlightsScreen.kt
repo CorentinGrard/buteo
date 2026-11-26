@@ -66,7 +66,7 @@ fun FlightsContent(
                     if (i > 0)
                         HorizontalDivider(Modifier.padding(horizontal = 14.dp),
                                           color = colors.panelBorder)
-                    LinkRow(format.format(Date(flight.modified)),
+                    LinkRow(format.format(Date(flight.time)),
                             listOfNotNull(flight.name, kilobytes(flight.size),
                                           onWeGlide.takeIf {
                                               uploads[flight.path] is Upload.Done

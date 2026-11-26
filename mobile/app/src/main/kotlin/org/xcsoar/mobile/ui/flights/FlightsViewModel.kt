@@ -32,7 +32,15 @@ data class FlightLog(
     val modified: Long,
     /** Bytes. */
     val size: Long,
-)
+    /**
+     * The flight's first fix, from the file (ms since the epoch); null
+     * if it has none.  A flight copied in has the copy's [modified].
+     */
+    val started: Long? = null,
+) {
+    /** When the flight was: its first fix, else when the file was written. */
+    val time get() = started ?: modified
+}
 
 /** How the upload of one flight to WeGlide went. */
 sealed interface Upload {
@@ -64,7 +72,8 @@ data class FlightDetail(
 )
 
 /**
- * The recorded flights, newest first, and their WeGlide uploads: those
+ * The recorded flights, newest flight first (by the IGC file's own date,
+ * not the file's), and their WeGlide uploads: those
  * of earlier sessions from [uploadStore] (WeGlide refuses a file twice).
  */
 class FlightsViewModel(
@@ -137,7 +146,7 @@ class FlightsViewModel(
     fun refresh() {
         viewModelScope.launch {
             val flights = try {
-                list().sortedByDescending { it.modified }
+                list().sortedByDescending { it.time }
             } catch (_: Exception) {
                 emptyList()
             }
