@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Buteo's own ART profile, merged with the libraries' (Compose's) into
+# the APK.  Without it Android compiled only the libraries' code ahead of
+# time and ran the app's interpreted until the JIT got to it: on a
+# Redmi 5 circling in a replay, the main thread spent most of its time
+# in ART's interpreter and lookups.  Installed by ProfileInstaller at the
+# first start (sideloaded) or by Google Play; Android compiles it when
+# the phone is idle, or at once with
+# `adb shell cmd package compile -m speed-profile -f app.corentin.buteo`.
+#
+# Everything of the app's, and MapLibre's Java side, which the flight
+# screen calls in every frame.
+HSPLorg/xcsoar/mobile/**->**(**)**
+Lorg/xcsoar/mobile/**;
+HSPLorg/maplibre/android/**->**(**)**
+Lorg/maplibre/android/**;
