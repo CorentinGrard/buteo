@@ -52,6 +52,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -60,7 +61,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntSize
@@ -198,6 +201,7 @@ fun FlightScreen(
         onNextWaypoint = onOpenWaypoints,
         onWind = onOpenWind,
         onNoPolar = onOpenCrew,
+        windowInsets = flightInsets(covered),
         replay = ReplayControls(replaySpeed, viewModel::pauseReplay, viewModel::setReplaySpeed,
                                 viewModel::skipReplay, viewModel::stopReplay),
         menuOpen = menuOpen,
@@ -297,6 +301,49 @@ class MapSlot(
 )
 
 /**
+ * How long the phone's bars take to go after a page (Android slides
+ * them out in 340 ms), and a margin.
+ */
+private const val BARS_GONE_MILLIS = 600L
+
+/**
+ * What the phone's bars and its cutout take of the flight screen
+ * ([WindowInsets.safeDrawing]), kept as it was while a page covers it
+ * and until the bars that come with the pages (MainActivity) are gone
+ * again.  Else the tiles' sheet grew over the navigation bar under the
+ * page and the map's height changed with the bars' slide: a new size
+ * of the map has the window wait for the map's next frame, which
+ * MapLibre draws at 4 a second on the ground (VectorMap's
+ * FOLLOW_MIN_FPS), so a page stood still for 250 to 750 ms before it
+ * slid in, and again going back.  The keyboard of a page stays out of
+ * it too.  A new size of the window (the phone turned) starts again.
+ */
+@Composable
+private fun flightInsets(covered: Boolean): WindowInsets {
+    val live = WindowInsets.safeDrawing
+    val density = LocalDensity.current
+    val direction = LocalLayoutDirection.current
+    val configuration = LocalConfiguration.current
+    var released by remember { mutableIntStateOf(0) }
+    val kept = remember(configuration.screenWidthDp, configuration.screenHeightDp, released) {
+        arrayOfNulls<WindowInsets>(1)
+    }
+    LaunchedEffect(covered) {
+        if (!covered && kept[0] != null) {
+            // Compose has the bars gone at the start of their slide
+            delay(BARS_GONE_MILLIS)
+            released++
+        }
+    }
+    // as they are now, without following them
+    if (covered && kept[0] == null) kept[0] = Snapshot.withoutReadObservation {
+        WindowInsets(live.getLeft(density, direction), live.getTop(density),
+                     live.getRight(density, direction), live.getBottom(density))
+    }
+    return kept[0] ?: live
+}
+
+/**
  * The flight screen, map first: the map with the vario and final glide
  * bars on its edges and the menu and zoom buttons along its bottom, and
  * the tiles below it (portrait) or beside it (landscape, with the next
@@ -334,6 +381,8 @@ fun FlightContent(
     replay: ReplayControls? = null,
     /** The task on the map: this instead of the tiles and the map's cards. */
     taskPanel: (@Composable () -> Unit)? = null,
+    /** What the phone's bars and its cutout take ([flightInsets]). */
+    windowInsets: WindowInsets = WindowInsets.safeDrawing,
 ) {
     val colors = XcsTheme.colors
     // the MacCready stepper, from its tile: each use counts, and it
@@ -372,14 +421,14 @@ fun FlightContent(
         if (maxWidth > maxHeight && maxWidth >= 600.dp) {
             Row(Modifier.fillMaxSize()) {
                 mapArea(false, Modifier.weight(1f).fillMaxHeight(),
-                        WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical +
-                                                      WindowInsetsSides.Start))
+                        windowInsets.only(WindowInsetsSides.Vertical +
+                                          WindowInsetsSides.Start))
                 Column(
                     Modifier
                         .width(400.dp)
                         .fillMaxHeight()
                         .background(colors.sheet)
-                        .windowInsetsPadding(WindowInsets.safeDrawing.only(
+                        .windowInsetsPadding(windowInsets.only(
                             WindowInsetsSides.Vertical + WindowInsetsSides.End)),
                 ) {
                     // at the bottom, as in portrait: MacCready and the menu
@@ -405,8 +454,8 @@ fun FlightContent(
             val sheetMax = maxHeight - 240.dp
             Column(Modifier.fillMaxSize()) {
                 mapArea(true, Modifier.weight(1f).fillMaxWidth(),
-                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top +
-                                                      WindowInsetsSides.Horizontal))
+                        windowInsets.only(WindowInsetsSides.Top +
+                                          WindowInsetsSides.Horizontal))
                 val sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
                 Column(
                     Modifier
@@ -415,7 +464,7 @@ fun FlightContent(
                         // flat: an outline where it meets the map
                         .background(colors.sheet, sheetShape)
                         .border(1.dp, colors.outline, sheetShape)
-                        .windowInsetsPadding(WindowInsets.safeDrawing.only(
+                        .windowInsetsPadding(windowInsets.only(
                             WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal))
                         .verticalScroll(rememberScrollState())
                         .padding(12.dp),
