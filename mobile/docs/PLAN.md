@@ -975,6 +975,10 @@ page, checklists, a widget, a message after landing away).
   elsewhere, until the phone's next fix (the warning computer only runs
   with a fix).  **Fixed** (2026-11-27): the replay's warnings, and
   what was acknowledged "for the day" in it, end with it.
+- Alerts in a replay: a replay warned like a flight (banner, tone,
+  vibration, voice, the airspace red on the map), on the ground too.
+  **Done** (2026-11-27): a replay warns of no airspace; those of the
+  real position come back when it stops.
 - Room on short phones: an airspace warning, the replay bar or the
   target card and the chips leave a short band of map (Redmi 5, 720 dp)
   and the vario bar shrinks to its number.  The target card could go
@@ -1009,6 +1013,16 @@ page, checklists, a widget, a message after landing away).
 ---
 
 ## Log
+
+- 2026-11-27 (morning) — The pilot: "can you remove the alerts in
+  replay mode?".  A replay warns of no airspace: the core runs it with
+  the warnings off, and clears those of the real position as it starts
+  (the replay's jump back in time resets XCSoar's warning computer,
+  which then kept them on the screen for the whole replay).  Checked
+  on the p7 emulator (no phone plugged in) with a restricted area
+  around Benalla: the banner before the replay, none on the ground or
+  in the air during it, back after Stop.  core-check (554) passes; its
+  new check fails without the change.
 
 - 2026-11-27 — The pilot, on the thermal assistant: "is it normal it is
   centered on the screen?  It feels like it should be static on the map
