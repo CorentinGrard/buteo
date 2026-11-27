@@ -89,12 +89,52 @@ class CalloutsTest {
         assertNull(Callouts.climb(Thermal(1.0, 20.0, 25.0)))
     }
 
-    /** A core whose state and events the test sets. */
+    /** A core whose state, events and airspace warnings the test sets. */
     private class Scripted(fake: FakeXcsoarCore) : XcsoarCore by fake {
         val states = MutableStateFlow<FlightState?>(null)
         val eventFlow = MutableSharedFlow<CoreEvent>(extraBufferCapacity = 8)
+        var warnings = emptyList<AirspaceWarningInfo>()
         override val flightState: StateFlow<FlightState?> = states
         override val events: SharedFlow<CoreEvent> = eventFlow
+        override suspend fun airspaceWarnings() = warnings
+    }
+
+    /** The pilot's own flight at [second] (the synthetic one is a replay). */
+    private fun flying(second: Int) = FakeXcsoarCore.syntheticState(second).copy(replay = false)
+
+    @Test
+    fun aReplayAlertsNothing() = runTest {
+        val core = Scripted(FakeXcsoarCore(backgroundScope))
+        val viewModel = FlightViewModel(core)
+        try {
+            val said = mutableListOf<String>()
+            val alerts = mutableListOf<AirspaceAlert>()
+            backgroundScope.launch { viewModel.callouts.collect { said += it } }
+            backgroundScope.launch { viewModel.alerts.collect { alerts += it } }
+
+            // in an airspace, out of a climb, on final glide, at a turn point
+            val replay = FakeXcsoarCore.syntheticState(0)
+            core.warnings = listOf(warning("inside"))
+            core.states.value = replay.copy(circling = true)
+            advanceTimeBy(1_000)
+            core.states.value = replay.copy(circling = false,
+                                            lastThermal = Thermal(2.1, 450.0, 300.0))
+            core.eventFlow.emit(CoreEvent.GlideComputer(GlideComputerEvent.FINALGLIDE_ABOVE))
+            core.eventFlow.emit(CoreEvent.GlideComputer(GlideComputerEvent.TASK_NEXTWAYPOINT))
+            advanceTimeBy(3_000)
+            assertEquals(emptyList<String>(), said)
+            assertEquals(emptyList<AirspaceAlert>(), alerts)
+
+            // the pilot's own flight warns
+            core.states.value = flying(1)
+            core.warnings = listOf(warning("near", distance = 2300.0))
+            advanceTimeBy(2_000)
+            assertEquals(listOf("Airspace ahead: GRENOBLE CTR, 2.3 kilometres"), said)
+            assertEquals(listOf(AirspaceAlert(Alert.CAUTION, sound = true, vibration = true)),
+                         alerts)
+        } finally {
+            viewModel.viewModelScope.cancel()
+        }
     }
 
     @Test
@@ -105,7 +145,7 @@ class CalloutsTest {
             val said = mutableListOf<String>()
             backgroundScope.launch { viewModel.callouts.collect { said += it } }
 
-            val s = FakeXcsoarCore.syntheticState(0)
+            val s = flying(0)
             core.states.value = s.copy(circling = true)
             advanceTimeBy(1_000)
             core.states.value = s.copy(circling = false, lastThermal = Thermal(2.1, 450.0, 300.0))
@@ -129,7 +169,7 @@ class CalloutsTest {
             val said = mutableListOf<String>()
             backgroundScope.launch { viewModel.callouts.collect { said += it } }
 
-            val s = FakeXcsoarCore.syntheticState(0)
+            val s = flying(0)
             val thermal = Thermal(0.5, 157.0, 300.0)
             for (i in 1..3) {
                 core.states.value = s.copy(circling = true, lastThermal = thermal.takeIf { i > 1 })
@@ -154,7 +194,7 @@ class CalloutsTest {
             val said = mutableListOf<String>()
             backgroundScope.launch { viewModel.callouts.collect { said += it } }
 
-            core.states.value = FakeXcsoarCore.syntheticState(0)
+            core.states.value = flying(0)
             core.eventFlow.emit(CoreEvent.GlideComputer(GlideComputerEvent.TASK_NEXTWAYPOINT))
             advanceTimeBy(2_000)
             assertEquals(emptyList<String>(), said)
@@ -162,7 +202,7 @@ class CalloutsTest {
             settings = CalloutSettings()
             core.eventFlow.emit(CoreEvent.GlideComputer(GlideComputerEvent.TASK_NEXTWAYPOINT))
             // the snapshot after the event has the next point
-            core.states.value = FakeXcsoarCore.syntheticState(1)
+            core.states.value = flying(1)
                 .copy(next = NextWaypoint("Grenoble", 23_400.0, 45.0, 120.0))
             advanceTimeBy(2_000)
             assertEquals(listOf("Turn point reached. Next: Grenoble, 23.4 kilometres"), said)

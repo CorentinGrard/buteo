@@ -978,7 +978,10 @@ page, checklists, a widget, a message after landing away).
 - Alerts in a replay: a replay warned like a flight (banner, tone,
   vibration, voice, the airspace red on the map), on the ground too.
   **Done** (2026-11-27): a replay warns of no airspace; those of the
-  real position come back when it stops.
+  real position come back when it stops.  Its voice callouts (climbs,
+  final glide, task points) went on: **done** (2026-11-27), a replay
+  says nothing and plays no alert tone or vibration; the vario sound
+  stays the menu's switch.
 - Room on short phones: an airspace warning, the replay bar or the
   target card and the chips leave a short band of map (Redmi 5, 720 dp)
   and the vario bar shrinks to its number.  The target card could go
@@ -1013,6 +1016,20 @@ page, checklists, a widget, a message after landing away).
 ---
 
 ## Log
+
+- 2026-11-27 (afternoon) — The pilot: "the menus of the app are super
+  laggy to open", then "the sub menus".  A page stood still for 250 to
+  750 ms before it slid in, and again going back: the bars that come
+  with it resized the map under it, and MapLibre's frame cap (4 a
+  second on the ground) sleeps before it reports a frame, which the
+  window waits for.  The flight screen keeps its insets under a page
+  (Pixel 7: no frame over 50 ms after the first, in a replay too).
+  Also seen: an Obtainium install runs uncompiled until the phone's
+  maintenance compiles it (idle and charging), the UI twice as slow.
+  Then: "Remove all the alerts when in replay mode, the audio alert
+  and such": a replay says no callout and plays no alert (Redmi 5, 83
+  minutes of the test flight at 50x: nothing said; the sample callout
+  speaks).
 
 - 2026-11-27 — The pilot: "commit, push, merge, and create a new
   release".  Upstream merged (41 commits; its team code now takes

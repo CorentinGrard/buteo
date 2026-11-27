@@ -252,12 +252,18 @@ class FlightViewModel(
     private var lastCallout = Long.MIN_VALUE / 2
 
     /**
+     * A replay runs: not the pilot's flight, so nothing in it alerts, no
+     * tone, vibration or voice (the pilot, 2026-11-27).  The core warns
+     * of no airspace in it either.
+     */
+    private val replaying get() = core.flightState.value?.replay == true
+
+    /**
      * Say [text]: airspace always, the others at most every
-     * [CALLOUT_GAP_MS], so a replay skipping ahead does not talk on
-     * for a minute.
+     * [CALLOUT_GAP_MS]; nothing in a replay.
      */
     private fun say(text: String?, airspace: Boolean = false) {
-        if (text == null) return
+        if (text == null || replaying) return
         val now = SystemClock.uptimeMillis()
         if (!airspace) {
             if (now - lastCallout < CALLOUT_GAP_MS) return
@@ -268,6 +274,8 @@ class FlightViewModel(
 
     /** The callouts of a glide computer event: final glide, task points. */
     private fun callout(event: GlideComputerEvent) {
+        // not later either, should the replay stop meanwhile
+        if (replaying) return
         val settings = calloutSettings()
         when (event) {
             GlideComputerEvent.FINALGLIDE_ABOVE, GlideComputerEvent.FINALGLIDE_BELOW ->
@@ -313,7 +321,7 @@ class FlightViewModel(
         val fresh = warnings.filter { it.key !in announced }
         announced = keys
         val options = airspaceAlertsFlow.value
-        if (fresh.isNotEmpty() && (options.sound || options.vibration))
+        if (fresh.isNotEmpty() && (options.sound || options.vibration) && !replaying)
             alertFlow.tryEmit(AirspaceAlert(
                 if (fresh.any { it.inside }) Alert.WARNING else Alert.CAUTION,
                 options.sound, options.vibration))
@@ -387,7 +395,8 @@ class FlightViewModel(
             var wasCircling: Boolean? = null
             var lastClimb: Thermal? = null
             core.flightState.map { it?.circling }.distinctUntilChanged().collect { circling ->
-                if (wasCircling == true && circling == false && calloutSettings().climbs)
+                if (wasCircling == true && circling == false && calloutSettings().climbs &&
+                    !replaying)
                     launch {
                         // XCSoar sets the last thermal as the climb ends; a
                         // turn or two in and out of it leaves it as it was
