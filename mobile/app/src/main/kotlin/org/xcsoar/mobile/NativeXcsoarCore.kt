@@ -53,6 +53,7 @@ import org.xcsoar.mobile.core.PolarInfo
 import org.xcsoar.mobile.core.ProfileInfo
 import org.xcsoar.mobile.core.MacCreadyOption
 import org.xcsoar.mobile.core.SafetyOption
+import org.xcsoar.mobile.core.WaypointDetails
 import org.xcsoar.mobile.core.StatusPages
 import org.xcsoar.mobile.core.AirspaceDetails
 import org.xcsoar.mobile.core.AtcInfo
@@ -194,6 +195,9 @@ class NativeXcsoarCore(
             WaypointInfo.parseList(checkNotNull(json) { "xcs_waypoints_search failed" })
         }
     }
+
+    override suspend fun waypoint(id: Int) =
+        query({ NativeCore.nativeWaypointGet(it, id) }, WaypointDetails::parse)
 
     override suspend fun gotoWaypoint(id: Int) =
         command { NativeCore.nativeGotoWaypoint(it, id) }
@@ -492,6 +496,9 @@ class NativeXcsoarCore(
         val status = networkCall(NativeCore::nativeWeatherUpdate)
         check(status == 0) { "No weather received" }
     }
+
+    override suspend fun weatherStation(code: String) =
+        networkCall { NativeCore.nativeWeatherStation(it, code) }?.let(WeatherStation::parse)
 
     override suspend fun trackingSettings() =
         query(NativeCore::nativeTrackingGet, TrackingSettings::parse)

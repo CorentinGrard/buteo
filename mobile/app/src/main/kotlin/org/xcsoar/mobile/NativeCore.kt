@@ -132,6 +132,8 @@ internal object NativeCore {
     @JvmStatic external fun nativeWeatherAdd(core: Long, code: String): Int
     @JvmStatic external fun nativeWeatherRemove(core: Long, code: String): Int
     @JvmStatic external fun nativeWeatherUpdate(core: Long): Int
+    @JvmStatic external fun nativeWeatherStation(core: Long, code: String): String?
+    @JvmStatic external fun nativeWaypointGet(core: Long, id: Int): String?
     @JvmStatic external fun nativeTrackingGet(core: Long): String?
     @JvmStatic external fun nativeTrackingSet(core: Long, json: String): Int
     @JvmStatic external fun nativeWeGlideGet(core: Long): String?

@@ -439,6 +439,26 @@
     <string name="voice_climbs">Leaving a climb, its average and the height gained: “Climb 2.1, gained 450”</string>
     <string name="voice_say">Say a callout</string>
 
+    <!-- a waypoint's page, from the map -->
+    <string name="field_airport">Airport</string>
+    <string name="field_none">This waypoint is no longer in the waypoint file.</string>
+    <string name="field_code">Code</string>
+    <string name="field_elevation">Elevation</string>
+    <string name="field_runway">Runway</string>
+    <string name="field_from_here">From here</string>
+    <string name="field_reach">Reach</string>
+    <string name="field_in_reach">In reach, %1$s to spare</string>
+    <string name="field_out_of_reach">Out of reach, %1$s short</string>
+    <string name="field_chart">Approach chart</string>
+    <string name="field_chart_open">VAC %1$s</string>
+    <string name="field_chart_page">VAC %1$s, page %2$d</string>
+    <string name="field_chart_hint">SIA\'s chart of the AIRAC cycle of %1$s, kept on the phone for flights without network.</string>
+    <string name="field_chart_old">The chart of %1$s: the current one could not be downloaded.</string>
+    <string name="field_chart_loading">Downloading the chart…</string>
+    <string name="field_chart_failed">No chart for %1$s: SIA has none, or there is no network and none on the phone.</string>
+    <string name="field_weather_loading">Getting METAR and TAF…</string>
+    <string name="field_weather_none">No METAR or TAF for %1$s (none published, or no network).</string>
+
     <!-- the safety heights page -->
     <string name="safety_margins">Margins</string>
     <string name="safety_arrival_name">arrival height</string>

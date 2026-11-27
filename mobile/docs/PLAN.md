@@ -1017,6 +1017,15 @@ page, checklists, a widget, a message after landing away).
 
 ## Log
 
+- 2026-11-27 (night) — The pilot: "click on an airfield on the map and
+  to get a detail view about it, it's height, maybe the VAC, weather,
+  have a go to button, see the frequencies".  A tap on a field opens
+  its page (D37).  Redmi 5: Lyon St Exupéry from the map, its runway
+  17/35 · 4000 m and 120.450 MHz, the live METAR and TAF, its VAC (two
+  pages, 550 kB, kept in XCSoarData/vac), Go to sets it as the target.
+  Not done: VACs downloaded ahead for the route's fields (pre-flight
+  check), and charts of other countries.
+
 - 2026-11-27 (evening) — The pilot: "I would like to select at which
   gliding ratio we are working with, usually between 10 and 30", then
   "I only set a max gliding rate, like 20, and I must always stay in

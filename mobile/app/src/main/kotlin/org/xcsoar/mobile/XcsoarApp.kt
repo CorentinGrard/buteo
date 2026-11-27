@@ -298,6 +298,9 @@ class XcsoarApp : Application() {
 
     val downloader by lazy { Downloader(cacheDir) }
 
+    /** The fields' approach charts, kept for flights without network. */
+    val vacStore by lazy { VacStore(File(xcsoarDataDir, "vac"), downloader) }
+
     /**
      * Download a repository file into the XCSoarData folder XCSoar uses
      * for its kind.

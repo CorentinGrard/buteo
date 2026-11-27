@@ -52,6 +52,8 @@ data class WeatherStation(
         /** What the profile holds (CoreWeather.cpp). */
         const val MAX_STATIONS = 20
 
+        fun parse(text: String): WeatherStation = json.decodeFromString(serializer(), text)
+
         fun parseList(text: String): List<WeatherStation> =
             json.decodeFromString(ListSerializer(serializer()), text)
     }

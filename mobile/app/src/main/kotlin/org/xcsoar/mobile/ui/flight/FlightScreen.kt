@@ -95,6 +95,8 @@ fun FlightScreen(
     viewModel: FlightViewModel,
     onOpenDataFiles: () -> Unit = {},
     onOpenWaypoints: () -> Unit = {},
+    /** A waypoint's page, from the map. */
+    onOpenWaypoint: (waypointId: Int) -> Unit = {},
     onOpenFlightSetup: () -> Unit = {},
     onOpenFlights: () -> Unit = {},
     onOpenTask: () -> Unit = {},
@@ -244,7 +246,7 @@ fun FlightScreen(
                               modifier, circling = circling, circlingZoom = circlingZoom,
                               relief = relief,
                               taskMode = taskMapMode.takeIf { taskPanel != null },
-                              onTaskTap = onTaskMapTap)
+                              onTaskTap = onTaskMapTap, onWaypoint = onOpenWaypoint)
                 }
             },
             onAircraftPosition = { _, y -> vectorState.setFocus(y) },

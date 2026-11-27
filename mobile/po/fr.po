@@ -1171,6 +1171,66 @@ msgstr "En quittant une ascendance, sa moyenne et la hauteur gagnée : « Climb 
 msgid "Say a callout"
 msgstr "Dire une annonce"
 
+#. field_none
+msgid "This waypoint is no longer in the waypoint file."
+msgstr "Ce point n'est plus dans le fichier de points."
+
+#. field_code
+msgid "Code"
+msgstr "Code"
+
+#. field_from_here
+msgid "From here"
+msgstr "D'ici"
+
+#. field_reach
+msgid "Reach"
+msgstr "Portée"
+
+#. field_in_reach
+msgid "In reach, %1$s to spare"
+msgstr "À portée, %1$s de marge"
+
+#. field_out_of_reach
+msgid "Out of reach, %1$s short"
+msgstr "Hors de portée, il manque %1$s"
+
+#. field_chart
+msgid "Approach chart"
+msgstr "Carte d'approche"
+
+#. field_chart_open
+msgid "VAC %1$s"
+msgstr "VAC %1$s"
+
+#. field_chart_page
+msgid "VAC %1$s, page %2$d"
+msgstr "VAC %1$s, page %2$d"
+
+#. field_chart_hint
+msgid "SIA's chart of the AIRAC cycle of %1$s, kept on the phone for flights without network."
+msgstr "La carte du SIA du cycle AIRAC du %1$s, gardée sur le téléphone pour les vols sans réseau."
+
+#. field_chart_old
+msgid "The chart of %1$s: the current one could not be downloaded."
+msgstr "La carte du %1$s : l'actuelle n'a pas pu être téléchargée."
+
+#. field_chart_loading
+msgid "Downloading the chart…"
+msgstr "Téléchargement de la carte…"
+
+#. field_chart_failed
+msgid "No chart for %1$s: SIA has none, or there is no network and none on the phone."
+msgstr "Pas de carte pour %1$s : le SIA n'en a pas, ou pas de réseau et aucune sur le téléphone."
+
+#. field_weather_loading
+msgid "Getting METAR and TAF…"
+msgstr "Récupération du METAR et du TAF…"
+
+#. field_weather_none
+msgid "No METAR or TAF for %1$s (none published, or no network)."
+msgstr "Pas de METAR ni de TAF pour %1$s (aucun publié, ou pas de réseau)."
+
 #. safety_margins
 msgid "Margins"
 msgstr "Marges"

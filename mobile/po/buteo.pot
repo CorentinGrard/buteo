@@ -1170,6 +1170,66 @@ msgstr ""
 msgid "Say a callout"
 msgstr ""
 
+#. field_none
+msgid "This waypoint is no longer in the waypoint file."
+msgstr ""
+
+#. field_code
+msgid "Code"
+msgstr ""
+
+#. field_from_here
+msgid "From here"
+msgstr ""
+
+#. field_reach
+msgid "Reach"
+msgstr ""
+
+#. field_in_reach
+msgid "In reach, %1$s to spare"
+msgstr ""
+
+#. field_out_of_reach
+msgid "Out of reach, %1$s short"
+msgstr ""
+
+#. field_chart
+msgid "Approach chart"
+msgstr ""
+
+#. field_chart_open
+msgid "VAC %1$s"
+msgstr ""
+
+#. field_chart_page
+msgid "VAC %1$s, page %2$d"
+msgstr ""
+
+#. field_chart_hint
+msgid "SIA's chart of the AIRAC cycle of %1$s, kept on the phone for flights without network."
+msgstr ""
+
+#. field_chart_old
+msgid "The chart of %1$s: the current one could not be downloaded."
+msgstr ""
+
+#. field_chart_loading
+msgid "Downloading the chart…"
+msgstr ""
+
+#. field_chart_failed
+msgid "No chart for %1$s: SIA has none, or there is no network and none on the phone."
+msgstr ""
+
+#. field_weather_loading
+msgid "Getting METAR and TAF…"
+msgstr ""
+
+#. field_weather_none
+msgid "No METAR or TAF for %1$s (none published, or no network)."
+msgstr ""
+
 #. safety_margins
 msgid "Margins"
 msgstr ""

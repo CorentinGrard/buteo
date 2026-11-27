@@ -59,6 +59,9 @@ interface XcsoarCore {
     suspend fun searchWaypoints(name: String, filter: WaypointFilter, max: Int): List<WaypointInfo> =
         emptyList()
 
+    /** One waypoint's details; null for an unknown id. */
+    suspend fun waypoint(id: Int): WaypointDetails? = null
+
     /**
      * Fly directly to this waypoint (XCSoar's "Go to"); it becomes the
      * next point.  Fails if the profile only allows landable targets.
@@ -267,6 +270,12 @@ interface XcsoarCore {
 
     /** Download METAR and TAF of every station (network). */
     suspend fun updateWeather() {}
+
+    /**
+     * METAR and TAF of one station without adding it (network); null
+     * when NOAA has nothing for it or cannot be reached.
+     */
+    suspend fun weatherStation(code: String): WeatherStation? = null
 
     /** Live tracking settings; null if unknown. */
     suspend fun trackingSettings(): TrackingSettings? = null

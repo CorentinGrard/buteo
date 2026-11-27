@@ -75,6 +75,11 @@ import org.xcsoar.mobile.ui.crew.PlaneEditViewModel
 import org.xcsoar.mobile.ui.analysis.AnalysisViewModel
 import org.xcsoar.mobile.ui.flight.FlightScreen
 import org.xcsoar.mobile.ui.tiles.AirspaceDetailsScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.xcsoar.mobile.ui.waypoints.FieldChart
+import org.xcsoar.mobile.ui.waypoints.VacScreen
+import org.xcsoar.mobile.ui.waypoints.WaypointDetailsScreen
+import org.xcsoar.mobile.ui.waypoints.WaypointDetailsViewModel
 import org.xcsoar.mobile.ui.tiles.AirspaceDetailsViewModel
 import org.xcsoar.mobile.ui.tiles.AtcScreen
 import org.xcsoar.mobile.ui.tiles.AtcViewModel
@@ -142,7 +147,8 @@ private enum class Screen { FLIGHT, PREFLIGHT, DATA_FILES, DOWNLOAD, MAP_SETTING
                             CREW, PLANE_EDIT, PILOT, TILE_PICKER,
                             AIRSPACE_ALERTS, SAFETY, WIND, STATUS, SOUND, TRACKING, WEATHER,
                             NOTAMS, FLIGHT_LOG, PROFILES, TEAM_CODE, TEAM_REFERENCE, RADIO,
-                            ATC, ATC_REFERENCE, AIRSPACE_DETAILS, WELCOME, SUMMARY }
+                            ATC, ATC_REFERENCE, AIRSPACE_DETAILS, WELCOME, SUMMARY,
+                            WAYPOINT_DETAILS, VAC }
 
 /**
  * The map's terrain for the analysis maps, from the native core; null
@@ -172,7 +178,8 @@ private val Screen.depth: Int
         Screen.DOWNLOAD, Screen.PLANE_EDIT, Screen.TASK_FILES, Screen.TASK_ADD_POINT,
         Screen.TASK_ADD_START, Screen.TASK_RULES, Screen.TEAM_REFERENCE, Screen.ATC_REFERENCE,
         // open from the page that holds them (D25)
-        Screen.PILOT, Screen.FLIGHT_LOG, Screen.NOTAMS, Screen.UNITS, Screen.WIND -> 2
+        Screen.PILOT, Screen.FLIGHT_LOG, Screen.NOTAMS, Screen.UNITS, Screen.WIND,
+        Screen.VAC -> 2
         else -> 1
     }
 
@@ -384,6 +391,10 @@ class MainActivity : ComponentActivity() {
                     factory = viewModelFactory {
                         initializer { AirspaceDetailsViewModel(app.anyCore) }
                     })
+                val waypointDetailsViewModel: WaypointDetailsViewModel = viewModel(
+                    factory = viewModelFactory {
+                        initializer { WaypointDetailsViewModel(app.anyCore, app.vacStore) }
+                    })
                 val statusViewModel: StatusViewModel = viewModel(
                     factory = viewModelFactory { initializer { StatusViewModel(app.anyCore) } })
                 val airspaceAlertsViewModel: AirspaceAlertsViewModel = viewModel(
@@ -511,6 +522,10 @@ class MainActivity : ComponentActivity() {
                         flightViewModel,
                         onOpenDataFiles = { screen = Screen.DATA_FILES },
                         onOpenWaypoints = { screen = Screen.WAYPOINTS },
+                        onOpenWaypoint = { id ->
+                            waypointDetailsViewModel.open(id)
+                            screen = Screen.WAYPOINT_DETAILS
+                        },
                         onOpenFlightSetup = { screen = Screen.FLIGHT_SETUP },
                         onOpenFlights = { screen = Screen.FLIGHTS },
                         onOpenTask = { screen = Screen.TASK },
@@ -737,6 +752,21 @@ class MainActivity : ComponentActivity() {
                                 title = stringResource(R.string.waypoints_relocate),
                                 pickLabel = stringResource(R.string.waypoints_set),
                                 onPick = { atcViewModel.setReference(it.id) })
+                            Screen.WAYPOINT_DETAILS -> WaypointDetailsScreen(
+                                waypointDetailsViewModel,
+                                onGoneTo = { screen = Screen.FLIGHT },
+                                onOpenChart = { screen = Screen.VAC },
+                                onBack = { screen = Screen.FLIGHT })
+                            Screen.VAC -> {
+                                val fieldState by waypointDetailsViewModel.state
+                                    .collectAsStateWithLifecycle()
+                                VacScreen(fieldState.details?.icao.orEmpty(),
+                                          (fieldState.chart as? FieldChart.Ready)?.chart,
+                                          onBack = {
+                                              waypointDetailsViewModel.closeChart()
+                                              screen = Screen.WAYPOINT_DETAILS
+                                          })
+                            }
                             Screen.AIRSPACE_DETAILS -> AirspaceDetailsScreen(
                                 airspaceDetailsViewModel, onBack = { screen = Screen.FLIGHT })
                             Screen.WIND -> WindScreen(

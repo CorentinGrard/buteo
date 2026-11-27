@@ -827,3 +827,29 @@ at 0 while the cone is on.
   Upstream's monitor warned once a flight (it re-armed only after a
   warning); it now re-arms when a field has been in reach for a minute,
   and warns at most every five minutes.
+
+## D37 — A field's page, from a tap on the map
+**Status:** Accepted (2026-11-27)
+
+The pilot: "click on an airfield on the map and get a detail view about
+it, its height, maybe the VAC, weather, have a go to button, see the
+frequencies".
+
+- A tap on a waypoint of the map (out of the route modes, which have
+  their own taps) opens its page; a hold still shows the card of all
+  that is there.  A page, not a dialog over the map (ARCHITECTURE §1).
+- The page (`xcs_waypoint_get`): Go to at the bottom, under the thumb;
+  code, elevation, runway ("02/20 · 1200 m", both ends from the file's
+  direction), radio with Set active / standby as the airspace page,
+  distance and bearing, reach on the safety polar (D36), the file's
+  description and the waypoint details file's text.
+- Weather: a field with an ICAO code (four letters; "LF3852" has
+  none) gets its METAR and TAF from NOAA as the page opens
+  (`xcs_weather_station`), without joining the Weather page's list.
+- VAC: French fields (LF..) open SIA's chart in the app (Android's PDF
+  renderer, two fingers zoom).  SIA keeps only the cycle in force
+  (eAIP_<DD_MMM_YYYY>/Atlas-VAC/PDF_AIPparSSection/VAC/AD/AD-2.<ICAO>.pdf,
+  past cycles' folders removed), so the app counts the 28-day AIRAC
+  cycles from 26 NOV 2026.  Charts stay in XCSoarData/vac: one opened on
+  the ground opens in flight without network; an older edition shows
+  when the new one cannot be had, and goes once it is.

@@ -296,7 +296,7 @@ private fun StationCard(
             return@Column
         }
 
-        summary(station)?.let {
+        weatherSummary(station)?.let {
             Text(it, color = colors.text, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
         }
         Text(listOfNotNull(station.metarTime?.let { "METAR ${utcTime(it)}" },
@@ -313,7 +313,7 @@ private fun StationCard(
 
 /** Wind, QNH and temperatures, in the pilot's units. */
 @Composable
-private fun summary(s: WeatherStation): String? {
+internal fun weatherSummary(s: WeatherStation): String? {
     val parts = mutableListOf<String>()
     val bearing = s.windBearing
     val windSpeed = s.windSpeed

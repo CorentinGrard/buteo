@@ -684,6 +684,7 @@ private fun shortest(from: Double, to: Double): Double {
  * @param taskMode the task on the map instead of the flight
  * @param onTaskTap a tap in a task mode: where, and the waypoint under
  *   the finger while building the task
+ * @param onWaypoint a tap on a waypoint out of the task modes: its page
  */
 @Composable
 fun VectorMap(
@@ -701,6 +702,7 @@ fun VectorMap(
     relief: Boolean = true,
     taskMode: TaskMapMode? = null,
     onTaskTap: (latitude: Double, longitude: Double, waypointId: Int?) -> Unit = { _, _, _ -> },
+    onWaypoint: (waypointId: Int) -> Unit = {},
 ) {
     val context = LocalContext.current
     val mapView = remember {
@@ -723,6 +725,7 @@ fun VectorMap(
     var style by remember { mutableStateOf<Style?>(null) }
     val currentOnItems by rememberUpdatedState(onItems)
     val currentOnTaskTap by rememberUpdatedState(onTaskTap)
+    val currentOnWaypoint by rememberUpdatedState(onWaypoint)
     val density = LocalDensity.current.density
     state.frameMargin = (24 * density).roundToInt()
     // the menu and zoom buttons along the map's bottom
@@ -775,7 +778,14 @@ fun VectorMap(
                 true
             }
             map.addOnMapClickListener { point ->
-                val mode = state.taskMode ?: return@addOnMapClickListener false
+                val mode = state.taskMode
+                if (mode == null) {
+                    // a field (or any waypoint) under the finger: its page
+                    val waypoint = waypointAt(map, map.projection.toScreenLocation(point),
+                                              24 * density) ?: return@addOnMapClickListener false
+                    currentOnWaypoint(waypoint)
+                    return@addOnMapClickListener true
+                }
                 if (mode == TaskMapMode.Preview) return@addOnMapClickListener true
                 val waypoint = if (mode == TaskMapMode.Edit)
                     waypointAt(map, map.projection.toScreenLocation(point), 24 * density)

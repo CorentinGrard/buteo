@@ -81,6 +81,8 @@ class TranslationsTest {
         /** Texts French writes as English does. */
         val SAME_IN_FRENCH = setOf(
             "app_name", "auto", "mac_cready", "netto", "menu", "flight_mc_auto",
+            // a field's page: "Code", "VAC LFLQ"
+            "field_code", "field_chart_open", "field_chart_page",
             // a brand name
             "menu_map_xcsoar",
             // the same word, or XCSoar's own (po/fr.po) is the same
