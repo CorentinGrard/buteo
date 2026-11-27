@@ -38,6 +38,7 @@
 {"type":"event","gce":4}
 {"type":"snapshot","time":1264035217,"flying":true,"circling":false,"final_glide":true,"flight_time":788,"lat":-35.95632,"lon":146.41783,"track":24,"ground_speed":42.0,"tas":35.7,"gps_alt":957,"baro_alt":931,"nav_alt":931,"agl":null,"vario":1.5,"avg_vario":0.2,"netto":null,"wind_speed":3.9,"wind_bearing":272,"mc":1.0,"next_distance":6837,"final_glide_alt_diff":276}
 {"type":"snapshot","time":1264035277,"flying":true,"circling":false,"final_glide":true,"flight_time":848,"lat":-35.93568,"lon":146.42590,"track":20,"ground_speed":41.4,"tas":37.9,"gps_alt":877,"baro_alt":848,"nav_alt":848,"agl":null,"vario":-1.2,"avg_vario":-1.6,"netto":null,"wind_speed":3.9,"wind_bearing":271,"mc":1.0,"next_distance":8903,"final_glide_alt_diff":138}
+{"type":"event","gce":9}
 {"type":"snapshot","time":1264035337,"flying":true,"circling":false,"final_glide":true,"flight_time":908,"lat":-35.91542,"lon":146.43450,"track":17,"ground_speed":38.2,"tas":35.8,"gps_alt":797,"baro_alt":781,"nav_alt":781,"agl":null,"vario":-0.2,"avg_vario":-0.3,"netto":null,"wind_speed":3.9,"wind_bearing":270,"mc":1.0,"next_distance":11103,"final_glide_alt_diff":12}
 {"type":"snapshot","time":1264035397,"flying":true,"circling":false,"final_glide":true,"flight_time":968,"lat":-35.89853,"lon":146.43735,"track":348,"ground_speed":29.9,"tas":30.3,"gps_alt":781,"baro_alt":766,"nav_alt":766,"agl":null,"vario":-3.8,"avg_vario":0.1,"netto":null,"wind_speed":4.0,"wind_bearing":268,"mc":1.0,"next_distance":12760,"final_glide_alt_diff":-50}
 {"type":"event","gce":4}
@@ -430,6 +431,7 @@
 {"type":"snapshot","time":1264052737,"flying":true,"circling":false,"final_glide":true,"flight_time":18308,"lat":-36.03908,"lon":146.33930,"track":225,"ground_speed":35.4,"tas":43.3,"gps_alt":973,"baro_alt":947,"nav_alt":947,"agl":null,"vario":-2.2,"avg_vario":-1.0,"netto":null,"wind_speed":8.3,"wind_bearing":264,"mc":1.0,"next_distance":5334,"final_glide_alt_diff":350}
 {"type":"snapshot","time":1264052797,"flying":true,"circling":false,"final_glide":true,"flight_time":18368,"lat":-36.05068,"lon":146.32353,"track":223,"ground_speed":31.8,"tas":42.7,"gps_alt":949,"baro_alt":926,"nav_alt":926,"agl":null,"vario":-0.5,"avg_vario":-1.6,"netto":null,"wind_speed":8.7,"wind_bearing":262,"mc":1.0,"next_distance":7056,"final_glide_alt_diff":292}
 {"type":"snapshot","time":1264052857,"flying":true,"circling":false,"final_glide":true,"flight_time":18428,"lat":-36.06408,"lon":146.30895,"track":227,"ground_speed":34.2,"tas":40.4,"gps_alt":805,"baro_alt":794,"nav_alt":794,"agl":null,"vario":-1.8,"avg_vario":-2.3,"netto":null,"wind_speed":9.0,"wind_bearing":261,"mc":1.0,"next_distance":8980,"final_glide_alt_diff":119}
+{"type":"event","gce":9}
 {"type":"snapshot","time":1264052917,"flying":true,"circling":false,"final_glide":true,"flight_time":18488,"lat":-36.07575,"lon":146.29152,"track":230,"ground_speed":32.6,"tas":40.6,"gps_alt":765,"baro_alt":753,"nav_alt":753,"agl":null,"vario":0.0,"avg_vario":-0.3,"netto":null,"wind_speed":9.1,"wind_bearing":261,"mc":1.0,"next_distance":10899,"final_glide_alt_diff":37}
 {"type":"event","gce":3}
 {"type":"event","gce":4}

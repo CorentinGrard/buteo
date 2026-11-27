@@ -6,8 +6,14 @@
 #include "ConditionMonitor.hpp"
 
 class ConditionMonitorLandableReachable final : public ConditionMonitor {
+  /** How long a landable must stay in reach to warn again. */
+  static constexpr FloatDuration REARM_TIME = std::chrono::minutes{1};
+
   bool last_reachable = false;
   bool now_reachable = false;
+
+  /** Since when a landable is in reach. */
+  TimeStamp reachable_since = TimeStamp::Undefined();
 
 public:
   constexpr ConditionMonitorLandableReachable() noexcept
