@@ -89,6 +89,13 @@ Profile::Load(const ProfileMap &map, TaskBehaviour &settings)
     settings.safety_mc = std::clamp(Temp / 10.,
                                     0., TaskBehaviour::SAFETY_MC_MAX);
 
+  if (map.Get(ProfileKeys::SafetyGlideRatio, Temp))
+    settings.safety_glide_ratio =
+      Temp >= TaskBehaviour::SAFETY_GLIDE_RATIO_MIN &&
+      Temp <= TaskBehaviour::SAFETY_GLIDE_RATIO_MAX
+      ? Temp
+      : 0;
+
   map.Get(ProfileKeys::SafetyAltitudeArrival, settings.safety_height_arrival);
   map.GetEnum(ProfileKeys::TaskType, settings.task_type_default);
   Load(map, settings.start_margins);

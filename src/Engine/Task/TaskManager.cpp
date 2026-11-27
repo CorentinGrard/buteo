@@ -48,7 +48,7 @@ TaskManager::SetTaskBehaviour(const TaskBehaviour &behaviour) noexcept
 {
   task_behaviour = behaviour;
 
-  ApplySafetyMC();
+  UpdateSafetyPolar();
 
   ordered_task->SetTaskBehaviour(behaviour);
   goto_task->SetTaskBehaviour(behaviour);
@@ -401,17 +401,33 @@ TaskManager::SetGlidePolar(const GlidePolar &_glide_polar) noexcept
 {
   glide_polar = _glide_polar;
 
-  safety_polar = glide_polar;
-  ApplySafetyMC();
+  UpdateSafetyPolar();
 }
 
 void
-TaskManager::ApplySafetyMC() noexcept
+TaskManager::UpdateSafetyPolar() noexcept
 {
+  safety_polar = glide_polar;
+
   /* The task polar keeps the cruise cap for speed-to-fly. Reach,
      abort and alternates fly the Safety MC point past that cap. */
   safety_polar.SetMCLimitedByCruise(false);
-  safety_polar.SetMC(task_behaviour.safety_mc);
+
+  const double ratio = task_behaviour.safety_glide_ratio;
+  if (ratio <= 0 || !safety_polar.IsValid()) {
+    safety_polar.SetMC(task_behaviour.safety_mc);
+    return;
+  }
+
+  /* The glide cone: still air best glide no better than the ratio.
+     Sink rates scale like bugs, so the polar keeps its shape and the
+     wind still tilts the cone. */
+  safety_polar.SetMC(0);
+  const double best_ld = safety_polar.GetBestLD();
+  if (ratio < best_ld) {
+    safety_polar.SetBugs(safety_polar.GetBugs() * ratio / best_ld);
+    safety_polar.SetMC(0);
+  }
 }
 
 void

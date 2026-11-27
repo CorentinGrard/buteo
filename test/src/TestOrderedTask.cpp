@@ -4,6 +4,8 @@
 #include "Engine/GlideSolvers/GlidePolar.hpp"
 #include "Engine/Navigation/Aircraft.hpp"
 #include "Engine/Task/TaskEvents.hpp"
+#include "Engine/Task/TaskManager.hpp"
+#include "Engine/Waypoint/Waypoints.hpp"
 #include "Engine/Task/Ordered/Settings.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Engine/Task/Ordered/Points/StartPoint.hpp"
@@ -1308,12 +1310,49 @@ TestAll()
   TestLowTPFinal();
 }
 
+/**
+ * The safety glide cone: the safety polar glides the chosen ratio at
+ * Safety MC zero, and the task polar keeps the glider's own.
+ */
+static void
+TestSafetyGlideRatio()
+{
+  const Waypoints waypoints;
+  TaskBehaviour behaviour = task_behaviour;
+  behaviour.safety_mc = 1;
+  TaskManager task_manager(behaviour, waypoints);
+  task_manager.SetGlidePolar(FlyablePolar(2));
+
+  const GlidePolar &safety = task_manager.GetSafetyPolar();
+  ok1(equals(safety.GetMC(), 1));
+  ok1(equals(safety.GetBugs(), 1));
+
+  behaviour.safety_glide_ratio = 20;
+  task_manager.SetTaskBehaviour(behaviour);
+  ok1(equals(safety.GetMC(), 0));
+  ok1(std::fabs(safety.GetBestLD() - 20) < 0.01);
+  ok1(equals(task_manager.GetGlidePolar().GetMC(), 2));
+  ok1(equals(task_manager.GetGlidePolar().GetBugs(), 1));
+
+  /* again, and with a new polar: still 20, not compounded */
+  task_manager.SetTaskBehaviour(behaviour);
+  task_manager.SetGlidePolar(FlyablePolar(2));
+  ok1(std::fabs(safety.GetBestLD() - 20) < 0.01);
+
+  /* never better than the glider */
+  behaviour.safety_glide_ratio = 60;
+  task_manager.SetTaskBehaviour(behaviour);
+  ok1(std::fabs(safety.GetBestLD() - FlyablePolar(0).GetBestLD()) < 0.01);
+  ok1(equals(safety.GetBugs(), 1));
+}
+
 int main()
 {
-  plan_tests(746 + 8 + 31 + 5 + 49 + 123 + 62 + 4 + 12 + 3 + 4 + 6);
+  plan_tests(746 + 8 + 31 + 5 + 49 + 123 + 62 + 4 + 12 + 3 + 4 + 6 + 9);
 
   task_behaviour.SetDefaults();
 
+  TestSafetyGlideRatio();
   TestTravelledDistance();
   TestStartLegOrigin();
   TestStartNavigationLocation();

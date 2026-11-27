@@ -442,8 +442,11 @@ public:
   void UpdateCommonStatsPolar(const AircraftState &state) noexcept;
 
 private:
-  /** Apply Safety MC without the maximum-cruise speed cap. */
-  void ApplySafetyMC() noexcept;
+  /**
+   * Make the safety polar from the task polar: Safety MC without the
+   * maximum-cruise speed cap, or the safety glide ratio.
+   */
+  void UpdateSafetyPolar() noexcept;
 
   TaskType SetMode(const TaskType mode) noexcept;
 

@@ -132,6 +132,16 @@ struct TaskBehaviour {
    */
   double safety_mc;
 
+  /**
+   * Glide ratio of the safety glide cone (0 = off).  While set, the
+   * safety polar glides at most this ratio with Safety MC zero, so
+   * reach, landable colours, abort and alternates stay in the cone.
+   */
+  double safety_glide_ratio;
+
+  static constexpr double SAFETY_GLIDE_RATIO_MIN = 5;
+  static constexpr double SAFETY_GLIDE_RATIO_MAX = 60;
+
   /** Minimum height above terrain for arrival height at landable waypoint (m) */
   double safety_height_arrival;
 

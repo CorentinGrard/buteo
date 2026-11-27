@@ -201,6 +201,7 @@ constexpr std::string_view LoggerTimeStepCircling = "LoggerTimeStepCircling";
 
 constexpr std::string_view TaskMacCready = "TaskMacCready";
 constexpr std::string_view SafetyMacCready = "SafetyMacCready";
+constexpr std::string_view SafetyGlideRatio = "SafetyGlideRatio";
 constexpr std::string_view AbortTaskMode = "AbortTaskMode";
 constexpr std::string_view AutoMcMode = "AutoMcMode";
 constexpr std::string_view AutoMc = "AutoMc";
