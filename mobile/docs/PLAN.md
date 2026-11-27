@@ -1017,6 +1017,12 @@ page, checklists, a widget, a message after landing away).
 
 ## Log
 
+- 2026-11-27 (night) — The pilot: "push and create a new minor
+  release".  Buteo 1.4.0: the safety glide cone and the glide range,
+  the field's page with its VAC and weather, VACs in the pre-flight
+  check, the best field on top (three ways to try), the lift around
+  the thermal, the replay's slider (mobile/docs/releases/v1.4.0.md).
+
 - 2026-11-27 (late night) — The pilot: VACs in the pre-flight check,
   "yes"; and "know easily what airfield I'm on glide distance off ...
   my next point ... my current local ... 2 data on [the top card], or

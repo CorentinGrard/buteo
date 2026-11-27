@@ -1,0 +1,6 @@
+- Safety glide ratio: your glide cone, with an alert when no field is left in it
+- Tap an airfield: Go to, runway, radio, METAR/TAF, approach chart (VAC) offline
+- Pre-flight check downloads the approach charts along your route
+- The best field in reach beside the next point
+- Circling: past lift around the thermal in colours
+- Replay with a slider, like a video
