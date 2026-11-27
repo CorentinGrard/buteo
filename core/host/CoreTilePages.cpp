@@ -94,7 +94,8 @@ bool
 CoreTilePages::SetTeamMateCode(const char *code) noexcept
 {
   /* the dialog's text entry: up to 7 characters, trailing blanks
-     stripped; team codes are base 36 (TeamCode.cpp) */
+     stripped; TeamCode takes three to five letters or digits, or ""
+     to forget the code */
   std::string_view value{code};
   while (!value.empty() && value.back() == ' ')
     value.remove_suffix(1);
@@ -111,7 +112,8 @@ CoreTilePages::SetTeamMateCode(const char *code) noexcept
   upper[length] = '\0';
 
   TeamCodeSettings &settings = CommonInterface::SetComputerSettings().team_code;
-  settings.team_code.Update(upper);
+  if (!settings.team_code.Update(upper))
+    return false;
   if (settings.team_code.IsDefined())
     settings.team_flarm_id.Clear();
   return true;

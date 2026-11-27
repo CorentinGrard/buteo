@@ -1584,8 +1584,8 @@ msgid "Team mate"
 msgstr "Équipier"
 
 #. team_invalid
-msgid "Letters and digits, up to 7"
-msgstr "Lettres et chiffres, jusqu'à 7"
+msgid "Three to five letters or digits"
+msgstr "Trois à cinq lettres ou chiffres"
 
 #. team_reference
 msgid "Reference waypoint"

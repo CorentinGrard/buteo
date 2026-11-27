@@ -580,7 +580,7 @@
     <string name="team_bearing">Bearing</string>
     <string name="team_rel_bearing">Rel. bearing</string>
     <string name="team_flarm_lock">Flarm Lock</string>
-    <string name="team_invalid">Letters and digits, up to 7</string>
+    <string name="team_invalid">Three to five letters or digits</string>
     <string name="team_set_code">Set code</string>
     <string name="team_reference">Reference waypoint</string>
     <string name="team_set_wp">Set WP</string>

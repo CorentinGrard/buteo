@@ -69,6 +69,8 @@ class TilePagesScreenshotTest {
         assertTrue(TeamCodeViewModel.isTeamCode("AB12"))
         assertFalse(TeamCodeViewModel.isTeamCode("AB 12"))
         assertFalse(TeamCodeViewModel.isTeamCode("ABCDEFGH"))
+        assertFalse(TeamCodeViewModel.isTeamCode("AB"))
+        assertFalse(TeamCodeViewModel.isTeamCode("ABCDEF"))
     }
 
     @Test

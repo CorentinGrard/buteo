@@ -79,6 +79,28 @@
       "commitMessageExtra": ""
     },
     {
+      "description": "Fastlane is the only Ruby program. .fastlane-version is the pin; gem install pulls its dependencies. Automerge once the Fastlane load job and the other checks are green",
+      "matchManagers": ["custom.regex"],
+      "matchDepNames": ["fastlane"],
+      "commitMessagePrefix": ".fastlane-version:",
+      "commitMessageTopic": "fastlane",
+      "commitMessageExtra": "to {{{newVersion}}}",
+      "automerge": true,
+      "platformAutomerge": false,
+      "automergeSchedule": ["at any time"]
+    },
+    {
+      "description": "Ruby pin on ruby/setup-ruby. Own PR, not the GitHub Actions group. Automerge only after the Fastlane load job has run that pin",
+      "matchDatasources": ["ruby-version"],
+      "groupName": null,
+      "commitMessagePrefix": ".github/workflows:",
+      "commitMessageTopic": "Ruby",
+      "commitMessageExtra": "to {{{newVersion}}}",
+      "automerge": true,
+      "platformAutomerge": false,
+      "automergeSchedule": ["at any time"]
+    },
+    {
       "description": "Python doc dependencies (weekly)",
       "matchManagers": ["pip_requirements"],
       "groupName": "Python dependencies",
@@ -102,9 +124,10 @@
       "commitMessagePrefix": "build:"
     },
     {
-      "description": "Separate PRs for major version updates",
+      "description": "Separate PRs for major version updates. A green Fastlane load is not enough to automerge a major",
       "matchUpdateTypes": ["major"],
-      "groupName": null
+      "groupName": null,
+      "automerge": false
     },
     {
       "description": "Patch updates bypass minimum release age",
@@ -150,6 +173,19 @@
     }
   ],
   "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Fastlane version pin. The Play jobs gem-install this and nothing else",
+      "managerFilePatterns": ["/^\\.fastlane-version$/"],
+      "matchStrings": [
+        "(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "rubygems",
+      "depNameTemplate": "fastlane",
+      "packageNameTemplate": "fastlane",
+      "autoReplaceStringTemplate": "{{{newValue}}}",
+      "versioningTemplate": "semver"
+    },
     {
       "customType": "regex",
       "description": "GitHub tarball pin in libs.py: repo, release tag, sha256. URLs are built from the tag. shortcut: netcdf-c releases ship no tarball, so a bump keeps the old sha256; replace it in that PR",

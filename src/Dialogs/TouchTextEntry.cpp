@@ -5,7 +5,7 @@
 #include "Look/DialogLook.hpp"
 #include "Form/Form.hpp"
 #include "Form/Button.hpp"
-#include "Form/Edit.hpp"
+#include "Form/TextEntryBuffer.hpp"
 #include "Widget/KeyboardWidget.hpp"
 #include "Asset.hpp"
 #include "Screen/Layout.hpp"
@@ -17,7 +17,6 @@
 #include "util/StringAPI.hxx"
 #include "util/StringCompare.hxx"
 #include "util/TruncateString.hpp"
-#include "ui/window/Window.hpp"
 
 #include <algorithm>
 
@@ -38,64 +37,44 @@ struct TextEntryLayout {
  */
 static void
 ComputeTextEntryLayout(const PixelRect &rc, bool with_keyboard, bool with_paste,
-                       TextEntryLayout &o) noexcept
+                       unsigned text_height, TextEntryLayout &o) noexcept
 {
-  const int client_height = rc.GetHeight();
   const int padding = Layout::Scale(2);
   const int backspace_width = Layout::Scale(36);
   const int backspace_left = rc.right - padding - backspace_width;
   const int paste_width = with_paste ? Layout::Scale(60) : 0;
   const int paste_left = backspace_left - (with_paste ? padding : 0) -
     paste_width;
-  const int editor_height = Layout::Scale(22);
-  const int editor_bottom = padding + editor_height;
+  const int editor_height =
+    std::max((int)text_height + 2 * Layout::Scale(6),
+             (int)Layout::GetMinimumControlHeight());
+  const int editor_bottom = rc.top + padding + editor_height;
   const int button_height = Layout::Scale(40);
-  constexpr unsigned keyboard_rows = 5u;
   const int keyboard_top = editor_bottom + padding;
-  const int keyboard_height = with_keyboard
-    ? int(keyboard_rows) * button_height
-    : 0;
-  const int keyboard_bottom = keyboard_top + keyboard_height;
 
-  /* without our own keyboard, the action row stays right below the
-     editor, where the system keyboard cannot cover it */
-  const bool vertical = with_keyboard &&
-    client_height >= keyboard_bottom + button_height;
+  /* Keep the action row separate even on a small landscape display. */
+  const int button_top = with_keyboard
+    ? std::max(keyboard_top, rc.bottom - button_height)
+    : keyboard_top;
+  const int button_bottom = std::min(rc.bottom, button_top + button_height);
+  const int keyboard_bottom = with_keyboard
+    ? std::min(button_top, keyboard_top + 5 * button_height)
+    : keyboard_top;
+  const int ok_left = rc.left;
+  const int ok_right = rc.left + rc.GetWidth() / 3;
+  const int cancel_left = ok_right;
+  const int cancel_right = rc.left + rc.GetWidth() * 2 / 3;
+  const int clear_left = cancel_right;
+  const int clear_right = rc.right;
 
-  const int button_top = !with_keyboard
-    ? keyboard_top
-    : (vertical
-       ? rc.bottom - button_height
-       : keyboard_bottom - button_height);
-  const int button_bottom = button_top + button_height;
-
-  /* the action row spans the whole width unless it has to share its
-     row with the last keyboard row */
-  const bool spread = vertical || !with_keyboard;
-
-  const int ok_left = spread ? 0 : padding;
-  const int ok_right = spread
-    ? rc.right / 3
-    : ok_left + Layout::Scale(80);
-
-  const int cancel_left = spread
-    ? ok_right
-    : Layout::Scale(175);
-  const int cancel_right = spread
-    ? rc.right * 2 / 3
-    : cancel_left + Layout::Scale(60);
-
-  const int clear_left = spread
-    ? cancel_right
-    : Layout::Scale(235);
-  const int clear_right = spread
-    ? rc.right
-    : clear_left + Layout::Scale(50);
-
-  o.editor = {0, padding, paste_left - padding, editor_bottom};
-  o.paste = {paste_left, padding, paste_left + paste_width, editor_bottom};
-  o.backspace = {backspace_left, padding, rc.right - padding, editor_bottom};
-  o.keyboard = {padding, keyboard_top, rc.right - padding, keyboard_bottom};
+  o.editor = {rc.left + padding, rc.top + padding,
+              paste_left - padding, editor_bottom};
+  o.paste = {paste_left, rc.top + padding, paste_left + paste_width,
+             editor_bottom};
+  o.backspace = {backspace_left, rc.top + padding, rc.right - padding,
+                 editor_bottom};
+  o.keyboard = {rc.left + padding, keyboard_top, rc.right - padding,
+                keyboard_bottom};
   o.ok = {ok_left, button_top, ok_right, button_bottom};
   o.cancel = {cancel_left, button_top, cancel_right, button_bottom};
   o.clear = {clear_left, button_top, clear_right, button_bottom};
@@ -115,7 +94,7 @@ BackspaceCaption(const ButtonLook &look) noexcept
 }
 
 static void
-ApplyTextEntryLayout(const TextEntryLayout &L, WndProperty &editor, Button &ok,
+ApplyTextEntryLayout(const TextEntryLayout &L, Window &editor, Button &ok,
                      Button &cancel, Button &clear, KeyboardWidget *keyboard,
                      Button &backspace, Button *paste,
                      ContainerWindow &client_area) noexcept
@@ -131,9 +110,10 @@ ApplyTextEntryLayout(const TextEntryLayout &L, WndProperty &editor, Button &ok,
     paste->Move(L.paste);
   client_area.Invalidate();
 }
+
 } // namespace
 
-static WndProperty *editor;
+static TextEntryField *editor;
 static KeyboardWidget *kb = NULL;
 static ContainerWindow *textentry_client = NULL;
 static Button *textentry_backspace = NULL;
@@ -144,59 +124,40 @@ static Button *textentry_paste = NULL;
 
 static AllowedCharacters AllowedCharactersCallback;
 
-static constexpr size_t MAX_TEXTENTRY = 256;
-static unsigned int cursor = 0;
-static size_t max_width;
-static char edittext[MAX_TEXTENTRY];
+static TextEntryBuffer *edit_buffer;
 
 static void
 UpdateAllowedCharacters()
 {
   if (kb != nullptr && AllowedCharactersCallback)
-    kb->SetAllowedCharacters(AllowedCharactersCallback(edittext));
+    kb->SetAllowedCharacters(AllowedCharactersCallback(edit_buffer->GetValue()));
 }
 
 /**
- * Check a character against the AllowedCharacters callback.  Without
- * our own on-screen keyboard, nothing else enforces it.
+ * Check all text sources against the AllowedCharacters callback.
  *
  * @return the character to be inserted (may have been converted to
  * upper case), or 0 if it is not allowed
  */
 static char
-FilterCharacter(char ch)
+FilterCharacter(unsigned ch)
 {
-  if (!AllowedCharactersCallback)
-    return ch;
-
-  const char *allowed = AllowedCharactersCallback(edittext);
-  if (allowed == nullptr || StringFind(allowed, ch) != nullptr)
-    return ch;
-
-  /* the allowed set is usually upper case only */
-  if (const char upper = ToUpperASCII(ch);
-      upper != ch && StringFind(allowed, upper) != nullptr)
-    return upper;
-
-  return 0;
+  return TextEntryBuffer::Filter(ch, AllowedCharactersCallback
+    ? AllowedCharactersCallback(edit_buffer->GetValue()) : nullptr);
 }
 
 static void
 UpdateTextboxProp()
 {
-  editor->SetText(edittext);
-
+  editor->SetValue(edit_buffer->GetValue(), edit_buffer->GetCursor());
   UpdateAllowedCharacters();
 }
 
 static bool
 DoBackspace()
 {
-  if (cursor < 1)
+  if (!edit_buffer->Backspace())
     return false;
-
-  cursor--;
-  edittext[cursor] = 0;
   UpdateTextboxProp();
   return true;
 }
@@ -210,11 +171,8 @@ OnBackspace()
 static bool
 DoCharacter(char character)
 {
-  if (cursor >= max_width - 1)
+  if (!edit_buffer->Insert(character))
     return false;
-
-  edittext[cursor++] = character;
-  edittext[cursor] = 0;
   UpdateTextboxProp();
   return true;
 }
@@ -253,9 +211,9 @@ FormKeyDown(unsigned key_code)
     return true;
   }
 
-  /* The system keyboard reports Space as a key event before text input.
+  /* Some backends report Space as a key event before text input.
      Do not let the focused action button interpret it as activation. */
-  if (kb == nullptr && key_code == KEY_SPACE)
+  if (key_code == KEY_SPACE)
     return true;
 
   /* On devices with cursor keys, first let the on-screen keyboard
@@ -337,32 +295,17 @@ FormCharacter(unsigned ch)
   if (ch < 0x20)
     return false;
 
-  if (ch >= 0x80)
-    /* TODO: ASCII only for now, because we don't have proper UTF-8
-       support yet */
-    return false;
-
-  if (kb == nullptr) {
-    /* without our own on-screen keyboard (which disables the buttons
-       for characters that are not allowed), the filter must be
-       applied here */
-    const char filtered = FilterCharacter((char)ch);
-    if (filtered == 0)
-      return true;
-
+  /* Consume rejected text too, so it cannot activate a control. */
+  const char filtered = FilterCharacter(ch);
+  if (filtered != 0)
     DoCharacter(filtered);
-    return true;
-  }
-
-  DoCharacter((char)ch);
   return true;
 }
 
 static void
 ClearText()
 {
-  cursor = 0;
-  edittext[0] = 0;
+  edit_buffer->Clear();
   UpdateTextboxProp();
 }
 
@@ -373,10 +316,8 @@ TouchTextEntry(char *text, size_t width,
                bool default_shift_state,
                bool use_system_keyboard)
 {
-  if (width == 0)
-    width = MAX_TEXTENTRY;
-
-  max_width = std::min(MAX_TEXTENTRY, width);
+  TextEntryBuffer buffer(text, width);
+  edit_buffer = &buffer;
 
   /* let the operating system provide the keyboard (giving access to
      all special characters); if it has none, fall back to our own */
@@ -392,15 +333,14 @@ TouchTextEntry(char *text, size_t width,
   ContainerWindow &client_area = form.GetClientAreaWindow();
   textentry_client = &client_area;
   const PixelRect rc0 = client_area.GetClientRect();
+  const unsigned text_height = look.text_font.GetHeight();
   TextEntryLayout L;
-  ComputeTextEntryLayout(rc0, !system_keyboard, with_paste, L);
+  ComputeTextEntryLayout(rc0, !system_keyboard, with_paste, text_height, L);
 
-  WndProperty _editor(client_area, look, "",
-                      L.editor,
-                      0, WindowStyle());
-  _editor.SetReadOnly();
+  TextEntryField _editor;
+  WindowStyle editor_style;
+  _editor.Create(client_area, L.editor, editor_style);
   editor = &_editor;
-  _editor.SetAlignment(WndProperty::Alignment::AUTO);
 
   WindowStyle button_style;
   button_style.TabStop();
@@ -454,7 +394,8 @@ TouchTextEntry(char *text, size_t width,
   form.SetClientLayoutFunction([&]() {
     const PixelRect rc = client_area.GetClientRect();
     TextEntryLayout layout;
-    ComputeTextEntryLayout(rc, !system_keyboard, with_paste, layout);
+    ComputeTextEntryLayout(rc, !system_keyboard, with_paste, text_height,
+                           layout);
     ApplyTextEntryLayout(layout, _editor, ok_button, cancel_button, clear_button,
                          kb, backspace_button,
                          with_paste ? &paste_button : nullptr, client_area);
@@ -463,14 +404,6 @@ TouchTextEntry(char *text, size_t width,
   });
 
   AllowedCharactersCallback = accb;
-
-  cursor = 0;
-  ClearText();
-
-  if (!StringIsEmpty(text)) {
-    CopyTruncateString(edittext, max_width, text);
-    cursor = strlen(edittext);
-  }
 
   UpdateTextboxProp();
 
@@ -498,8 +431,11 @@ TouchTextEntry(char *text, size_t width,
   }
 
   if (result) {
-    CopyTruncateString(text, max_width, edittext);
+    CopyTruncateString(text, width == 0 ? TextEntryBuffer::CAPACITY : width,
+                       buffer.GetValue());
   }
 
+  edit_buffer = nullptr;
+  AllowedCharactersCallback = {};
   return result;
 }

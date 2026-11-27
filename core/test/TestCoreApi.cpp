@@ -1254,6 +1254,10 @@ TestTilePages(xcs_core *core)
   ok1(Contains(team(), "\"mate\":\"AB12\""));
   ok1(xcs_team_code_set_mate(core, "AB 12") == XCS_ERROR_INVALID_ARGUMENT);
   ok1(xcs_team_code_set_mate(core, "ABCDEFGH") == XCS_ERROR_INVALID_ARGUMENT);
+  /* as XCSoar's dialog: three to five */
+  ok1(xcs_team_code_set_mate(core, "AB") == XCS_ERROR_INVALID_ARGUMENT &&
+      xcs_team_code_set_mate(core, "ABCDEF") == XCS_ERROR_INVALID_ARGUMENT);
+  ok1(Contains(team(), "\"mate\":\"AB12\""));
   ok1(xcs_team_code_set_mate(core, "") == XCS_OK);
   ok1(Contains(team(), "\"mate\":\"\""));
   ok1(xcs_team_code_set_reference(core, -5) == XCS_ERROR_INVALID_ARGUMENT);
@@ -1940,7 +1944,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1 + 1 + 3 + 2);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1 + 1 + 3 + 2 + 2);
 
   Recorder recorder;
   TestCreateArguments(recorder);

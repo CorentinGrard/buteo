@@ -103,9 +103,10 @@ class TeamCodeViewModel(private val core: XcsoarCore) : ViewModel() {
     companion object {
         const val REFRESH_MS = 1_000L
 
-        /** Up to 7 letters and digits, as the core takes them; "" too. */
+        /** Three to five letters or digits, as the core takes them; "" too. */
         fun isTeamCode(code: String) =
-            code.length <= 7 && code.all { it in 'A'..'Z' || it in '0'..'9' }
+            (code.isEmpty() || code.length in 3..5) &&
+                code.all { it in 'A'..'Z' || it in '0'..'9' }
     }
 }
 

@@ -56,11 +56,26 @@ Version 7.47 - not yet released
     the same as on a touch screen #3021
   - fix the progress dialog staying on the light splash colours
     when Dark mode is on
+  - fix latitude and longitude displays that showed 60 seconds or
+    minutes after rounding
   - fix a long pause after the quick guide while a fine terrain
     file loads the tiles under the map
   - fix tapping the barogram, thermal band, climb, contest and other
     InfoBoxes doing nothing when no terrain is loaded
+  - fix shaded terrain drifting off airspace when the map is zoomed
+    far out. The display shades the terrain, one sample per pen
+    pixel. Zoomed out to a continent, the colours stay and the
+    slope shading turns off #3449
+  - keep shaded terrain while panning and fill only the new edge.
+    A north or south pan zoomed out keeps the picture until the
+    view leaves it. A pinch keeps it until the fingers lift
 * map
+  - add a filter on the map Waypoints settings page to choose
+    which waypoint types are drawn. Task waypoints and watched
+    waypoints stay visible
+  - add a Non-ICAO airports row to that filter. It hides airports
+    whose short name is not four characters. Task waypoints and
+    watched waypoints stay visible
   - draw the map scale, the contour spacing, and auto-zoom (with a
     magnifying glass) on one line, and each part of the line above
     them (PAN with a four-arrow mark, the page name, an overlay,
@@ -83,6 +98,9 @@ Version 7.47 - not yet released
     #3094
   - add an Imhof Atlas lite terrain colour ramp: the Imhof Atlas
     colours from 500 m up, with lighter colours below that
+  - fix the kinked and doubled snail trail while circling with
+    Trail drift on #3027
+  - fix small gaps in the scaled vario snail trail in tight turns
 * airspace
   - show the bottom airspace warning in bold, white on the red
     Inside fill
@@ -102,8 +120,15 @@ Version 7.47 - not yet released
     to the average wind (``A``)
   - fix a FLARM or Flytec flight log that started at 23:00 so the
     recorded time wraps at midnight instead of jumping to 15:00
+  - fix coordinates sent with 60 minutes to FLARM, Altair, CAI302 and LXNAV
   - fix a Volkslogger download whose security record gained an extra
     group when the flight data already ended on a three-byte boundary
+* tracking
+  - SkyLines: while offline, queue one fix every 25 seconds as
+    intended, instead of keeping arbitrary fixes #3516
+  - XCSoar Cloud server: ignore a fix that arrives after a newer one
+    from the same pilot, and send the fix time with Cloud traffic
+    #3518
 * android
   - add Share to Export flights so selected IGC/NMEA files can be
     sent via the system share sheet (Nearby Share, Drive, mail, …)
@@ -115,7 +140,21 @@ Version 7.47 - not yet released
   - reconnect a USB serial device that was unplugged and plugged in
     again; XCSoar kept reporting "USB serial device not found" until
     it was restarted #3450
+  - reconnect a USB serial device that sends no valid data for 10
+    seconds, e.g. after a knock on the USB plug, instead of only when
+    it is unplugged; drivers for devices that may stay silent, such as
+    radios, are left out #3346
 * dialogs
+  - list thermal hotspots in the waypoint type editor. A CUP file
+    has no style for them, so saving the file stores them as
+    turnpoints #3529
+  - enter password punctuation with the on-screen #+= key or HighScore
+    controls, and type directly in HighScore with an attached keyboard
+  - mark the on-screen space key with the space symbol
+  - blink the text cursor while entering text; it stays steady on
+    e-paper
+  - follow the dialog theme and frame in the text-entry field,
+    including dark mode
   - remember checklist checkbox ticks when an unfinished flight is
     restored; choosing a different checklist file, or editing a page's
     text, clears the ticks for that file or page #2536
@@ -132,6 +171,8 @@ Version 7.47 - not yet released
     of a minute
   - translate "No" for a valid start and finish in the Status dialog
 * documentation
+  - describe the map Waypoints filter: a type can be hidden, the
+    choice is saved, and task or watched waypoints stay drawn
   - describe the MacCready InfoBox speed-to-fly comment as true
     airspeed, labelled TAS, and the Setup switch for indicated
     airspeed
@@ -182,6 +223,9 @@ Version 7.47 - not yet released
   - cross-compile for Raspberry Pi 4 and 5 with TARGET=PI4
     (TARGET=PI5 is an alias). The arm64 sysroot defaults to
     /opt/pi64/root
+* FLARM
+  - accept lowercase teammate codes and explain the format when a code
+    is invalid
 
 Version 7.46.1 - 2026-10-30
 * ui
@@ -360,6 +404,10 @@ Version 7.46 - 2026-10-19
     first, and take it off when it grows too old
   - draw the glider on the flugwetter.de radar and satellite
     pictures, and on Sat Rad Blitz, at its GPS position #2966
+  - draw SkySight forecast overlays as smooth contour bands instead of
+    one coloured square per forecast grid point, so layer boundaries
+    stay sharp at every zoom level; forecasts already downloaded are
+    fetched again once, and use slightly less storage than before
 * map
   - use Vario #2 snail trail colours by default so climb and sink
     stand out on typical terrain

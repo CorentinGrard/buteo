@@ -1583,7 +1583,7 @@ msgid "Team mate"
 msgstr ""
 
 #. team_invalid
-msgid "Letters and digits, up to 7"
+msgid "Three to five letters or digits"
 msgstr ""
 
 #. team_reference

@@ -676,8 +676,8 @@ XCS_EXPORT xcs_status
 xcs_team_code_get(xcs_core *core, char *buffer, size_t size,
                   size_t *length_r);
 
-/** The team mate's code: up to 7 letters and digits ("" forgets it).
-    XCS_ERROR_INVALID_ARGUMENT for anything else. */
+/** The team mate's code: three to five letters or digits ("" forgets
+    it).  XCS_ERROR_INVALID_ARGUMENT for anything else. */
 XCS_EXPORT xcs_status
 xcs_team_code_set_mate(xcs_core *core, const char *code);
 

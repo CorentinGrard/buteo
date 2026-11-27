@@ -1,0 +1,65 @@
+# Load Fastlane on a pull request. The Play jobs run only on master
+# and tags, so a version bump never executes Fastlane there.
+# Same Ruby pin as those jobs. This one has no Play key.
+---
+name: Fastlane
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.fastlane-version'
+      - 'fastlane/**'
+      - '.github/workflows/fastlane.yml'
+    branches:
+      - master
+      - 'v*.x'
+  push:
+    paths:
+      - '.fastlane-version'
+      - 'fastlane/**'
+      - '.github/workflows/fastlane.yml'
+    branches:
+      - master
+      - 'v*.x'
+
+permissions:
+  contents: read
+
+jobs:
+  load:
+    name: Load Fastlane
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Require one Ruby pin
+        run: |
+          # Renovate bumps every ruby-version input together. The load
+          # below uses the pin in this file, so the Play jobs must match.
+          pins=$(grep -h '^[[:space:]]*ruby-version:' \
+            .github/workflows/fastlane.yml \
+            .github/workflows/build-native.yml \
+            .github/workflows/promote-play-open-testing.yml \
+            .github/workflows/update-play-store-metadata.yml | sort -u)
+          echo "$pins"
+          test "$(printf '%s\n' "$pins" | grep -c .)" -eq 1
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0.9'
+
+      - name: Install Fastlane
+        run: gem install fastlane -v "$(tr -d '[:space:]' < .fastlane-version)" --no-document
+
+      - name: Load Fastlane and the Play uploader
+        env:
+          FASTLANE_SKIP_UPDATE_CHECK: '1'
+          FASTLANE_DISABLE_ANIMATION: '1'
+        run: |
+          # supply is inside the fastlane gem. This failed when a
+          # dependency of that release was missing.
+          ruby -e 'require "supply"'
+          fastlane lanes
