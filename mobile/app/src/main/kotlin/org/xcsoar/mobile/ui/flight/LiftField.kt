@@ -158,12 +158,12 @@ internal fun liftField(samples: List<LiftSample>): LiftField? {
                      columns, rows, climb, confidence, best)
 }
 
-/* the colour scale: the updraft's blues, light for a weak climb, deep for the best */
-private val SCALE = intArrayOf(0xBFE6FA, 0x3A9BD5, 0x0B3D91)
+/* the colour scale, warm (ColorBrewer's YlOrRd): yellow for a weak climb, red for the best */
+private val SCALE = intArrayOf(0xFED976, 0xFD8D3C, 0xE31A1C)
 
 /**
  * The field as an image, north up, a pixel a cell (the map smooths
- * it): no colour without a climb, then the updraft's blues up to
+ * it): no colour without a climb, then yellow to red up to
  * [LiftField.best], fading out where the field is not sure.
  */
 fun LiftField.toBitmap(): Bitmap {

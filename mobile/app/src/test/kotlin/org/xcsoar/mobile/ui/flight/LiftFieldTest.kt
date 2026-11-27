@@ -80,6 +80,7 @@ class LiftFieldTest {
             floor((field.north - 45.0) / (field.north - field.south) * field.rows).toInt())
         assertEquals(0, Color.alpha(pixel(-100.0)))
         assertTrue(Color.alpha(pixel(100.0)) > 0)
-        assertTrue(Color.blue(pixel(100.0)) > Color.red(pixel(100.0)))
+        // warm
+        assertTrue(Color.red(pixel(100.0)) > Color.blue(pixel(100.0)))
     }
 }

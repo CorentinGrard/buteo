@@ -779,8 +779,9 @@ circle's centre in the middle and the glider on the ring.
   them); the app fits a plane to the samples near each cell of a grid
   round them (local linear regression, 60 m), so a climb growing
   across the circle goes on growing past it, fading out 250 m from the
-  samples, and the map draws it under the trail, the updraft's blues
-  from none to the best climb.  No rings, no advisor's line: the
+  samples, and the map draws it under the trail, from none to the best
+  climb in warm colours, yellow to red (the pilot's choice over the
+  updraft's blues).  No rings, no advisor's line: the
   gauge stays in its tile.  With the assistant off (Map & units), the
   dot alone.
 - The earlier climbs: XCSoar's thermal sources (the last 20, kept only
