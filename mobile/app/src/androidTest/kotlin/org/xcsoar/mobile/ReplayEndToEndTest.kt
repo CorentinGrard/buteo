@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.annotation.StringRes
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
@@ -16,6 +17,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
@@ -69,12 +71,11 @@ class ReplayEndToEndTest {
         }
         compose.onNodeWithText(text(R.string.flights_replay)).performClick()
         waitFor("the replay bar", STARTUP_MS) {
-            exists(hasContentDescription(text(R.string.replay_skip)))
+            exists(hasContentDescription(text(R.string.replay_position)))
         }
 
-        // XCSoar sees the take-off a few minutes into the file; "On ground"
-        // also goes when the core has no state ("Starting…"): not a take-off
-        compose.onNodeWithContentDescription(text(R.string.replay_skip)).performClick()
+        // the replay starts at the take-off; "On ground" also goes when
+        // the core has no state ("Starting…"): not a take-off
         waitFor("the take-off", FLIGHT_MS) {
             !exists(hasText(text(R.string.flight_on_ground))) &&
                 !exists(hasText(text(R.string.flight_starting))) &&
@@ -87,8 +88,12 @@ class ReplayEndToEndTest {
                                       !it.startsWith("$vario${Format.INVALID}") }
         }
 
-        // a circling estimate needs a few turns
-        compose.onNodeWithContentDescription(text(R.string.replay_skip)).performClick()
+        // a circling estimate needs a few turns: the slider to 40 % of the flight
+        val slider = compose.onNodeWithContentDescription(text(R.string.replay_position))
+        val range = slider.fetchSemanticsNode().config[SemanticsProperties.ProgressBarRangeInfo].range
+        slider.performSemanticsAction(SemanticsActions.SetProgress) {
+            it(range.start + 0.4f * (range.endInclusive - range.start))
+        }
         waitFor("a wind estimate", FLIGHT_MS) {
             descriptions(prefix(R.string.flight_wind_from)).any { !it.contains(Format.INVALID) }
         }

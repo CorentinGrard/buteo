@@ -388,11 +388,17 @@ interface XcsoarCore {
     suspend fun setReplayTimeScale(timeScale: Double) {}
 
     /**
-     * Replay the next [seconds] of flight time as fast as possible.
+     * Jump to [time] of the replayed file, seconds since midnight UTC of
+     * its first day (as [FlightTimes]): every fix up to it goes through
+     * the calculations as fast as the phone can (seconds for hours of
+     * flight); earlier than now, the file starts again.
      *
-     * @throws IllegalStateException without a replay
+     * @throws IllegalStateException without a replay, or past its end
      */
-    suspend fun fastForwardReplay(seconds: Double) {}
+    suspend fun seekReplay(time: Double) {}
+
+    /** End the replay at [time] (as [seekReplay]), as if its file ended there. */
+    suspend fun setReplayEnd(time: Double) {}
 }
 
 /** Values of `xcs_event_type` (core/api/xcsoar_core.h). */

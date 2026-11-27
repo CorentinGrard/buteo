@@ -31,10 +31,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.AirspaceAlerts
+import org.xcsoar.mobile.core.Analysis
 import org.xcsoar.mobile.core.AirspaceWarningInfo
 import org.xcsoar.mobile.core.airspaceAlerts
 import org.xcsoar.mobile.core.CoreEvent
 import org.xcsoar.mobile.core.FlightState
+import org.xcsoar.mobile.core.FlightTimes
 import org.xcsoar.mobile.core.GlideComputerEvent
 import org.xcsoar.mobile.core.MapItemInfo
 import org.xcsoar.mobile.core.WaypointFilter
@@ -55,6 +57,9 @@ import org.xcsoar.mobile.core.TileValue
 import org.xcsoar.mobile.core.XcsoarCore
 import kotlin.math.abs
 import org.xcsoar.mobile.ui.text
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.format.DateTimeParseException
 
 /**
  * State and actions of the flight screen; knows only [XcsoarCore].
@@ -419,7 +424,9 @@ class FlightViewModel(
                     core.flightState.value?.replay != true)
                     flightEndFlow.tryEmit(FlightEnd.Landed)
                 if (event is CoreEvent.ReplayFinished)
-                    event.analysis?.let { flightEndFlow.tryEmit(FlightEnd.Replayed(it)) }
+                    (replayAnalysis?.let(FlightEnd::ReplayedFile)
+                        ?: event.analysis?.let(FlightEnd::Replayed))
+                        ?.let(flightEndFlow::tryEmit)
                 if (event is CoreEvent.GlideComputer &&
                     event.event in AIRSPACE_EVENTS)
                     launch { refreshWarnings() }
@@ -440,12 +447,38 @@ class FlightViewModel(
     /** The speed the next or current replay runs at, and whether it is paused. */
     val replaySpeed: StateFlow<ReplaySpeed> = replaySpeedFlow.asStateFlow()
 
-    /** Replay an IGC or NMEA file at [replaySpeed]. */
-    fun startReplay(path: String) {
+    private val replayWindowFlow = MutableStateFlow<ReplayWindow?>(null)
+    /** What the current replay spans, for its slider; null: unknown (the whole file). */
+    val replayWindow: StateFlow<ReplayWindow?> = replayWindowFlow.asStateFlow()
+
+    private val replaySeekFlow = MutableStateFlow<Double?>(null)
+    /** Where the replay is going while the core computes its way there (s of [ReplayWindow]). */
+    val replaySeek: StateFlow<Double?> = replaySeekFlow.asStateFlow()
+
+    /* the seek to make after the one under way: the slider's last place */
+    private var nextSeek: Double? = null
+
+    /* the replayed file's analysis (its page's), for the summary at its end */
+    private var replayAnalysis: Analysis? = null
+
+    /**
+     * Replay an IGC or NMEA file at [replaySpeed]: from the take-off to
+     * the landing when its [analysis] (the flight's page) gives them,
+     * else the whole file.  At its end, the summary is that analysis's.
+     */
+    fun startReplay(path: String, analysis: Analysis? = null) {
+        val window = ReplayWindow.of(analysis?.date, analysis?.flight)
         replaySpeedFlow.value = replaySpeedFlow.value.copy(paused = false)
+        replayWindowFlow.value = window
+        replayAnalysis = analysis
+        nextSeek = null
         viewModelScope.launch {
             try {
                 core.startReplay(path, timeScale = replaySpeedFlow.value.timeScale)
+                if (window != null) {
+                    core.setReplayEnd(window.end)
+                    seekReplay(window.start)
+                }
             } catch (e: Exception) {
                 lastEventFlow.value = text(R.string.event_replay_failed, e.message.orEmpty())
             }
@@ -462,18 +495,8 @@ class FlightViewModel(
         }
     }
 
-    /** The replay's speed, one of [ReplaySpeed.CHOICES]; it goes on if paused. */
-    fun setReplaySpeed(timeScale: Double) {
-        replaySpeedFlow.value = ReplaySpeed(timeScale, paused = false)
-        applyReplaySpeed()
-    }
-
     fun pauseReplay(paused: Boolean) {
         replaySpeedFlow.value = replaySpeedFlow.value.copy(paused = paused)
-        applyReplaySpeed()
-    }
-
-    private fun applyReplaySpeed() {
         val speed = replaySpeedFlow.value
         // only a running replay: the speed is also the next one's
         if (flightState.value?.replay != true) return
@@ -486,14 +509,31 @@ class FlightViewModel(
         }
     }
 
-    /** Skip [REPLAY_SKIP_SECONDS] of the replayed flight. */
-    fun skipReplay() {
+    /**
+     * Go to [time] of the replay (s since its day's midnight, as
+     * [ReplayWindow]): the slider let go.  The core computes every fix
+     * up to there, seconds for hours of flight; a slider let go again
+     * meanwhile goes on from there to its last place.
+     */
+    fun seekReplay(time: Double) {
+        if (replaySeekFlow.value != null) {
+            nextSeek = time
+            replaySeekFlow.value = time
+            return
+        }
+        replaySeekFlow.value = time
         viewModelScope.launch {
-            try {
-                core.fastForwardReplay(REPLAY_SKIP_SECONDS)
-            } catch (_: Exception) {
-                // the replay just ended
+            var target: Double? = time
+            while (target != null) {
+                try {
+                    core.seekReplay(target)
+                } catch (_: Exception) {
+                    // past the end, or the replay just ended
+                }
+                target = nextSeek
+                nextSeek = null
             }
+            replaySeekFlow.value = null
         }
     }
 
@@ -630,16 +670,42 @@ class FlightViewModel(
 /** 5 screen updates per second: smooth enough for the vario. */
 private const val UI_INTERVAL_MS = 1000L
 
-/** What "+10 min" skips in a replay, like XCSoar's replay dialog. */
-const val REPLAY_SKIP_SECONDS = 600.0
-
 /**
  * How fast a replay runs: [timeScale] times real time, unless [paused].
+ * Its slider goes anywhere in the flight: no other speed.
  */
-data class ReplaySpeed(val timeScale: Double = 10.0, val paused: Boolean = false) {
+data class ReplaySpeed(val timeScale: Double = 10.0, val paused: Boolean = false)
+
+/** What a replay shows after the landing, s: the roll to a stop. */
+private const val REPLAY_AFTER_LANDING = 60.0
+
+/**
+ * What a replay spans, for its slider: the flight's day ([dayStartUtc],
+ * its midnight UTC, s since 1970), and its take-off ([start]) and
+ * landing ([end], with the roll after it), s since that midnight, as
+ * the flight's analysis gives them ([FlightTimes]).
+ */
+data class ReplayWindow(val dayStartUtc: Double, val start: Double, val end: Double) {
+    /** Where [timeUtc] (s since 1970) is in it, s since the day's midnight. */
+    fun at(timeUtc: Double) = timeUtc - dayStartUtc
+
     companion object {
-        /** The speeds offered: real time to a long flight in minutes. */
-        val CHOICES = listOf(1.0, 2.0, 5.0, 10.0, 20.0, 50.0)
+        /**
+         * From a flight's analysis: its [date] ("YYYY-MM-DD", UTC) and
+         * [times]; null without them.  Not landed (the file ends in the
+         * air): to the end of the flight's time.
+         */
+        fun of(date: String?, times: FlightTimes?): ReplayWindow? {
+            times ?: return null
+            val day = try {
+                LocalDate.parse(date ?: return null).atStartOfDay(ZoneOffset.UTC).toEpochSecond()
+            } catch (_: DateTimeParseException) {
+                return null
+            }
+            val end = times.landing?.let { it + REPLAY_AFTER_LANDING }
+                ?: (times.takeoff + times.duration)
+            return ReplayWindow(day.toDouble(), times.takeoff, end).takeIf { end > times.takeoff }
+        }
     }
 }
 private const val VARIO_INTERVAL_MS = 200L

@@ -53,8 +53,9 @@ class SummaryViewModel(
             is FlightEnd.Replayed -> withContext(Dispatchers.Default) {
                 try { Analysis.parse(end.analysis) } catch (_: Exception) { null }
             }
+            is FlightEnd.ReplayedFile -> end.analysis
         } ?: return false
-        val summary = FlightSummary.of(analysis, replay = end is FlightEnd.Replayed)
+        val summary = FlightSummary.of(analysis, replay = end != FlightEnd.Landed)
         if (summary.duration < FlightSummary.MIN_SECONDS) return false
 
         logJob?.cancel()

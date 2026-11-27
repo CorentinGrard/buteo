@@ -161,6 +161,8 @@ fun FlightScreen(
     val hideTimer by viewModel.airspaceHideTimer.collectAsStateWithLifecycle()
     val airspaceAlerts by viewModel.airspaceAlerts.collectAsStateWithLifecycle()
     val replaySpeed by viewModel.replaySpeed.collectAsStateWithLifecycle()
+    val replayWindow by viewModel.replayWindow.collectAsStateWithLifecycle()
+    val replaySeek by viewModel.replaySeek.collectAsStateWithLifecycle()
     val thermalAssistant by viewModel.thermalAssistant.collectAsStateWithLifecycle()
     val circlingZoom by viewModel.circlingZoom.collectAsStateWithLifecycle()
     val relief by viewModel.relief.collectAsStateWithLifecycle()
@@ -202,8 +204,8 @@ fun FlightScreen(
         onWind = onOpenWind,
         onNoPolar = onOpenCrew,
         windowInsets = flightInsets(covered),
-        replay = ReplayControls(replaySpeed, viewModel::pauseReplay, viewModel::setReplaySpeed,
-                                viewModel::skipReplay, viewModel::stopReplay),
+        replay = ReplayControls(replaySpeed, viewModel::pauseReplay, viewModel::stopReplay,
+                                replayWindow, replaySeek, viewModel::seekReplay),
         menuOpen = menuOpen,
         onMenuOpen = onMenuOpen,
         menu = flightMenu(
@@ -265,9 +267,12 @@ fun FlightScreen(
 class ReplayControls(
     val speed: ReplaySpeed,
     val onPause: (Boolean) -> Unit = {},
-    val onSpeed: (Double) -> Unit = {},
-    val onSkip: () -> Unit = {},
     val onStop: () -> Unit = {},
+    /** What the replay spans, for its slider; null: none. */
+    val window: ReplayWindow? = null,
+    /** Where the replay is going while the core gets there. */
+    val seeking: Double? = null,
+    val onSeek: (Double) -> Unit = {},
 )
 
 /**
@@ -561,8 +566,8 @@ private fun MapArea(
                                       Modifier.fillMaxWidth(), hideTimer)
             }
             if (state?.replay == true && replay != null)
-                ReplayBar(state.timeUtc, replay.speed, replay.onPause, replay.onSpeed,
-                          replay.onSkip, replay.onStop)
+                ReplayBar(state.timeUtc, replay.speed.paused, replay.window, replay.seeking,
+                          replay.onPause, replay.onSeek, replay.onStop)
             if (showNext && !taskOnMap)
                 NextWaypointCard(state?.next, Modifier.fillMaxWidth(), state?.nextTimeRemaining,
                                  onClick = onNextWaypoint)

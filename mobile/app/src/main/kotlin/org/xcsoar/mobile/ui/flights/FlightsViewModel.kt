@@ -67,6 +67,8 @@ data class FlightDetail(
     val summary: FlightSummary? = null,
     /** The take-off's day, "YYYY-MM-DD" (UTC). */
     val date: String? = null,
+    /** The core's analysis of the file (its replay reads it); null while reading. */
+    val analysis: Analysis? = null,
     /** Why the file could not be deleted. */
     val error: UiText? = null,
 )
@@ -116,6 +118,7 @@ class FlightsViewModel(
             }
             detailFlow.value = FlightDetail(
                 flight, reading = false, date = analysis?.date,
+                analysis = analysis,
                 summary = analysis?.takeIf { it.flight != null }
                     ?.let { FlightSummary.of(it, replay = false) })
         }

@@ -23,6 +23,9 @@ import org.xcsoar.mobile.ui.theme.XcsTheme
 import kotlin.math.cos
 import kotlin.math.sin
 
+/* the synthetic flight's day, an hour after the take-off of a five-hour flight */
+private val SCREENSHOT_REPLAY = ReplayWindow(1_789_948_800.0, 47_600.0, 65_600.0)
+
 /**
  * L4: the flight screen against the fake core, in each theme and
  * orientation (mobile/docs/ARCHITECTURE.md §6).
@@ -258,7 +261,7 @@ class FlightScreenScreenshotTest {
         XcsTheme(dark = false) {
             FlightContent(FakeXcsoarCore.syntheticState(120).copy(replay = true), null,
                           circling = false, {},
-                          replay = ReplayControls(ReplaySpeed(20.0, paused = true)))
+                          replay = ReplayControls(ReplaySpeed(20.0, paused = true), window = SCREENSHOT_REPLAY))
         }
     }
 
@@ -272,7 +275,7 @@ class FlightScreenScreenshotTest {
         XcsTheme(dark = true) {
             FlightContent(FakeXcsoarCore.syntheticState(320).copy(replay = true), null,
                           circling = true, {},
-                          replay = ReplayControls(ReplaySpeed(10.0, paused = false)))
+                          replay = ReplayControls(ReplaySpeed(10.0, paused = false), window = SCREENSHOT_REPLAY))
         }
     }
 
@@ -368,7 +371,7 @@ class FrenchFlightScreenshotTest {
         XcsTheme(dark = false) {
             FlightContent(FakeXcsoarCore.syntheticState(120).copy(replay = true), null,
                           circling = false, {},
-                          replay = ReplayControls(ReplaySpeed(20.0, paused = true)))
+                          replay = ReplayControls(ReplaySpeed(20.0, paused = true), window = SCREENSHOT_REPLAY))
         }
     }
 

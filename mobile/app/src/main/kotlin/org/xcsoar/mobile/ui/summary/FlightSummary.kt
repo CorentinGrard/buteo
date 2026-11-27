@@ -16,6 +16,13 @@ sealed interface FlightEnd {
 
     /** A replay reached its end: its flight's analysis, which the core forgot. */
     data class Replayed(val analysis: String) : FlightEnd
+
+    /**
+     * A replay of a flight whose file the app analysed (the flight's
+     * page) reached its end: that analysis, all of the file's (the
+     * core's had its contest from a jump, not yet solved to the end).
+     */
+    data class ReplayedFile(val analysis: Analysis) : FlightEnd
 }
 
 /**

@@ -169,12 +169,8 @@ msgstr ""
 msgid "Pause replay"
 msgstr ""
 
-#. replay_speed
-msgid "Replay speed %1$s, faster"
-msgstr ""
-
-#. replay_skip
-msgid "Skip 10 minutes"
+#. replay_position
+msgid "Where in the flight"
 msgstr ""
 
 #. replay_stop

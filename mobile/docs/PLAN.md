@@ -1037,7 +1037,17 @@ page, checklists, a widget, a message after landing away).
   centre (D35 amended): the core gives the climb's samples, the app
   fits the field (local linear regression) and draws it under the
   trail.  Redmi 5, replay at 1x: a blue cloud where the climb was,
-  still on the map; 38-39 % of a core, as before the climb.
+  still on the map; 38-39 % of a core, as before the climb.  "use the
+  warmer color": yellow to red.  Then: "on the replay, remove the 10x
+  and 10" and add a slider that will span the whole flight and progress
+  as the flight progress, like a youtube video bar.  Also can you cut
+  the before takeoff and after landing part of the recording ?": the
+  replay bar has pause, the time, a slider from the take-off to the
+  landing (and a minute's roll) and Stop; the replay starts at the
+  take-off and ends there with its summary, the file's own analysis.
+  A jump computes every fix up to there (xcs_replay_seek, XCSoar's
+  Replay::ProcessFixesUntil); the contest solver only at the last one:
+  Redmi 5, three hours of flight in 4 s (45 s solving it at each fix).
 
 - 2026-11-27 — The pilot: "commit, push, merge, and create a new
   release".  Upstream merged (41 commits; its team code now takes

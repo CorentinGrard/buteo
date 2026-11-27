@@ -829,7 +829,9 @@ class MainActivity : ComponentActivity() {
                                     .collectAsState().value?.flying == false,
                                 // replaying: back to the map itself
                                 onReplay = {
-                                    flightViewModel.startReplay(it.path)
+                                    // from the take-off to the landing
+                                    flightViewModel.startReplay(
+                                        it.path, flightsViewModel.detail.value?.analysis)
                                     menuOpen = false
                                     screen = Screen.FLIGHT
                                 },

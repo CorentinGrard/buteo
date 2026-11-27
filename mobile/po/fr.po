@@ -170,13 +170,9 @@ msgstr "Lire le rejeu"
 msgid "Pause replay"
 msgstr "Mettre le rejeu en pause"
 
-#. replay_speed
-msgid "Replay speed %1$s, faster"
-msgstr "Vitesse du rejeu %1$s, plus vite"
-
-#. replay_skip
-msgid "Skip 10 minutes"
-msgstr "Avancer de 10 minutes"
+#. replay_position
+msgid "Where in the flight"
+msgstr "Où dans le vol"
 
 #. replay_stop
 msgid "Stop replay"

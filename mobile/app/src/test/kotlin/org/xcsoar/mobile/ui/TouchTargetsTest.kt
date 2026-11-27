@@ -50,6 +50,7 @@ import org.xcsoar.mobile.ui.flight.CalloutSettings
 import org.xcsoar.mobile.ui.flight.FlightContent
 import org.xcsoar.mobile.ui.flight.ReplayControls
 import org.xcsoar.mobile.ui.flight.ReplaySpeed
+import org.xcsoar.mobile.ui.flight.ReplayWindow
 import org.xcsoar.mobile.ui.flight.flightMenu
 import org.xcsoar.mobile.ui.flights.FlightsContent
 import org.xcsoar.mobile.ui.flights.FlightDetail
@@ -123,7 +124,8 @@ class TouchTargetsTest {
                       warnings = listOf(AirspaceWarningInfo(
                           "1", "near", "LF-R 46 N", "Restricted", "FL95", "SFC",
                           distance = 1800.0, time = 85.0)),
-                      replay = ReplayControls(ReplaySpeed(20.0)))
+                      replay = ReplayControls(ReplaySpeed(20.0), window = ReplayWindow(
+                          1_789_948_800.0, 47_600.0, 65_600.0)))
     }
 
     @Test

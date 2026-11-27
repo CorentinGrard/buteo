@@ -43,7 +43,8 @@ internal object NativeCore {
     @JvmStatic external fun nativeReplayStart(core: Long, path: String, timeScale: Double): Int
     @JvmStatic external fun nativeReplayStop(core: Long): Int
     @JvmStatic external fun nativeReplaySetTimeScale(core: Long, timeScale: Double): Int
-    @JvmStatic external fun nativeReplayFastForward(core: Long, seconds: Double): Int
+    @JvmStatic external fun nativeReplaySeek(core: Long, time: Double): Int
+    @JvmStatic external fun nativeReplaySetEnd(core: Long, time: Double): Int
     /** @param kind an `xcs_data_file`; [path] null removes the file */
     @JvmStatic external fun nativeSetDataFile(core: Long, kind: Int, path: String?): Int
     /** @return the JSON of `xcs_get_data_status`, or null on error */

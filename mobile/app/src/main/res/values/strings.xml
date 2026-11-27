@@ -77,8 +77,7 @@
     <!-- the replay bar -->
     <string name="replay_play">Play replay</string>
     <string name="replay_pause">Pause replay</string>
-    <string name="replay_speed">Replay speed %1$s, faster</string>
-    <string name="replay_skip">Skip 10 minutes</string>
+    <string name="replay_position">Where in the flight</string>
     <string name="replay_stop">Stop replay</string>
 
     <!-- holding the map -->

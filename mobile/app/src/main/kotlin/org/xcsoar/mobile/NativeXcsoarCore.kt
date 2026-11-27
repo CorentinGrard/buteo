@@ -155,8 +155,11 @@ class NativeXcsoarCore(
     override suspend fun setReplayTimeScale(timeScale: Double) =
         command { NativeCore.nativeReplaySetTimeScale(it, timeScale) }
 
-    override suspend fun fastForwardReplay(seconds: Double) =
-        command { NativeCore.nativeReplayFastForward(it, seconds) }
+    override suspend fun seekReplay(time: Double) =
+        command { NativeCore.nativeReplaySeek(it, time) }
+
+    override suspend fun setReplayEnd(time: Double) =
+        command { NativeCore.nativeReplaySetEnd(it, time) }
 
     override suspend fun setDataFile(kind: DataFile, path: String?) =
         command { NativeCore.nativeSetDataFile(it, kind.code, path) }
