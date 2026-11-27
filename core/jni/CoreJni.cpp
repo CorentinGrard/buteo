@@ -300,11 +300,17 @@ Java_org_xcsoar_mobile_NativeCore_nativeReplaySetTimeScale(JNIEnv *, jclass,
 }
 
 JNIEXPORT jint JNICALL
-Java_org_xcsoar_mobile_NativeCore_nativeReplayFastForward(JNIEnv *, jclass,
-                                                          jlong core,
-                                                          jdouble seconds)
+Java_org_xcsoar_mobile_NativeCore_nativeReplaySeek(JNIEnv *, jclass,
+                                                   jlong core, jdouble time)
 {
-  return xcs_replay_fast_forward(ToCore(core), seconds);
+  return xcs_replay_seek(ToCore(core), time);
+}
+
+JNIEXPORT jint JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeReplaySetEnd(JNIEnv *, jclass,
+                                                     jlong core, jdouble time)
+{
+  return xcs_replay_set_end(ToCore(core), time);
 }
 
 JNIEXPORT jint JNICALL

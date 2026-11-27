@@ -1698,6 +1698,61 @@ TestReplayControls(xcs_core *core)
 
 /* a replay that reaches the end of its file ends itself; the core
    kept spinning in the watch timer it had just destroyed */
+/* the replay's time of day (s), from its latest snapshot; -1 without */
+static double
+ReplayTimeOfDay(xcs_core *core)
+{
+  xcs_flight_snapshot s{};
+  s.struct_size = sizeof(s);
+  if (xcs_get_snapshot(core, &s) != XCS_OK || (s.valid & XCS_VALID_TIME) == 0)
+    return -1;
+  return std::fmod(s.time_utc, 86400);
+}
+
+/* the replay bar's slider: a jump to a time, forward or back, and an
+   end before the file's */
+static void
+TestReplaySeek(xcs_core *core, Recorder &recorder)
+{
+  ok1(xcs_replay_seek(nullptr, 100) == XCS_ERROR_INVALID_ARGUMENT);
+  ok1(xcs_replay_seek(core, 100) == XCS_ERROR_FAILED);
+  ok1(xcs_replay_set_end(core, 100) == XCS_ERROR_FAILED);
+
+  recorder.Clear();
+  ok1(xcs_replay_start(core, FLIGHT, 1) == XCS_OK);
+  double start = -1;
+  for (unsigned i = 0; i < 100 && start < 0; ++i) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    start = ReplayTimeOfDay(core);
+  }
+
+  /* half an hour ahead at once, then back to the tenth minute */
+  ok1(xcs_replay_seek(core, start + 1800) == XCS_OK);
+  ok1(std::fabs(ReplayTimeOfDay(core) - (start + 1800)) < 10);
+  /* and on from there, a day and a time in every snapshot */
+  std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+  ok1(std::fabs(ReplayTimeOfDay(core) - (start + 1800)) < 30);
+  ok1(xcs_replay_seek(core, start + 600) == XCS_OK);
+  ok1(std::fabs(ReplayTimeOfDay(core) - (start + 600)) < 10);
+
+  /* ended five minutes later, as if the file ended there */
+  ok1(xcs_replay_set_time_scale(core, 50) == XCS_OK);
+  ok1(xcs_replay_set_end(core, start + 900) == XCS_OK);
+  bool finished = false;
+  for (unsigned i = 0; i < 300 && !finished; ++i) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    const std::lock_guard lock{recorder.mutex};
+    finished = recorder.replay_finished > 0;
+  }
+  ok1(finished);
+  /* with the flight and its contest, for its summary */
+  {
+    const std::lock_guard lock{recorder.mutex};
+    ok1(Contains(recorder.replay_analysis, "\"flight\":{\"takeoff\":") &&
+        Contains(recorder.replay_analysis, "\"contest\":{"));
+  }
+}
+
 static void
 TestReplayToEnd(xcs_core *core, Recorder &recorder)
 {
@@ -1948,7 +2003,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1 + 1 + 3 + 2 + 2 + 2);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1 + 1 + 3 + 2 + 2 + 2 + 13);
 
   Recorder recorder;
   TestCreateArguments(recorder);
@@ -1990,6 +2045,7 @@ main()
   TestTilePages(core);
   TestStatusPages(core);
   TestReplayControls(core);
+  TestReplaySeek(core, recorder);
   TestReplayToEnd(core, recorder);
   TestProfiles(core);
 

@@ -1736,6 +1736,28 @@ XCS_EXPORT xcs_status
 xcs_replay_fast_forward(xcs_core *core, double seconds);
 
 /**
+ * Jump to \a time of the replayed file: seconds since midnight UTC of
+ * its first day, as the flight times of xcs_get_analysis() ("takeoff",
+ * "landing").  Earlier than now, the file starts again.  Every fix up
+ * to \a time goes through the calculations as fast as possible (the
+ * trail, the climbs and the task as if flown; the contest gets one
+ * pass of its solver there and improves from it as the replay goes
+ * on), then the replay goes on at its speed (paused stays paused).  Blocks meanwhile; one snapshot
+ * follows.  XCS_ERROR_FAILED without a replay, or when the file ends
+ * before \a time (XCS_EVENT_REPLAY_FINISHED follows then).
+ */
+XCS_EXPORT xcs_status
+xcs_replay_seek(xcs_core *core, double time);
+
+/**
+ * End the replay at \a time (as xcs_replay_seek()), as if its file
+ * ended there (within a second): XCS_EVENT_REPLAY_FINISHED follows.
+ * 0: at the end of the file.  XCS_ERROR_FAILED without a replay.
+ */
+XCS_EXPORT xcs_status
+xcs_replay_set_end(xcs_core *core, double time);
+
+/**
  * Replay the whole file as fast as possible and deterministically:
  * every fix goes through the merge and calculation code, in order,
  * with no timing involved.  Snapshots and events are published as

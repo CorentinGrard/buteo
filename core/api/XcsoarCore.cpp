@@ -221,6 +221,10 @@ struct xcs_core final : CoreListener {
 
   std::unique_ptr<UI::Timer> replay_watch;
 
+  /* where the replay ends (xcs_replay_set_end()); undefined: at the
+     end of its file */
+  TimeStamp replay_end = TimeStamp::Undefined();
+
   /* the task mode before xcs_replay_start(), while a replay runs */
   std::optional<TaskType> task_mode_before_replay;
 
@@ -3274,6 +3278,7 @@ xcs_core::EndReplay() noexcept
      which still uses its captures afterwards */
   if (replay_watch)
     replay_watch->Cancel();
+  replay_end = TimeStamp::Undefined();
   if (!task_mode_before_replay)
     return;
 
@@ -3342,12 +3347,18 @@ xcs_replay_start(xcs_core *core, const char *path, double time_scale)
       return status;
     }
 
-    /* Replay has no "finished" callback; check once per second */
+    /* Replay has no "finished" callback; check once per second, also
+       for the end the app chose (xcs_replay_set_end()) */
     core->replay_watch = std::make_unique<UI::Timer>([core]{
-      if (backend_components->replay->IsActive()) {
+      auto &replay = *backend_components->replay;
+      const auto time = replay.GetVirtualTime();
+      const bool ended = core->replay_end.IsDefined() && time.IsDefined() &&
+        time >= core->replay_end;
+      if (replay.IsActive() && !ended) {
         core->replay_watch->Schedule(std::chrono::seconds(1));
         return;
       }
+      replay.Stop();
 
       /* the replayed flight, for its summary, before EndReplay()
          forgets it */
@@ -3400,6 +3411,70 @@ xcs_replay_fast_forward(xcs_core *core, double seconds)
       return XCS_ERROR_FAILED;
 
     replay.FastForward(FloatDuration{seconds});
+    return XCS_OK;
+  });
+}
+
+xcs_status
+xcs_replay_seek(xcs_core *core, double time)
+{
+  if (core == nullptr || !(time >= 0))
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+  return RunOnMain(*core, [core, time]{
+    auto &bc = *backend_components;
+    auto &replay = *bc.replay;
+    if (!replay.IsActive())
+      return XCS_ERROR_FAILED;
+
+    const TimeStamp target{FloatDuration{time}};
+    const auto now = replay.GetVirtualTime();
+    if (!now.IsDefined() || target < now) {
+      /* back: the file again from its start; its jump back in time
+         resets the computers, as a replay's start does */
+      const std::string path = replay.GetFilename().c_str();
+      if (const auto status = StartReplay(path.c_str()); status != XCS_OK) {
+        core->EndReplay();
+        return status;
+      }
+    }
+
+    bc.merge_thread->Suspend();
+    bc.calculation_thread->Suspend();
+    core->replay_run_active = true;
+
+    PopupOperationEnvironment env;
+    replay.ProcessFixesUntil(target, *bc.merge_thread, *bc.calculation_thread,
+                             [&env]{
+      /* what the event loop would do after each merge/calculation */
+      CoreReceiveSensorData(env);
+      CoreReceiveCalculatedData();
+    });
+
+    /* the state there, before the threads resume and expire the
+       (now stale) replay data until the timed replay's next fix */
+    core->PublishSnapshot();
+    core->replay_run_active = false;
+    bc.calculation_thread->Resume();
+    bc.merge_thread->Resume();
+
+    /* past the end of the file: the watch finishes the replay */
+    return replay.IsActive() ? XCS_OK : XCS_ERROR_FAILED;
+  });
+}
+
+xcs_status
+xcs_replay_set_end(xcs_core *core, double time)
+{
+  if (core == nullptr || !(time >= 0))
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+  return RunOnMain(*core, [core, time]{
+    if (!backend_components->replay->IsActive())
+      return XCS_ERROR_FAILED;
+    core->replay_end = time > 0
+      ? TimeStamp{FloatDuration{time}}
+      : TimeStamp::Undefined();
     return XCS_OK;
   });
 }
