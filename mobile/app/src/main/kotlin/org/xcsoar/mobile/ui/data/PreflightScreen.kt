@@ -182,8 +182,13 @@ private fun statusText(check: DataCheck, area: FlightArea?): String {
         }
         DataKind.CHARTS -> {
             val count = check.count ?: 0
-            if (check.ok) stringResource(R.string.preflight_charts_ok, count)
-            else stringResource(R.string.preflight_charts_missing, check.updates.size, count)
+            when {
+                task && check.ok -> stringResource(R.string.preflight_charts_ok, count)
+                task -> stringResource(R.string.preflight_charts_missing, check.updates.size, count)
+                check.ok -> stringResource(R.string.preflight_charts_ok_around, count, around ?: "")
+                else -> stringResource(R.string.preflight_charts_missing_around,
+                                       check.updates.size, count, around ?: "")
+            }
         }
         DataKind.AIRSPACE, DataKind.WAYPOINTS -> {
             val airspace = check.kind == DataKind.AIRSPACE

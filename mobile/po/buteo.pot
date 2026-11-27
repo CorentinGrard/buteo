@@ -249,6 +249,14 @@ msgstr ""
 msgid "%1$d of the %2$d airports along the route have no chart on the phone yet"
 msgstr ""
 
+#. preflight_charts_ok_around
+msgid "All %1$d airports within %2$s have their chart on the phone"
+msgstr ""
+
+#. preflight_charts_missing_around
+msgid "%1$d of the %2$d airports within %3$s have no chart on the phone yet"
+msgstr ""
+
 #. preflight_charts_to_get
 msgid "To download: %1$s"
 msgstr ""
