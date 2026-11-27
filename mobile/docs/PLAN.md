@@ -1017,6 +1017,17 @@ page, checklists, a widget, a message after landing away).
 
 ## Log
 
+- 2026-11-27 (late night) — The pilot: VACs in the pre-flight check,
+  "yes"; and "know easily what airfield I'm on glide distance off ...
+  my next point ... my current local ... 2 data on [the top card], or
+  sliding pages? Experiment and get my opinion".  The check has a
+  "Approach charts (VAC)" line: the French airports within its margin
+  of the route, this cycle's chart on the phone or not; the missing
+  ones come with the automatic downloads on Wi-Fi (an "SIA has none"
+  marker stops asking).  The top card: three ways to try (D38).  Redmi
+  5 replay near Lyon: FIELD LF3852 Frontonas 2.44 km +925 m under NEXT
+  LFLQ 123 km, a tap on it opens its page; Pages swipes to it.
+
 - 2026-11-27 (night) — The pilot: "click on an airfield on the map and
   to get a detail view about it, it's height, maybe the VAC, weather,
   have a go to button, see the frequencies".  A tap on a field opens

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright The XCSoar Project
 
-package org.xcsoar.mobile
+package org.xcsoar.mobile.core
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -32,8 +32,15 @@ class VacTest {
     }
 
     @Test
+    fun icaoOfAFile() {
+        assertEquals("LFLQ", Vac.icaoOf("AD-2.LFLQ.2026-11-26.pdf"))
+        assertEquals(null, Vac.icaoOf("AD-2.LFLQ.2026-11-26.none"))
+    }
+
+    @Test
     fun france() {
         assertTrue(Vac.covers("LFLQ"))
         assertFalse(Vac.covers("LSGG"))
+        assertFalse(Vac.covers("LF38"))
     }
 }

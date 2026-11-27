@@ -148,43 +148,55 @@ fun NextWaypointCard(
             }
             return@FloatingCard
         }
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            // where it is needs a GPS fix
-            next?.bearing?.let { b ->
-                Box(Modifier.size(44.dp).background(colors.selected, CircleShape),
-                    contentAlignment = Alignment.Center) {
-                    DirectionArrow(b, colors.onSelected, Modifier.size(24.dp))
-                }
+        NextRow(next, timeRemaining)
+    }
+}
+
+/** The next point's row: arrow, NEXT, bearing and ETE, name, distance, arrival. */
+@Composable
+internal fun NextRow(next: NextWaypoint, timeRemaining: Double?,
+                     modifier: Modifier = Modifier) {
+    val colors = XcsTheme.colors
+    val distance = Format.distance(next.distance)
+    val bearing = Format.bearing(next.bearing)
+    val arrival = Format.altitudeDifference(next.altitudeDifference)
+    val name = next.name.ifEmpty { Format.INVALID }
+    Row(modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        // where it is needs a GPS fix
+        next.bearing?.let { b ->
+            Box(Modifier.size(44.dp).background(colors.selected, CircleShape),
+                contentAlignment = Alignment.Center) {
+                DirectionArrow(b, colors.onSelected, Modifier.size(24.dp))
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                if (next != null) Row(verticalAlignment = Alignment.CenterVertically,
-                                      horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(upperStringResource(R.string.next), color = colors.onSelected,
-                         fontSize = 11.sp,
-                         fontWeight = FontWeight.Bold, letterSpacing = 0.08.em,
-                         modifier = Modifier
-                             .background(colors.task, RoundedCornerShape(5.dp))
-                             .padding(horizontal = 6.dp, vertical = 1.dp))
-                    val ete = timeRemaining?.let { " · ETE ${Format.duration(it).text}" } ?: ""
-                    Text("${bearing.text}${bearing.unit}$ete", color = colors.textSecondary,
-                         fontSize = 13.sp)
-                }
-                Text(name, color = colors.text, fontSize = 22.sp, fontWeight = FontWeight.Bold,
-                     maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(upperStringResource(R.string.next), color = colors.onSelected,
+                     fontSize = 11.sp,
+                     fontWeight = FontWeight.Bold, letterSpacing = 0.08.em,
+                     modifier = Modifier
+                         .background(colors.task, RoundedCornerShape(5.dp))
+                         .padding(horizontal = 6.dp, vertical = 1.dp))
+                val ete = timeRemaining?.let { " · ETE ${Format.duration(it).text}" } ?: ""
+                Text("${bearing.text}${bearing.unit}$ete", color = colors.textSecondary,
+                     fontSize = 13.sp)
             }
-            Column(horizontalAlignment = Alignment.End,
-                   verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(valueWithUnit(distance, 24.sp, colors.text, colors.textSecondary),
-                     style = XcsTheme.numberStyle, maxLines = 1)
-                Text(valueWithUnit(arrival, 18.sp,
-                                   next?.altitudeDifference?.let {
-                                       if (it >= 0) colors.safe else colors.caution
-                                   } ?: colors.text,
-                                   colors.textSecondary),
-                     style = XcsTheme.numberStyle, fontWeight = FontWeight.Bold, maxLines = 1)
-            }
+            Text(name, color = colors.text, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                 maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        Column(horizontalAlignment = Alignment.End,
+               verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(valueWithUnit(distance, 24.sp, colors.text, colors.textSecondary),
+                 style = XcsTheme.numberStyle, maxLines = 1)
+            Text(valueWithUnit(arrival, 18.sp,
+                               next.altitudeDifference?.let {
+                                   if (it >= 0) colors.safe else colors.caution
+                               } ?: colors.text,
+                               colors.textSecondary),
+                 style = XcsTheme.numberStyle, fontWeight = FontWeight.Bold, maxLines = 1)
         }
     }
 }

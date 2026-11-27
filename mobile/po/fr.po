@@ -238,6 +238,22 @@ msgstr "La carte stockée n'a pas tout le circuit, vers %1$s"
 msgid "No map stored for the flight yet: it downloads on Wi-Fi"
 msgstr "Pas encore de carte stockée pour le vol : elle se télécharge en Wi-Fi"
 
+#. preflight_charts
+msgid "Approach charts (VAC)"
+msgstr "Cartes d'approche (VAC)"
+
+#. preflight_charts_ok
+msgid "All %1$d airports along the route have their chart on the phone"
+msgstr "Les %1$d aérodromes le long du circuit ont leur carte sur le téléphone"
+
+#. preflight_charts_missing
+msgid "%1$d of the %2$d airports along the route have no chart on the phone yet"
+msgstr "%1$d des %2$d aérodromes le long du circuit n'ont pas encore leur carte sur le téléphone"
+
+#. preflight_charts_to_get
+msgid "To download: %1$s"
+msgstr "À télécharger : %1$s"
+
 #. preflight_along_task
 msgid "Along the route: %1$s"
 msgstr "Le long du circuit : %1$s"
@@ -1170,6 +1186,14 @@ msgstr "En quittant une ascendance, sa moyenne et la hauteur gagnée : « Climb 
 #. voice_say
 msgid "Say a callout"
 msgstr "Dire une annonce"
+
+#. field_card
+msgid "Field"
+msgstr "Terrain"
+
+#. field_card_chip
+msgid "Chip"
+msgstr "Pastille"
 
 #. field_none
 msgid "This waypoint is no longer in the waypoint file."

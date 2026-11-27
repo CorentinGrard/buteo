@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.xcsoar.mobile.R
-import org.xcsoar.mobile.Vac
+import org.xcsoar.mobile.core.Vac
 import org.xcsoar.mobile.VacChart
 import org.xcsoar.mobile.VacStore
 import org.xcsoar.mobile.core.RadioSlot

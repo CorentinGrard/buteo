@@ -89,6 +89,33 @@ class PreflightTest {
     }
 
     @Test
+    fun theChartsOfTheAirportsAlongTheTask() {
+        val cycle = java.time.LocalDate.parse("2026-11-26")
+        val coverage = DataCoverage(listOf(3.5, 43.5, 9.0, 47.5), null, 40, 120, 25,
+                                    airports = listOf("LFLQ", "LFLU", "LFLQ", "LSGG", "LF3852"))
+        // only French codes, once; one there, one SIA has none, one to get
+        val check = PreflightCheck.of(area, data(coverage).copy(
+            charts = setOf(Vac.fileName("LFLQ", cycle), Vac.noneName("LFLU", cycle)),
+            chartCycle = cycle))
+        val charts = check.checks.single { it.kind == DataKind.CHARTS }
+        assertTrue(charts.ok)
+        assertEquals(listOf("LFLQ"), charts.files)
+        assertEquals(2, charts.count)
+
+        val missing = PreflightCheck.of(area, data(coverage).copy(charts = emptySet(),
+                                                                   chartCycle = cycle))
+        val get = missing.checks.single { it.kind == DataKind.CHARTS }
+        assertFalse(get.ok)
+        assertEquals(listOf("AD-2.LFLQ.2026-11-26.pdf", "AD-2.LFLU.2026-11-26.pdf"),
+                     get.updates.map { it.name })
+        assertTrue(missing.automatic.any { it.folder == Vac.FOLDER })
+        // without the chart folder read (or no French airport): no line
+        assertTrue(PreflightCheck.of(area, data(coverage)).checks.none { it.kind == DataKind.CHARTS })
+        assertEquals(listOf("LFLQ"), DataCoverage.parse(
+            """{"terrain":null,"airspace":0,"waypoints":1,"landables":1,"airports":["LFLQ"]}""").airports)
+    }
+
+    @Test
     fun theAreaOfTheFlight() {
         assertTrue(area.isTask)
         assertEquals(FlightArea.TASK_MARGIN, area.margin, 0.0)

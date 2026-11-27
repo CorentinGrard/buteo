@@ -237,6 +237,22 @@ msgstr ""
 msgid "No map stored for the flight yet: it downloads on Wi-Fi"
 msgstr ""
 
+#. preflight_charts
+msgid "Approach charts (VAC)"
+msgstr ""
+
+#. preflight_charts_ok
+msgid "All %1$d airports along the route have their chart on the phone"
+msgstr ""
+
+#. preflight_charts_missing
+msgid "%1$d of the %2$d airports along the route have no chart on the phone yet"
+msgstr ""
+
+#. preflight_charts_to_get
+msgid "To download: %1$s"
+msgstr ""
+
 #. preflight_along_task
 msgid "Along the route: %1$s"
 msgstr ""
@@ -1168,6 +1184,14 @@ msgstr ""
 
 #. voice_say
 msgid "Say a callout"
+msgstr ""
+
+#. field_card
+msgid "Field"
+msgstr ""
+
+#. field_card_chip
+msgid "Chip"
 msgstr ""
 
 #. field_none

@@ -95,6 +95,8 @@ data class FlightState(
      * estimate at the glider's altitude; null otherwise.
      */
     val thermal: GeoPosition? = null,
+    /** XCSoar's best alternate: where to land if the day ends here. */
+    val alternate: Alternate? = null,
 ) {
     companion object {
         /** The QNH range of XCSoar's flight setup, hPa. */
@@ -127,5 +129,18 @@ data class NextWaypoint(
 data class FinalGlide(
     val remainingDistance: Double,
     /** Above (positive) or below final glide to the finish. */
+    val altitudeDifference: Double,
+)
+
+/**
+ * XCSoar's best alternate ("Alternate 1"), on the safety polar (the
+ * glide cone when set): [altitudeDifference] the height left above the
+ * arrival height on getting there, metres (negative: out of reach).
+ */
+data class Alternate(
+    val id: Int,
+    val name: String,
+    val distance: Double,
+    val bearing: Double,
     val altitudeDifference: Double,
 )

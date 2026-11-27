@@ -441,6 +441,7 @@ class MainActivity : ComponentActivity() {
                     flightViewModel.callouts.collect { app.voice.speak(it) }
                 }
                 var callouts by remember { mutableStateOf(app.calloutSettings) }
+                var fieldCard by remember { mutableStateOf(app.fieldCard) }
 
                 // the first start sets up units, glider and maps; later, once
                 // per app start, the plane and crew of this flight (when
@@ -525,6 +526,11 @@ class MainActivity : ComponentActivity() {
                         onOpenWaypoint = { id ->
                             waypointDetailsViewModel.open(id)
                             screen = Screen.WAYPOINT_DETAILS
+                        },
+                        fieldCard = fieldCard,
+                        onFieldCard = {
+                            fieldCard = it
+                            app.fieldCard = it
                         },
                         onOpenFlightSetup = { screen = Screen.FLIGHT_SETUP },
                         onOpenFlights = { screen = Screen.FLIGHTS },

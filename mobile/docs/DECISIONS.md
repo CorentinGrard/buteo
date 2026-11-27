@@ -853,3 +853,25 @@ frequencies".
   cycles from 26 NOV 2026.  Charts stay in XCSoarData/vac: one opened on
   the ground opens in flight without network; an older edition shows
   when the new one cannot be had, and goes once it is.
+
+## D38 — The best field beside the next point
+**Status:** Proposed (2026-11-27), an experiment: the pilot to choose
+
+The pilot: "I'm interested of knowing where is my next point, but if I
+need to change local, I'm also interested in my current local, maybe
+the top card ... could 2 data on it, or maybe having sliding pages?
+Experiment and get my opinion."
+
+- The field is XCSoar's best alternate (its "Alternate 1"), on the
+  safety polar: in the glide cone (D36) when set, sorted as the Safety
+  page says.  It comes with every snapshot (alternate_*, struct_size
+  528): name, distance, bearing, the height left above the arrival
+  height (green in reach, orange out of it).
+- Three ways, switched in the menu's quick settings (Field: Rows,
+  Pages, Chip), kept on the phone: a second, smaller row in the NEXT
+  card; the card swiping between NEXT and FIELD; a chip beside the
+  wind.  A tap on the field opens its page (D37: Go to, VAC, weather).
+- Known: the map's label at a field (the route around the terrain) and
+  the alternate's margin (XCSoar's straight glide) can differ by some
+  tens of metres.
+- Once chosen, the others and the menu row go.

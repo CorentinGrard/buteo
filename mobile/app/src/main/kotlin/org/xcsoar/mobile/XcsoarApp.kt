@@ -39,6 +39,7 @@ import org.xcsoar.mobile.ui.flight.VECTOR_CRUISE_ZOOM
 import org.xcsoar.mobile.ui.text
 import org.xcsoar.mobile.ui.theme.ThemeChoice
 import java.io.File
+import org.xcsoar.mobile.ui.flight.FieldCardStyle
 import java.util.Locale
 
 /**
@@ -146,6 +147,13 @@ class XcsoarApp : Application() {
                 .putFloat("vectorLongitude", value.second.toFloat())
                 .apply()
         }
+
+    /** How the best field shows beside the next point; on the phone, like the theme. */
+    var fieldCard: FieldCardStyle
+        get() = FieldCardStyle.entries.firstOrNull {
+            it.name == uiPreferences.getString("fieldCard", null)
+        } ?: FieldCardStyle.ROWS
+        set(value) = uiPreferences.edit().putString("fieldCard", value.name).apply()
 
     /** Rows of tiles on the flight screen ([TILE_ROWS]); on the phone, like the theme. */
     var tileRows: Int

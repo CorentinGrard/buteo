@@ -123,6 +123,9 @@ class FlightMenu(
     val onVarioSound: (Boolean) -> Unit = {},
     val theme: ThemeChoice = ThemeChoice.SYSTEM,
     val onTheme: (ThemeChoice) -> Unit = {},
+    /** the best field beside the next point (an experiment) */
+    val fieldCard: FieldCardStyle = FieldCardStyle.ROWS,
+    val onFieldCard: (FieldCardStyle) -> Unit = {},
     /** what the phone has of the map for this flight; null hides it */
     val mapCoverage: MapCoverage? = null,
 )
@@ -276,6 +279,10 @@ private fun QuickSettings(menu: FlightMenu) {
                               onSelect = { menu.onVarioSound(it == 0) },
                               description = stringResource(R.string.menu_vario_sound))
         }
+        LabelledSegmented(stringResource(R.string.field_card),
+                          FieldCardStyle.entries.map { stringResource(it.label) },
+                          selected = menu.fieldCard.ordinal,
+                          onSelect = { menu.onFieldCard(FieldCardStyle.entries[it]) })
         LabelledSegmented(stringResource(R.string.menu_tiles),
                           listOf(stringResource(R.string.auto),
                                  stringResource(R.string.cruise),

@@ -97,6 +97,8 @@ fun FlightScreen(
     onOpenWaypoints: () -> Unit = {},
     /** A waypoint's page, from the map. */
     onOpenWaypoint: (waypointId: Int) -> Unit = {},
+    fieldCard: FieldCardStyle = FieldCardStyle.ROWS,
+    onFieldCard: (FieldCardStyle) -> Unit = {},
     onOpenFlightSetup: () -> Unit = {},
     onOpenFlights: () -> Unit = {},
     onOpenTask: () -> Unit = {},
@@ -203,6 +205,8 @@ fun FlightScreen(
         airspaceHideTimer = hideTimer,
         onAcknowledge = viewModel::acknowledgeAirspace,
         onNextWaypoint = onOpenWaypoints,
+        fieldCard = fieldCard,
+        onField = onOpenWaypoint,
         onWind = onOpenWind,
         onNoPolar = onOpenCrew,
         windowInsets = flightInsets(covered),
@@ -233,6 +237,8 @@ fun FlightScreen(
             onVarioSound = viewModel::setVarioSound,
             theme = theme,
             onTheme = onTheme,
+            fieldCard = fieldCard,
+            onFieldCard = onFieldCard,
             mapCoverage = vectorState.coverage,
             state = state,
         ),
@@ -377,6 +383,10 @@ fun FlightContent(
     airspaceHideTimer: HideTimer? = null,
     onAcknowledge: (AirspaceWarningInfo, day: Boolean) -> Unit = { _, _ -> },
     onNextWaypoint: () -> Unit = {},
+    /** how the best field in glide shows beside the next point */
+    fieldCard: FieldCardStyle = FieldCardStyle.ROWS,
+    /** the best field's page */
+    onField: (waypointId: Int) -> Unit = {},
     onWind: () -> Unit = {},
     /** the "NO POLAR" chip: set up a plane */
     onNoPolar: () -> Unit = {},
@@ -423,7 +433,7 @@ fun FlightContent(
                                     insets: WindowInsets ->
             MapArea(state, lastEvent, circling, map, warnings, airspaceHideTimer,
                     onAcknowledge, onNextWaypoint, onWind, onNoPolar,
-                    onSetMacCready, showNext,
+                    onSetMacCready, showNext, fieldCard, onField,
                     vario, replay, modifier, insets, onMenu = { onMenuOpen(true) },
                     stepper = macCreadyStepper, taskOnMap = taskPanel != null)
         }
@@ -451,9 +461,9 @@ fun FlightContent(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         if (taskPanel == null)
-                            NextWaypointCard(state?.next, Modifier.fillMaxWidth(),
-                                             state?.nextTimeRemaining, onClick = onNextWaypoint,
-                                             elevated = false)
+                            TopCards(state?.next, state?.alternate, fieldCard,
+                                     state?.nextTimeRemaining, onNextWaypoint, onField,
+                                     Modifier.fillMaxWidth(), elevated = false)
                         instruments()
                     }
                 }
@@ -503,6 +513,8 @@ private fun MapArea(
     onSetMacCready: (Double) -> Unit,
     /** false in landscape, where the side panel shows it */
     showNext: Boolean,
+    fieldCard: FieldCardStyle,
+    onField: (waypointId: Int) -> Unit,
     vario: (() -> VarioValues?)?,
     replay: ReplayControls?,
     modifier: Modifier,
@@ -571,8 +583,8 @@ private fun MapArea(
                 ReplayBar(state.timeUtc, replay.speed.paused, replay.window, replay.seeking,
                           replay.onPause, replay.onSeek, replay.onStop)
             if (showNext && !taskOnMap)
-                NextWaypointCard(state?.next, Modifier.fillMaxWidth(), state?.nextTimeRemaining,
-                                 onClick = onNextWaypoint)
+                TopCards(state?.next, state?.alternate, fieldCard, state?.nextTimeRemaining,
+                         onNextWaypoint, onField, Modifier.fillMaxWidth())
             if (!taskOnMap) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 when {
@@ -580,6 +592,8 @@ private fun MapArea(
                                                  colors.textSecondary)
                     else -> {
                         WindChip(state.wind, onClick = onWind)
+                        if (fieldCard == FieldCardStyle.CHIP)
+                            state.alternate?.let { FieldChip(it, onField) }
                         if (state.position == null)
                             StatusChip(upperStringResource(R.string.flight_no_gps), colors.caution)
                         // upstream's "No polar is set up, so final glide and speed to
@@ -1033,6 +1047,8 @@ fun flightMenu(
     onVarioSound: (Boolean) -> Unit = {},
     theme: ThemeChoice = ThemeChoice.SYSTEM,
     onTheme: (ThemeChoice) -> Unit = {},
+    fieldCard: FieldCardStyle = FieldCardStyle.ROWS,
+    onFieldCard: (FieldCardStyle) -> Unit = {},
     mapCoverage: MapCoverage? = null,
     state: FlightState? = null,
 ): FlightMenu {
@@ -1099,6 +1115,8 @@ fun flightMenu(
         onOrientation = onOrientation,
         varioSound = varioSound,
         onVarioSound = onVarioSound,
+        fieldCard = fieldCard,
+        onFieldCard = onFieldCard,
         theme = theme,
         onTheme = onTheme,
         mapCoverage = mapCoverage,

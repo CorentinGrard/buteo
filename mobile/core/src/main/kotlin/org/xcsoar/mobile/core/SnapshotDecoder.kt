@@ -14,7 +14,7 @@ import java.nio.ByteOrder
  */
 object SnapshotDecoder {
     const val API_VERSION = 1
-    const val SIZE = 432
+    const val SIZE = 528
 
     // xcs_flight_snapshot field offsets
     private const val STRUCT_SIZE = 0
@@ -67,6 +67,12 @@ object SnapshotDecoder {
     private const val STATIC_PRESSURE = 408
     private const val THERMAL_LATITUDE = 416
     private const val THERMAL_LONGITUDE = 424
+    private const val ALTERNATE_DISTANCE = 432
+    private const val ALTERNATE_BEARING = 440
+    private const val ALTERNATE_ALTITUDE_DIFFERENCE = 448
+    private const val ALTERNATE_ID = 456
+    private const val ALTERNATE_NAME = 464
+    private const val ALTERNATE_NAME_SIZE = 64
 
     // XCS_VALID_* bits
     const val VALID_TIME = 1 shl 0
@@ -96,6 +102,7 @@ object SnapshotDecoder {
     const val VALID_NEXT_NAME = 1 shl 24
     const val VALID_NEXT_ARRIVAL = 1 shl 25
     const val VALID_THERMAL = 1 shl 26
+    const val VALID_ALTERNATE = 1 shl 27
 
     // XCS_FLAG_* bits
     const val FLAG_GPS_REAL = 1 shl 0
@@ -181,6 +188,11 @@ object SnapshotDecoder {
             staticPressure = ifValid(VALID_STATIC_PRESSURE, STATIC_PRESSURE),
             thermal = if (valid and VALID_THERMAL != 0)
                 GeoPosition(d(THERMAL_LATITUDE), d(THERMAL_LONGITUDE)) else null,
+            alternate = if (valid and VALID_ALTERNATE != 0)
+                Alternate(b.getInt(base + ALTERNATE_ID),
+                          readCString(b, base + ALTERNATE_NAME, ALTERNATE_NAME_SIZE),
+                          d(ALTERNATE_DISTANCE), d(ALTERNATE_BEARING),
+                          d(ALTERNATE_ALTITUDE_DIFFERENCE)) else null,
             gpsReal = flags and FLAG_GPS_REAL != 0,
             flying = flags and FLAG_FLYING != 0,
             circling = flags and FLAG_CIRCLING != 0,

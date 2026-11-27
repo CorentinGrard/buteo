@@ -36,6 +36,7 @@ import org.xcsoar.mobile.core.DataCheck
 import org.xcsoar.mobile.core.DataDownload
 import org.xcsoar.mobile.core.DataFile
 import org.xcsoar.mobile.core.DataKind
+import org.xcsoar.mobile.core.Vac
 import org.xcsoar.mobile.core.FlightArea
 import org.xcsoar.mobile.core.GeoPosition
 import org.xcsoar.mobile.core.MapPoint
@@ -134,6 +135,7 @@ private fun CheckCard(check: DataCheck, area: FlightArea?, busy: Boolean,
                 DataKind.VECTOR_MAP -> R.string.preflight_vector_map
                 DataKind.AIRSPACE -> R.string.airspace
                 DataKind.WAYPOINTS -> R.string.data_waypoints
+                DataKind.CHARTS -> R.string.preflight_charts
             }))
         }
         val files = check.files.joinToString(" + ").ifEmpty { null }
@@ -178,6 +180,11 @@ private fun statusText(check: DataCheck, area: FlightArea?): String {
             task -> stringResource(R.string.preflight_covers_task)
             else -> stringResource(R.string.preflight_covers_around, around ?: "")
         }
+        DataKind.CHARTS -> {
+            val count = check.count ?: 0
+            if (check.ok) stringResource(R.string.preflight_charts_ok, count)
+            else stringResource(R.string.preflight_charts_missing, check.updates.size, count)
+        }
         DataKind.AIRSPACE, DataKind.WAYPOINTS -> {
             val airspace = check.kind == DataKind.AIRSPACE
             val count = check.count
@@ -201,6 +208,10 @@ private fun statusText(check: DataCheck, area: FlightArea?): String {
 @Composable
 private fun updatesText(updates: List<DataDownload>): String {
     val context = LocalContext.current
+    // charts: their fields
+    if (updates.all { it.folder == Vac.FOLDER })
+        return stringResource(R.string.preflight_charts_to_get,
+                              updates.joinToString(", ") { it.title })
     // a region: its title and size; a newer file: the day of its data
     val regions = updates.filter { it.use == null }
     return if (regions.isNotEmpty())

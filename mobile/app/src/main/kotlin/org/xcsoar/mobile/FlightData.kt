@@ -32,6 +32,8 @@ import org.xcsoar.mobile.core.TaskOutline
 import org.xcsoar.mobile.ui.UiText
 import org.xcsoar.mobile.ui.toText
 import java.io.File
+import java.time.LocalDate
+import org.xcsoar.mobile.core.Vac
 import java.time.Instant
 import java.time.ZoneId
 
@@ -163,8 +165,9 @@ class FlightData(private val app: XcsoarApp, private val scope: CoroutineScope) 
                               gap = area?.let { map.firstGap(it.lines, it.margin) })
             } ?: StoredRegions(emptyMap(), gap = null)
         }
+        val charts = withContext(Dispatchers.IO) { app.vacStore.names() }
         return PreflightCheck.of(area, PreflightData(status, coverage, repository, fileDates,
-                                                     regions, regionIndex))
+                                                     regions, regionIndex, charts))
     }
 
     /**
@@ -185,6 +188,13 @@ class FlightData(private val app: XcsoarApp, private val scope: CoroutineScope) 
     private suspend fun fetch(file: DataDownload) {
         stateFlow.update { it.copy(downloading = Progress(file.title, 0f), error = null) }
         try {
+            // a chart: checked and the older edition dropped
+            if (file.folder == Vac.FOLDER) {
+                val icao = Vac.icaoOf(file.name) ?: return
+                app.vacStore.fetch(icao, LocalDate.parse(file.date))
+                Log.i(TAG, "downloaded ${file.name}")
+                return
+            }
             val target = File(File(app.xcsoarDataDir, file.folder), file.name)
             app.downloader.download(file.url, target, file.sha256) { p ->
                 stateFlow.update { it.copy(downloading = Progress(file.title, p)) }

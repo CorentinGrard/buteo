@@ -144,6 +144,19 @@ class SnapshotDecoderTest {
     }
 
     @Test
+    fun decodesTheAlternate() {
+        val b = snapshot(SnapshotDecoder.VALID_ALTERNATE)
+        b.putDouble(432, 5350.0)
+        b.putDouble(440, 337.0)
+        b.putDouble(448, -120.0)
+        b.putInt(456, 7)
+        "LF3852 Frontonas".toByteArray().forEachIndexed { i, byte -> b.put(464 + i, byte) }
+        assertEquals(Alternate(7, "LF3852 Frontonas", 5350.0, 337.0, -120.0),
+                     SnapshotDecoder.decode(b).alternate)
+        assertNull(SnapshotDecoder.decode(snapshot(0)).alternate)
+    }
+
+    @Test
     fun validityAndFlagBitsMatchHeader() {
         val valid = CoreHeader.constants("XCS_VALID_")
         val flags = CoreHeader.constants("XCS_FLAG_")

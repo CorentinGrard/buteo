@@ -12,6 +12,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.xcsoar.mobile.core.Alternate
 import org.xcsoar.mobile.core.FakeXcsoarCore
 import org.xcsoar.mobile.core.FinalGlide
 import org.xcsoar.mobile.core.MapOrientation
@@ -44,6 +45,27 @@ class FlightScreenScreenshotTest {
             FlightContent(FakeXcsoarCore.syntheticState(120), null, circling = false, {})
         }
     }
+
+    /** The best field beside the next point, each way of the experiment. */
+    private fun withField(style: FieldCardStyle) = capture("field_${style.name.lowercase()}") {
+        XcsTheme(dark = false) {
+            FlightContent(FakeXcsoarCore.syntheticState(120).copy(
+                              alternate = Alternate(7, "LF3852 Frontonas", 5350.0, 337.0, 182.0)),
+                          null, circling = false, {}, fieldCard = style)
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "w390dp-h844dp-xxhdpi")
+    fun fieldRows() = withField(FieldCardStyle.ROWS)
+
+    @Test
+    @Config(qualifiers = "w390dp-h844dp-xxhdpi")
+    fun fieldPages() = withField(FieldCardStyle.PAGES)
+
+    @Test
+    @Config(qualifiers = "w390dp-h844dp-xxhdpi")
+    fun fieldChip() = withField(FieldCardStyle.CHIP)
 
     @Test
     @Config(qualifiers = "w390dp-h844dp-xxhdpi")

@@ -8,44 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.LocalDate
-import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
-import java.util.Locale
-
-/**
- * The French visual approach charts (VAC) of SIA's eAIP: one PDF a
- * field, in a folder of the AIRAC cycle in force (SIA removes the
- * folders of past cycles).
- */
-object Vac {
-    /** An AIRAC effective date (SIA's eAIP_26_NOV_2026); cycles are 28 days. */
-    private val REFERENCE: LocalDate = LocalDate.of(2026, 11, 26)
-    private const val CYCLE_DAYS = 28L
-
-    private val MONTHS = arrayOf("JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-                                 "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")
-
-    /** SIA publishes the fields of France: ICAO codes LF.. */
-    fun covers(icao: String) = icao.length == 4 && icao.startsWith("LF")
-
-    /** The effective date of the cycle in force on [date]. */
-    fun cycle(date: LocalDate): LocalDate {
-        val days = ChronoUnit.DAYS.between(REFERENCE, date)
-        return REFERENCE.plusDays(Math.floorDiv(days, CYCLE_DAYS) * CYCLE_DAYS)
-    }
-
-    /** The cycle in force now (cycles change at 00:00 UTC). */
-    fun currentCycle(): LocalDate = cycle(LocalDate.now(ZoneOffset.UTC))
-
-    fun url(icao: String, cycle: LocalDate): String =
-        String.format(Locale.ROOT,
-            "https://www.sia.aviation-civile.gouv.fr/media/dvd/eAIP_%02d_%s_%04d/" +
-                "Atlas-VAC/PDF_AIPparSSection/VAC/AD/AD-2.%s.pdf",
-            cycle.dayOfMonth, MONTHS[cycle.monthValue - 1], cycle.year, icao)
-
-    /** The local copy of [icao]'s chart of [cycle]. */
-    fun fileName(icao: String, cycle: LocalDate) = "AD-2.$icao.$cycle.pdf"
-}
+import org.xcsoar.mobile.core.Vac
 
 /** A chart on the phone, of [cycle]; [current] false when a newer one could not be had. */
 data class VacChart(val file: File, val cycle: LocalDate, val current: Boolean)
@@ -80,15 +43,8 @@ class VacStore(private val dir: File, private val downloader: Downloader) {
         if (newest != null && newest.second >= cycle)
             return@withContext VacChart(newest.first, newest.second, true)
 
-        val target = File(dir, Vac.fileName(icao, cycle))
-        try {
-            downloader.download(Vac.url(icao, cycle), target, null) {}
-            // a server's error page is no chart
-            val head = target.inputStream().use { it.readNBytes(4) }
-            if (!head.contentEquals("%PDF".toByteArray())) {
-                target.delete()
-                throw java.io.IOException("Not a PDF: ${Vac.url(icao, cycle)}")
-            }
+        val target = try {
+            fetch(icao, cycle)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -96,10 +52,40 @@ class VacStore(private val dir: File, private val downloader: Downloader) {
                 return@withContext VacChart(newest.first, newest.second, false)
             throw e
         }
-        // the older editions are of no use any more
-        copies(icao).filter { it.second < cycle }.forEach { it.first.delete() }
         VacChart(target, cycle, true)
     }
+
+    /**
+     * Download [icao]'s chart of [cycle] and drop the older editions.
+     * When SIA has none (HTTP 404), a marker says so, so that the
+     * pre-flight check does not ask again this cycle.
+     */
+    suspend fun fetch(icao: String, cycle: LocalDate): File = withContext(Dispatchers.IO) {
+        val target = File(dir, Vac.fileName(icao, cycle))
+        try {
+            downloader.download(Vac.url(icao, cycle), target, null) {}
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            if (e.message?.contains("HTTP 404") == true)
+                File(dir, Vac.noneName(icao, cycle)).writeText("")
+            throw e
+        }
+        // a server's error page is no chart
+        val head = target.inputStream().use { it.readNBytes(4) }
+        if (!head.contentEquals("%PDF".toByteArray())) {
+            target.delete()
+            throw java.io.IOException("Not a PDF: ${Vac.url(icao, cycle)}")
+        }
+        // the older editions are of no use any more
+        copies(icao).filter { it.second < cycle }.forEach { it.first.delete() }
+        dir.listFiles { f -> f.name.startsWith("AD-2.$icao.") && f.name.endsWith(".none") }
+            ?.forEach { it.delete() }
+        target
+    }
+
+    /** The names of the files kept, for the pre-flight check. */
+    fun names(): Set<String> = dir.list()?.toSet().orEmpty()
 
     private companion object {
         val NAME = Regex("""AD-2\.([A-Z]{4})\.(\d{4}-\d{2}-\d{2})\.pdf""")

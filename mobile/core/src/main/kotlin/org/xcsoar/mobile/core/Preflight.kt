@@ -58,6 +58,8 @@ data class DataCoverage(
     val airspace: Int = 0,
     val waypoints: Int = 0,
     val landables: Int = 0,
+    /** The codes of the airports among them ("LFLQ"). */
+    val airports: List<String> = emptyList(),
 ) {
     companion object {
         fun parse(text: String): DataCoverage {
@@ -71,7 +73,8 @@ data class DataCoverage(
                 },
                 airspace = count("airspace"),
                 waypoints = count("waypoints"),
-                landables = count("landables"))
+                landables = count("landables"),
+                airports = o["airports"]?.jsonArray?.map { it.jsonPrimitive.content }.orEmpty())
         }
 
         /** [[[lon, lat], ...], ...], as `xcs_data_coverage` takes them. */
@@ -210,7 +213,7 @@ data class FlightArea(
 }
 
 /** The kinds of data a flight needs. */
-enum class DataKind { TERRAIN, VECTOR_MAP, AIRSPACE, WAYPOINTS }
+enum class DataKind { TERRAIN, VECTOR_MAP, AIRSPACE, WAYPOINTS, CHARTS }
 
 /** A file to fetch for the flight. */
 data class DataDownload(
@@ -271,6 +274,10 @@ data class PreflightData(
     val regions: StoredRegions?,
     /** The server's regions; null when its index could not be read. */
     val regionIndex: List<MapRegion>?,
+    /** The files in XCSoarData/vac; null leaves the charts out. */
+    val charts: Set<String>? = null,
+    /** The AIRAC cycle of the charts to have. */
+    val chartCycle: java.time.LocalDate = Vac.currentCycle(),
 )
 
 /**
@@ -344,6 +351,22 @@ data class PreflightCheck(
                              else data.suggest(area, waypointFiles, "waypoint",
                                                "-WPT-National-XCSoar.cup",
                                                "-WPT-Airports-OpenAIP.cupx"))
+
+            // the approach charts of the French airports along the task
+            val codes = coverage?.airports.orEmpty().filter(Vac::covers).distinct().sorted()
+            if (data.charts != null && codes.isNotEmpty()) {
+                val cycle = data.chartCycle
+                val missing = codes.filter {
+                    Vac.fileName(it, cycle) !in data.charts && Vac.noneName(it, cycle) !in data.charts
+                }
+                checks += DataCheck(
+                    DataKind.CHARTS, codes.filter { Vac.fileName(it, cycle) in data.charts },
+                    ok = missing.isEmpty(), count = codes.size, date = cycle.toString(),
+                    updates = missing.map {
+                        DataDownload(Vac.fileName(it, cycle), "VAC $it", Vac.url(it, cycle),
+                                     null, null, Vac.FOLDER, null, cycle.toString())
+                    })
+            }
 
             return PreflightCheck(area, checks)
         }

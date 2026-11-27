@@ -104,6 +104,10 @@
     <string name="menu_map_none">No map stored for the flight yet: it downloads on Wi-Fi</string>
     <!-- the pre-flight check: the data the flight needs (D31) -->
     <!-- %1$s: the task's points, "Montélimar – Vienne – Sagy" -->
+    <string name="preflight_charts">Approach charts (VAC)</string>
+    <string name="preflight_charts_ok">All %1$d airports along the route have their chart on the phone</string>
+    <string name="preflight_charts_missing">%1$d of the %2$d airports along the route have no chart on the phone yet</string>
+    <string name="preflight_charts_to_get">To download: %1$s</string>
     <string name="preflight_along_task">Along the route: %1$s</string>
     <!-- %1$s: a distance, "50 km" -->
     <string name="preflight_around">No route: within %1$s of the glider</string>
@@ -438,6 +442,13 @@
     <string name="voice_climbs_title">Climbs</string>
     <string name="voice_climbs">Leaving a climb, its average and the height gained: “Climb 2.1, gained 450”</string>
     <string name="voice_say">Say a callout</string>
+
+    <!-- the best field beside the next point (an experiment) -->
+    <string name="field_card">Field</string>
+    <string name="field_card_rows">Rows</string>
+    <string name="field_card_pages">Pages</string>
+    <string name="field_card_chip">Chip</string>
+    <string name="field_card_tag">Field</string>
 
     <!-- a waypoint's page, from the map -->
     <string name="field_airport">Airport</string>
