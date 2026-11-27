@@ -96,6 +96,9 @@ enum {
   /** thermal_latitude/longitude: circling, once XCSoar's thermal
       locator has an estimate (a few seconds in). */
   XCS_VALID_THERMAL = 1u << 26,
+  /** alternate_*: XCSoar's best alternate (its "Alternate 1"), with a
+      GPS fix and a polar. */
+  XCS_VALID_ALTERNATE = 1u << 27,
 };
 
 /** Bits of xcs_flight_snapshot.flags. */
@@ -238,6 +241,23 @@ typedef struct xcs_flight_snapshot {
       (XCS_VALID_THERMAL).  XCSoar's map centres on it then. */
   double thermal_latitude;
   double thermal_longitude;
+
+  /* appended in API version 1 (struct_size 528) */
+
+  /** XCSoar's best alternate, the first of its alternates as the
+      safety settings sort them (XCS_VALID_ALTERNATE): on the safety
+      polar (the glide cone when set), the field to land on if the
+      day ends here.  Distance m, bearing degrees true, and the height
+      left above the arrival height on getting there (negative: out
+      of reach). */
+  double alternate_distance;
+  double alternate_bearing;
+  double alternate_altitude_difference;
+  /** For xcs_waypoint_get() and xcs_goto_waypoint(). */
+  uint32_t alternate_id;
+  uint32_t alternate_reserved;
+  /** UTF-8, null-terminated. */
+  char alternate_name[64];
 } xcs_flight_snapshot;
 
 /*
@@ -1454,12 +1474,15 @@ xcs_get_data_status(xcs_core *core, char *buffer, size_t size,
  * as the glider's position).  JSON (UTF-8, null-terminated):
  *
  *   {"terrain": {"bounds": [w, s, e, n], "gap": [lon, lat]},
- *    "airspace": 12, "waypoints": 40, "landables": 9}
+ *    "airspace": 12, "waypoints": 40, "landables": 9,
+ *    "airports": ["LFLQ", "LFLU"]}
  *
  * "terrain" is null without terrain.  "gap" is the first place along
  * the lines where the terrain does not reach @p margin metres around,
  * left out when it reaches everywhere.  "airspace", "waypoints" and
- * "landables" count those within @p margin metres of the lines.
+ * "landables" count those within @p margin metres of the lines;
+ * "airports" are the short names (codes) of the airports among them,
+ * those that have one, e.g. for their approach charts.
  * Buffer rules as for xcs_get_data_status().
  *
  * @param margin metres, up to 1000 km

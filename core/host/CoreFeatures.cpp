@@ -844,16 +844,21 @@ try {
 
   std::unordered_set<unsigned> waypoints;
   unsigned landables = 0;
+  boost::json::array airports;
   if (const auto *w = data_components->waypoints.get())
     for (const GeoPoint &p : samples)
       w->VisitWithinRange(p, margin, [&](const WaypointPtr &waypoint){
         /* a square around the point: only those within the margin */
         if (waypoint->location.Distance(p) <= margin &&
-            waypoints.insert(waypoint->id).second && waypoint->IsLandable())
+            waypoints.insert(waypoint->id).second && waypoint->IsLandable()) {
           ++landables;
+          if (waypoint->IsAirport() && !waypoint->shortname.empty())
+            airports.emplace_back(waypoint->shortname.c_str());
+        }
       });
   result["waypoints"] = waypoints.size();
   result["landables"] = landables;
+  result["airports"] = std::move(airports);
 
   StringOutputStream os;
   Json::Serialize(os, result);

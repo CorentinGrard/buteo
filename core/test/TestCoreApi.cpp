@@ -362,7 +362,7 @@ TestDataFiles(xcs_core *core)
     ok1(xcs_terrain_tile(core, 0, 0, 0, 1, &height) == XCS_ERROR_FAILED);
   }
   ok1(Coverage(core, "[[[146.0,-36.55]]]", 10000) ==
-      "{\"terrain\":null,\"airspace\":0,\"waypoints\":0,\"landables\":0}");
+      "{\"terrain\":null,\"airspace\":0,\"waypoints\":0,\"landables\":0,\"airports\":[]}");
 }
 
 static std::string

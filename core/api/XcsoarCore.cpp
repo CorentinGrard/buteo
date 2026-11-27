@@ -89,6 +89,7 @@
 #include "Terrain/RasterTerrain.hpp"
 #include "Engine/Airspace/Airspaces.hpp"
 #include "Engine/Waypoint/Waypoints.hpp"
+#include "Engine/Task/Unordered/AlternateList.hpp"
 #include "Geo/GeoVector.hpp"
 #include "LocalPath.hpp"
 #include "LogFile.hpp"
@@ -140,7 +141,10 @@ static_assert(offsetof(xcs_flight_snapshot, last_thermal_duration) == 360);
 static_assert(offsetof(xcs_flight_snapshot, ballast) == 368);
 static_assert(offsetof(xcs_flight_snapshot, qnh) == 400);
 static_assert(offsetof(xcs_flight_snapshot, thermal_latitude) == 416);
-static_assert(sizeof(xcs_flight_snapshot) == 432);
+static_assert(offsetof(xcs_flight_snapshot, alternate_distance) == 432);
+static_assert(offsetof(xcs_flight_snapshot, alternate_id) == 456);
+static_assert(offsetof(xcs_flight_snapshot, alternate_name) == 464);
+static_assert(sizeof(xcs_flight_snapshot) == 528);
 static_assert(offsetof(xcs_plane_details, max_takeoff_mass) == 56);
 static_assert(sizeof(xcs_plane_details) == 64);
 
@@ -487,6 +491,24 @@ FillSnapshot(xcs_flight_snapshot &s) noexcept
       CopyTruncateStringUTF8(std::span{s.next_name},
                              tp->GetWaypoint().name.c_str(),
                              sizeof(s.next_name) - 1);
+    }
+
+    /* as the "Alternate 1" InfoBoxes */
+    s.alternate_name[0] = '\0';
+    const auto &alternates = lease->GetAlternates();
+    if (basic.location_available && !alternates.empty() &&
+        alternates.front().solution.IsDefined()) {
+      const auto &alternate = alternates.front();
+      const GeoVector vector(basic.location, alternate.waypoint->location);
+      valid |= XCS_VALID_ALTERNATE;
+      s.alternate_distance = vector.distance;
+      s.alternate_bearing = vector.bearing.Degrees();
+      s.alternate_altitude_difference =
+        alternate.solution.SelectAltitudeDifference(settings.task.glide);
+      s.alternate_id = alternate.waypoint->id;
+      CopyTruncateStringUTF8(std::span{s.alternate_name},
+                             alternate.waypoint->name.c_str(),
+                             sizeof(s.alternate_name) - 1);
     }
   }
 
