@@ -60,6 +60,14 @@ std::string
 Lift() noexcept;
 
 /**
+ * The glide range: where the glider reaches on the safety polar (the
+ * safety glide cone when set) above the terrain clearance, as
+ * polygons.  None on the ground or without terrain.
+ */
+std::string
+Reach() noexcept;
+
+/**
  * The terrain's heights (metres) over tile (zoom, x, y) of the Web
  * Mercator grid, @p size by @p size from the north-west, for the map's
  * relief (xcs_terrain_tile()).

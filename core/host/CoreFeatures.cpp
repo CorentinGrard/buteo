@@ -23,8 +23,10 @@
 #include "Engine/Task/Factory/AbstractTaskFactory.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Engine/Task/Ordered/Points/OrderedTaskPoint.hpp"
+#include "Engine/Route/FlatTriangleFanVisitor.hpp"
 #include "Engine/Trace/Point.hpp"
 #include "Engine/Trace/Vector.hpp"
+#include "Task/ProtectedRoutePlanner.hpp"
 #include "Task/ProtectedTaskManager.hpp"
 #include "Formatter/AirspaceFormatter.hpp"
 #include "Geo/GeoBounds.hpp"
@@ -579,6 +581,66 @@ Thermals() noexcept
         : 0.},
     });
   }
+  return std::move(w).Finish();
+}
+
+/** Each fan of the reach as a polygon. */
+class ReachWriter final : public FlatTriangleFanVisitor {
+  FeatureWriter &w;
+  const FlatProjection &projection;
+
+public:
+  ReachWriter(FeatureWriter &_w, const FlatProjection &_projection) noexcept
+    :w(_w), projection(_projection) {}
+
+  void VisitFan([[maybe_unused]] FlatGeoPoint origin,
+                std::span<const FlatGeoPoint> fan) noexcept override {
+    if (fan.size() < 3)
+      return;
+
+    w.Begin("Polygon");
+    w.Raw("[[");
+    w.Positions(fan, [this](const FlatGeoPoint &p){
+      return projection.Unproject(p);
+    });
+    /* GeoJSON closes its rings */
+    w.Raw(",");
+    w.Position(projection.Unproject(fan.front()));
+    w.Raw("]]");
+    w.Properties({});
+  }
+};
+
+/** How far around the glider the reach is looked for, degrees: more
+    than any glide from the highest airspace. */
+static constexpr double REACH_SPAN = 4;
+
+std::string
+Reach() noexcept
+{
+  FeatureWriter w;
+  const auto &basic = CommonInterface::Basic();
+  const auto &calculated = CommonInterface::Calculated();
+  /* as XCSoar's map (MapWindow::DrawTerrainAbove()) */
+  if (!basic.location_available || !calculated.flight.flying ||
+      !backend_components->glide_computer)
+    return std::move(w).Finish();
+
+  const auto &planner =
+    backend_components->glide_computer->GetProtectedRoutePlanner();
+  const FlatProjection projection = planner.GetTerrainReachProjection();
+  if (!projection.IsValid())
+    return std::move(w).Finish();
+
+  const Angle span = Angle::Degrees(REACH_SPAN);
+  GeoBounds bounds(basic.location);
+  bounds.Extend(GeoPoint(basic.location.longitude - span,
+                         basic.location.latitude - span));
+  bounds.Extend(GeoPoint(basic.location.longitude + span,
+                         basic.location.latitude + span));
+
+  ReachWriter writer(w, projection);
+  planner.AcceptInRange(bounds, writer, false);
   return std::move(w).Finish();
 }
 

@@ -590,6 +590,10 @@ typedef enum xcs_safety_option {
   /** m/s, 0..5, in 0.1 steps: MacCready at start; setting it also sets
       the MacCready now [TaskMacCready] */
   XCS_SAFETY_STARTUP_MC = 7,
+  /** 0 (off) or 5..60, whole: the safety glide cone.  Reach, landables
+      and alternates glide at most this ratio, at Safety MC zero
+      [SafetyGlideRatio] */
+  XCS_SAFETY_GLIDE_RATIO = 8,
 } xcs_safety_option;
 
 /** Set a safety option; saved in the profile.  XCS_ERROR_INVALID_ARGUMENT
@@ -1491,6 +1495,8 @@ enum {
   XCS_FEATURES_THERMALS = 7,
   /** The current climb's samples, while circling. */
   XCS_FEATURES_LIFT = 8,
+  /** The glide range on the safety polar, while flying. */
+  XCS_FEATURES_REACH = 9,
 };
 
 /**
@@ -1536,6 +1542,11 @@ enum {
  *   there (m/s), where XCS_FEATURES_TRAIL_RECENT draws them (moved with
  *   the wind while the trail drifts); none while not circling.  A map
  *   can draw the climb around the thermal from them.
+ * - XCS_FEATURES_REACH: polygons, where the glider can glide on the
+ *   safety polar (the safety glide cone, XCS_SAFETY_GLIDE_RATIO, when
+ *   set; with the wind) keeping the terrain clearance, its obstacles
+ *   cut out, as XCSoar's map draws its glide range.  None on the
+ *   ground, without terrain or while the reach option is off.
  *
  * Buffer rules as for xcs_get_data_status().
  */

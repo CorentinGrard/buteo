@@ -1486,6 +1486,9 @@ xcs_map_features(xcs_core *core, uint32_t which, char *buffer, size_t size,
   case XCS_FEATURES_LIFT:
     describe = CoreFeatures::Lift;
     break;
+  case XCS_FEATURES_REACH:
+    describe = CoreFeatures::Reach;
+    break;
   default:
     return XCS_ERROR_INVALID_ARGUMENT;
   }
@@ -2746,6 +2749,11 @@ SafetyRange(uint32_t option, double &min, double &max) noexcept
   case XCS_SAFETY_STARTUP_MC:
     min = 0, max = TaskBehaviour::TASK_MC_MAX;
     return true;
+  case XCS_SAFETY_GLIDE_RATIO:
+    /* or 0: off */
+    min = TaskBehaviour::SAFETY_GLIDE_RATIO_MIN;
+    max = TaskBehaviour::SAFETY_GLIDE_RATIO_MAX;
+    return true;
   default:
     return false;
   }
@@ -2755,8 +2763,13 @@ xcs_status
 xcs_safety_set_option(xcs_core *core, uint32_t option, double value)
 {
   double min = 0, max = 0;
-  if (core == nullptr || !SafetyRange(option, min, max) ||
-      !(value >= min && value <= max))
+  if (core == nullptr || !SafetyRange(option, min, max))
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+  if (option == XCS_SAFETY_GLIDE_RATIO && value == 0)
+    min = 0;
+
+  if (!(value >= min && value <= max))
     return XCS_ERROR_INVALID_ARGUMENT;
 
   /* like SafetyFactorsConfigPanel; TaskComputer hands the settings to
@@ -2801,6 +2814,12 @@ xcs_safety_set_option(xcs_core *core, uint32_t option, double value)
       /* "Changing it here also sets the live MacCready" */
       ActionInterface::SetMacCready(task.task_mc);
       break;
+
+    case XCS_SAFETY_GLIDE_RATIO:
+      task.safety_glide_ratio = std::round(value);
+      Profile::Set(ProfileKeys::SafetyGlideRatio,
+                   iround(task.safety_glide_ratio));
+      break;
     }
 
     Profile::Save();
@@ -2838,6 +2857,9 @@ xcs_safety_get_option(xcs_core *core, uint32_t option, double *value_r)
       break;
     case XCS_SAFETY_STARTUP_MC:
       *value_r = task.task_mc;
+      break;
+    case XCS_SAFETY_GLIDE_RATIO:
+      *value_r = task.safety_glide_ratio;
       break;
     }
     return XCS_OK;

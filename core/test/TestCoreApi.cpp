@@ -1446,6 +1446,16 @@ TestSafety(xcs_core *core)
   }
   ok1(mc_set);
   ok1(xcs_safety_set_option(core, XCS_SAFETY_STARTUP_MC, startup) == XCS_OK);
+
+  /* the safety glide cone: off, or a whole ratio */
+  ok1(xcs_safety_get_option(core, XCS_SAFETY_GLIDE_RATIO, &value) == XCS_OK &&
+      value == 0);
+  ok1(xcs_safety_set_option(core, XCS_SAFETY_GLIDE_RATIO, 3) == XCS_ERROR_INVALID_ARGUMENT);
+  ok1(xcs_safety_set_option(core, XCS_SAFETY_GLIDE_RATIO, 61) == XCS_ERROR_INVALID_ARGUMENT);
+  ok1(xcs_safety_set_option(core, XCS_SAFETY_GLIDE_RATIO, 20.4) == XCS_OK);
+  ok1(xcs_safety_get_option(core, XCS_SAFETY_GLIDE_RATIO, &value) == XCS_OK &&
+      value == 20);
+  ok1(xcs_safety_set_option(core, XCS_SAFETY_GLIDE_RATIO, 0) == XCS_OK);
   ok1(xcs_set_mac_cready(core, mc_now) == XCS_OK);
 }
 
@@ -1613,6 +1623,9 @@ TestReplayControls(xcs_core *core)
   ok1(Contains(Features(core, XCS_FEATURES_LIFT),
                "\"type\":\"Point\""));
   ok1(Contains(Features(core, XCS_FEATURES_LIFT), "\"climb\":"));
+  /* no terrain here: no glide range, an empty collection */
+  ok1(Contains(Features(core, XCS_FEATURES_REACH),
+               "\"type\":\"FeatureCollection\""));
   ok1(Contains(graphic(InfoBoxFactory::THERMAL_ASSISTANT),
                "\"graphic\":{\"kind\":\"thermal_assistant\",\"circling\":true,"));
   xcs_tiles_set(core, XCS_TILES_CIRCLING, 5, InfoBoxFactory::e_WindSpeed_Est);
@@ -2003,7 +2016,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1 + 1 + 3 + 2 + 2 + 2 + 13);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1 + 1 + 3 + 2 + 2 + 2 + 13 + 6 + 1);
 
   Recorder recorder;
   TestCreateArguments(recorder);
