@@ -1439,13 +1439,18 @@ xcs_data_coverage(xcs_core *core, const char *lines, double margin,
  * JSON:
  *
  *   {"kind": "thermal_assistant", "circling": true, "left": true,
- *    "heading": 274.0, "average": 1.2, "lift": [0.4, 0.9, ...]}
+ *    "heading": 274.0, "average": 1.2, "lift": [0.4, 0.9, ...],
+ *    "circle": {"latitude": 44.61, "longitude": 4.88, "radius": 96.0}}
  *
  * "lift": the climb XCSoar measured on each heading of the circle, 36
  * values (m/s) from north in 10° steps.  The glider flew that heading
  * at bearing heading + 90° from the circle's centre when turning left
  * ("left"), heading − 90° when turning right.  "average": the 30 s
- * average climb.  Buffer rules as for xcs_get_data_status().
+ * average climb.  "circle": the circle the glider flies in the air
+ * now, its centre (WGS84) and radius (m): the true airspeed over the
+ * heading's turn rate, the centre beside the glider on the side it
+ * turns to; only while circling at 4°/s or more with a radius of 15 to
+ * 500 m.  Buffer rules as for xcs_get_data_status().
  */
 XCS_EXPORT xcs_status
 xcs_thermal_assistant_get(xcs_core *core, char *buffer, size_t size,
