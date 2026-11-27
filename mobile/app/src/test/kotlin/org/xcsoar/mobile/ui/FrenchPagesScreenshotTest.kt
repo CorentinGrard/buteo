@@ -88,7 +88,8 @@ class FrenchPagesScreenshotTest {
                             SafetyOption.TERRAIN_HEIGHT to 150.0,
                             SafetyOption.MC to 0.5, SafetyOption.STARTUP_MC to 0.0,
                             SafetyOption.RISK_FACTOR to 0.3, SafetyOption.ALTERNATES to 0.0,
-                            SafetyOption.TURN_BACK_MARKER to 1.0),
+                            SafetyOption.TURN_BACK_MARKER to 1.0,
+                            SafetyOption.GLIDE_RATIO to 20.0),
                       { _, _ -> }, {})
     }
 

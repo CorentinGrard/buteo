@@ -32,6 +32,9 @@ object Callouts {
     /** The shortest climb worth a summary: one turn for traffic is none. */
     const val MIN_CLIMB_SECONDS = 30.0
 
+    /** No field left in the safety glide cone (Safety page). */
+    const val OUT_OF_CONE = "Out of the glide cone, no field in reach"
+
     /** "Airspace ahead: Grenoble CTR, in 40 seconds"; "Inside …". */
     fun airspace(warning: AirspaceWarningInfo): String? = when {
         warning.inside -> "Inside airspace: ${warning.name}"

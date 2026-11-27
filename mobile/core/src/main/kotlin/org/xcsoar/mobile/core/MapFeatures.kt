@@ -41,6 +41,12 @@ enum class MapFeatures(val code: Int) {
      * netto vario, m/s), where the trail draws them.
      */
     LIFT(8),
+    /**
+     * The glide range while flying: polygons where the glider reaches on
+     * the safety polar (the safety glide cone when set), above the
+     * terrain clearance.
+     */
+    REACH(9),
 }
 
 /** An airspace with a warning (`XCS_FEATURES_AIRSPACE_STATE`). */

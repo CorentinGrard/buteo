@@ -22,6 +22,7 @@
     "task": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
     "trail": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
     "reach": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
+    "glide-range": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
     "thermals": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}}
   },
   "layers": [
@@ -122,6 +123,10 @@
                       1, "#8fd6b3", 2, "#2f9d77", "#055c44"],
        "line-width": ["match", ["get", "climb"], 1, 3, 2, 4.5, 3, 6, 2]
      }},
+
+    {"id": "glide-range", "type": "line", "source": "glide-range",
+     "layout": {"line-join": "round"},
+     "paint": {"line-color": "#0b7a5c", "line-width": 2.5, "line-dasharray": [3, 2]}},
 
     {"id": "task", "type": "line", "source": "task",
      "filter": ["match", ["get", "layer"], ["zone", "leg"], true, false],

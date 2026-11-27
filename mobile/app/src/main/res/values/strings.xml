@@ -168,7 +168,7 @@
     <string name="menu_airspace_on">Warnings on, classes, NOTAMs</string>
     <string name="menu_airspace_off">Warnings off, classes, NOTAMs</string>
     <string name="menu_safety">Safety heights</string>
-    <string name="menu_safety_detail">Arrival, terrain, safety MC</string>
+    <string name="menu_safety_detail">Arrival, glide ratio, terrain, safety MC</string>
     <string name="menu_sound">Sound</string>
     <string name="menu_sound_detail">Vario tone, voice callouts</string>
     <string name="menu_map_units">Map &amp; units</string>
@@ -444,6 +444,9 @@
     <string name="safety_arrival_name">arrival height</string>
     <string name="safety_arrival">Arrival height</string>
     <string name="safety_arrival_hint">Above the field when you land there: arrival heights and reach use it.</string>
+    <string name="safety_cone_name">safety glide ratio</string>
+    <string name="safety_cone">Safety glide ratio</string>
+    <string name="safety_cone_hint">Your glide cone: a field is in reach only at this glide ratio, with the wind and the terrain, arriving at the arrival height. You are warned when none is left. Final glide and speed to fly keep the glider\'s polar.</string>
     <string name="safety_terrain_name">terrain clearance</string>
     <string name="safety_terrain">Terrain clearance</string>
     <string name="safety_terrain_hint">Kept between the glide path and the terrain on final glide.</string>
@@ -451,6 +454,7 @@
     <string name="safety_mc_name">safety MacCready</string>
     <string name="safety_mc">Safety MacCready</string>
     <string name="safety_mc_hint">The MacCready of the reach and of the arrival heights at fields.</string>
+    <string name="safety_mc_cone_hint">0 while the safety glide ratio is on.</string>
     <string name="safety_start_mc_name">MacCready at start</string>
     <string name="safety_start_mc">MacCready at start</string>
     <string name="safety_start_mc_hint">The MacCready for speed to fly when the app starts; changing it sets the MacCready now too.</string>

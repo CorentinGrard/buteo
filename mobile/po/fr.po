@@ -436,8 +436,8 @@ msgid "Safety heights"
 msgstr "Hauteurs de sécurité"
 
 #. menu_safety_detail
-msgid "Arrival, terrain, safety MC"
-msgstr "Arrivée, relief, MC de sécurité"
+msgid "Arrival, glide ratio, terrain, safety MC"
+msgstr "Arrivée, finesse, relief, MC de sécurité"
 
 #. menu_sound
 msgid "Sound"
@@ -1183,6 +1183,18 @@ msgstr "hauteur d'arrivée"
 msgid "Above the field when you land there: arrival heights and reach use it."
 msgstr "Au-dessus du terrain quand vous y atterrissez : les hauteurs d'arrivée et la portée l'utilisent."
 
+#. safety_cone_name
+msgid "safety glide ratio"
+msgstr "finesse de sécurité"
+
+#. safety_cone
+msgid "Safety glide ratio"
+msgstr "Finesse de sécurité"
+
+#. safety_cone_hint
+msgid "Your glide cone: a field is in reach only at this glide ratio, with the wind and the terrain, arriving at the arrival height. You are warned when none is left. Final glide and speed to fly keep the glider's polar."
+msgstr "Votre cône de sécurité : un terrain n'est à portée qu'à cette finesse, avec le vent et le relief, en arrivant à la hauteur d'arrivée. Une alerte quand il n'en reste aucun. La finale et la vitesse à voler gardent la polaire du planeur."
+
 #. safety_terrain_name
 msgid "terrain clearance"
 msgstr "marge sur le relief"
@@ -1210,6 +1222,10 @@ msgstr "MacCready de sécurité"
 #. safety_mc_hint
 msgid "The MacCready of the reach and of the arrival heights at fields."
 msgstr "Le MacCready de la portée et des hauteurs d'arrivée sur les terrains."
+
+#. safety_mc_cone_hint
+msgid "0 while the safety glide ratio is on."
+msgstr "0 tant que la finesse de sécurité est active."
 
 #. safety_start_mc_name
 msgid "MacCready at start"

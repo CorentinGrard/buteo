@@ -520,6 +520,9 @@ enum class SafetyOption(val code: Int) {
     TURN_BACK_MARKER(6),
     /** m/s, 0..5: MacCready at start; setting it sets the MacCready now too */
     STARTUP_MC(7),
+    /** 0 off, or 5..60 whole: reach, landables and alternates glide at
+        most this ratio, at Safety MacCready zero */
+    GLIDE_RATIO(8),
 }
 
 /** Values of `xcs_mac_cready_option` (core/api/xcsoar_core.h). */

@@ -435,7 +435,7 @@ msgid "Safety heights"
 msgstr ""
 
 #. menu_safety_detail
-msgid "Arrival, terrain, safety MC"
+msgid "Arrival, glide ratio, terrain, safety MC"
 msgstr ""
 
 #. menu_sound
@@ -1182,6 +1182,18 @@ msgstr ""
 msgid "Above the field when you land there: arrival heights and reach use it."
 msgstr ""
 
+#. safety_cone_name
+msgid "safety glide ratio"
+msgstr ""
+
+#. safety_cone
+msgid "Safety glide ratio"
+msgstr ""
+
+#. safety_cone_hint
+msgid "Your glide cone: a field is in reach only at this glide ratio, with the wind and the terrain, arriving at the arrival height. You are warned when none is left. Final glide and speed to fly keep the glider's polar."
+msgstr ""
+
 #. safety_terrain_name
 msgid "terrain clearance"
 msgstr ""
@@ -1208,6 +1220,10 @@ msgstr ""
 
 #. safety_mc_hint
 msgid "The MacCready of the reach and of the arrival heights at fields."
+msgstr ""
+
+#. safety_mc_cone_hint
+msgid "0 while the safety glide ratio is on."
 msgstr ""
 
 #. safety_start_mc_name

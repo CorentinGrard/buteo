@@ -793,3 +793,37 @@ circle's centre in the middle and the glider on the ring.
   the circles of one thermal stack over its core.  Every point moves
   with each fix then, so the whole trail comes with every fix (the
   recent part's layer) until the climb ends.
+
+## D36 — The safety glide cone
+**Status:** Accepted (2026-11-27), the pilot's choices
+
+The pilot (2026-11-27): "I only set a max gliding rate, like 20, and I
+must always stay in this glide cone to be safe".  Asked, they chose the
+wind counted, "ratio 20, arriving at 300 m", and the safety MacCready
+at 0 while the cone is on.
+
+- One setting, Safety page: the safety glide ratio, off or 10 to 40
+  (+ on "Off" gives 20).  The core takes 5 to 60
+  (`XCS_SAFETY_GLIDE_RATIO`, profile key `SafetyGlideRatio`).
+- It changes XCSoar's safety polar only (`TaskManager::
+  UpdateSafetyPolar()`): sink rates scaled like bugs so its still-air
+  best glide is the ratio, at MacCready 0, never better than the
+  glider's own.  The safety polar is what reach, the landables' colours
+  and arrival heights, the alternates and "no landable in reach" use;
+  final glide, speed to fly, the task and the netto vario keep the
+  real polar.  A scaled polar, not a flat ratio: the wind tilts the
+  cone (with it, a field 5.6 km away crosswind takes 19.8, headwind
+  legs about 18, tailwind about 23, in the Redmi check).
+- The arrival height stays: a field is in the cone when the glider
+  gets there at the ratio with the arrival height left.  The "Alternate
+  1 altitude difference" tile is the margin above the cone at the best
+  field; no new tile.
+- The map draws XCSoar's glide range again (`XCS_FEATURES_REACH`, a
+  dashed green line): where the glider reaches on the safety polar
+  above the terrain clearance.
+- Out of the cone (no landable left in reach): with the cone on, the
+  warning tone, a vibration and "Out of the glide cone, no field in
+  reach", besides the chip every pilot gets; nothing in a replay.
+  Upstream's monitor warned once a flight (it re-armed only after a
+  warning); it now re-arms when a field has been in reach for a minute,
+  and warns at most every five minutes.

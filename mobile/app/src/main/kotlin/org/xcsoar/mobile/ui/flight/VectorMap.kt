@@ -942,6 +942,13 @@ fun VectorMap(
                             loaded.source("thermals")?.setGeoJson(thermalsJson(json))
                         }
                     }
+                // the glide range: the core solves it every few seconds
+                if (tick % 3 == 0)
+                    features(MapFeatures.REACH)?.let { json ->
+                        changes.apply("glide-range", json) {
+                            loaded.source("glide-range")?.setGeoJson(json)
+                        }
+                    }
                 if (tick % 5 == 0 && landablesAt.isNotEmpty())
                     try {
                         val nearby = landables()

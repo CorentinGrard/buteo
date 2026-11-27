@@ -77,7 +77,8 @@ fun SafetyScreen(viewModel: SafetyViewModel, onBack: () -> Unit) {
 
 /**
  * XCSoar's safety factors: the heights the glide computer keeps above
- * the field and the terrain, the MacCready of reach and arrival
+ * the field and the terrain, the safety glide cone (reach at a glide
+ * ratio, Safety MacCready zero), the MacCready of reach and arrival
  * heights, the speed-to-fly risk factor, the order of the alternates
  * and the turn back marker.
  */
@@ -97,6 +98,31 @@ fun SafetyContent(
             onSet(SafetyOption.ARRIVAL_HEIGHT, it)
         }
         Explanation(stringResource(R.string.safety_arrival_hint))
+        val ratio = values[SafetyOption.GLIDE_RATIO]
+        val cone = ratio != null && ratio > 0
+        val ratioText = when {
+            ratio == null -> Format.INVALID
+            cone -> ratio.roundToInt().toString()
+            else -> stringResource(R.string.off)
+        }
+        Stepper(stringResource(R.string.safety_cone_name),
+                stringResource(R.string.safety_cone), ratioText, ratioText,
+                canDecrease = cone,
+                canIncrease = ratio != null && ratio < GLIDE_RATIO_MAX,
+                onDecrease = {
+                    ratio?.let {
+                        onSet(SafetyOption.GLIDE_RATIO,
+                              if (it - 1 < GLIDE_RATIO_MIN) 0.0 else it - 1)
+                    }
+                },
+                onIncrease = {
+                    ratio?.let {
+                        onSet(SafetyOption.GLIDE_RATIO,
+                              if (it > 0) it + 1 else GLIDE_RATIO_FIRST)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth())
+        Explanation(stringResource(R.string.safety_cone_hint))
         HeightStepper(stringResource(R.string.safety_terrain_name),
                       stringResource(R.string.safety_terrain),
                       values[SafetyOption.TERRAIN_HEIGHT], 1000.0) {
@@ -105,12 +131,14 @@ fun SafetyContent(
         Explanation(stringResource(R.string.safety_terrain_hint))
 
         Caption(stringResource(R.string.safety_computer), Modifier.padding(start = 4.dp, top = 8.dp))
-        val mc = values[SafetyOption.MC]
+        // the cone glides at Safety MacCready zero
+        val mc = if (cone) 0.0 else values[SafetyOption.MC]
         val mcUnit = Format.unit(UnitGroup.VERTICAL_SPEED).name
         val mcText = mc?.let { Format.macCready(it).text } ?: Format.INVALID
         Stepper(stringResource(R.string.safety_mc_name),
                 "${stringResource(R.string.safety_mc)} · $mcUnit", mcText, "$mcText $mcUnit",
-                canDecrease = mc != null && mc > 0, canIncrease = mc != null && mc < 10,
+                canDecrease = !cone && mc != null && mc > 0,
+                canIncrease = !cone && mc != null && mc < 10,
                 onDecrease = {
                     mc?.let { onSet(SafetyOption.MC, Format.stepVerticalSpeed(it, -1)
                         .coerceIn(0.0, 10.0)) }
@@ -120,7 +148,8 @@ fun SafetyContent(
                         .coerceIn(0.0, 10.0)) }
                 },
                 modifier = Modifier.fillMaxWidth())
-        Explanation(stringResource(R.string.safety_mc_hint))
+        Explanation(stringResource(if (cone) R.string.safety_mc_cone_hint
+                                   else R.string.safety_mc_hint))
 
         val startup = values[SafetyOption.STARTUP_MC]
         val startupText = startup?.let { Format.macCready(it).text } ?: Format.INVALID
@@ -172,6 +201,12 @@ fun SafetyContent(
 
 /** TaskBehaviour::TASK_MC_MAX */
 private const val STARTUP_MC_MAX = 5.0
+
+/* the safety glide ratio: off below the first, the core takes 5..60 */
+private const val GLIDE_RATIO_MIN = 10.0
+private const val GLIDE_RATIO_MAX = 40.0
+/** What + on "Off" gives: the ratio clubs teach. */
+private const val GLIDE_RATIO_FIRST = 20.0
 
 private fun tenths(value: Double) = ((value * 10).roundToInt() / 10.0).coerceIn(0.0, 1.0)
 

@@ -1017,6 +1017,19 @@ page, checklists, a widget, a message after landing away).
 
 ## Log
 
+- 2026-11-27 (evening) — The pilot: "I would like to select at which
+  gliding ratio we are working with, usually between 10 and 30", then
+  "I only set a max gliding rate, like 20, and I must always stay in
+  this glide cone to be safe".  The safety glide cone (D36): a ratio on
+  the Safety page for reach, fields in reach, alternates and the
+  glide range on the map, with the wind, arriving at the arrival
+  height; an alert when no field is left in it.  Redmi 5, replay near
+  Lyon: the glide range shrinks from ratio off to 20, arrival margins
+  give 18 to 23 by the wind's side; at 10 with 900 m to arrive, every
+  field turns orange and "No landable in reach" shows once a field had
+  been back in reach.  The tone and the voice are not heard in a
+  replay (on purpose): not checked in the air.
+
 - 2026-11-27 (afternoon) — The pilot: "the menus of the app are super
   laggy to open", then "the sub menus".  A page stood still for 250 to
   750 ms before it slid in, and again going back: the bars that come

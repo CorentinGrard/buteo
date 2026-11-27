@@ -38,6 +38,7 @@ import org.xcsoar.mobile.core.CoreEvent
 import org.xcsoar.mobile.core.FlightState
 import org.xcsoar.mobile.core.FlightTimes
 import org.xcsoar.mobile.core.GlideComputerEvent
+import org.xcsoar.mobile.core.SafetyOption
 import org.xcsoar.mobile.core.MapItemInfo
 import org.xcsoar.mobile.core.WaypointFilter
 import org.xcsoar.mobile.core.WaypointInfo
@@ -296,8 +297,30 @@ class FlightViewModel(
                         delay(NEXT_POINT_WAIT_MS)
                         say(Callouts.taskPoint(event, core.flightState.value?.next))
                     }
+            // the core says it once, then at most every 5 minutes
+            GlideComputerEvent.LANDABLE_UNREACHABLE -> viewModelScope.launch {
+                if (outOfCone()) {
+                    alertFlow.tryEmit(AirspaceAlert(Alert.WARNING, sound = true,
+                                                    vibration = true))
+                    // a safety alert: not dropped for a recent callout
+                    say(Callouts.OUT_OF_CONE, airspace = true)
+                }
+            }
             else -> {}
         }
+    }
+
+    /**
+     * No field left in the pilot's safety glide cone: the cone is on
+     * (Safety page), so "no landable in reach" means out of it.
+     */
+    private suspend fun outOfCone(): Boolean {
+        val ratio = try {
+            core.safetyOption(SafetyOption.GLIDE_RATIO)
+        } catch (_: Exception) {
+            null
+        }
+        return ratio != null && ratio > 0 && !replaying
     }
 
     /* warnings already announced, by airspace and state */
@@ -730,7 +753,8 @@ private val AIRSPACE_EVENTS = setOf(
 /** How urgent an alert is (doc/architecture.rst colours: red, orange). */
 enum class Alert { WARNING, CAUTION }
 
-/** An alert to play, with the pilot's choice of sound and vibration. */
+/** An alert to play, with the pilot's choice of sound and vibration:
+    airspace, or leaving the safety glide cone. */
 data class AirspaceAlert(val level: Alert, val sound: Boolean, val vibration: Boolean)
 
 /**
