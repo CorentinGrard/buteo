@@ -1,0 +1,6 @@
+- A new map that works without a network, by region of the world
+- Pre-flight check: is your data ready for the route? Downloads it on Wi-Fi
+- Routes: switch or stop one in one tap, preview a saved one
+- Circling, the map holds the thermal; its core and earlier thermals marked
+- Trail drift with the wind; a clearer menu
+- Replays raise no airspace alerts

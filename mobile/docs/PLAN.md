@@ -1014,6 +1014,13 @@ page, checklists, a widget, a message after landing away).
 
 ## Log
 
+- 2026-11-27 — The pilot: "commit, push, merge, and create a new
+  release".  Upstream merged (41 commits; its team code now takes
+  three to five characters, the app too).  Buteo 1.3.0: the vector
+  map and its regions, the pre-flight check, routes, the circling view
+  on the thermal, trail drift, the menu, flights by their date, no
+  alerts in a replay (mobile/docs/releases/v1.3.0.md).
+
 - 2026-11-27 (morning) — The pilot: "can you remove the alerts in
   replay mode?".  A replay warns of no airspace: the core runs it with
   the warnings off, and clears those of the real position as it starts
