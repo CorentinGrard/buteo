@@ -1029,7 +1029,14 @@ page, checklists, a widget, a message after landing away).
   Then: "Remove all the alerts when in replay mode, the audio alert
   and such": a replay says no callout and plays no alert (Redmi 5, 83
   minutes of the test flight at 50x: nothing said; the sample callout
-  speaks).
+  speaks).  Then: "there is still a bug with the thermal assistant, the
+  zoom level have no impact on the drawn circles nor the thermal
+  shape"; asked what its ring should measure, the pilot chose the
+  glider's own circle (D35 amended): the core sends the circle (radius
+  from airspeed and turn rate, 251 m in the core test's climb), the
+  map draws the rings, the lift and the advisor in metres.  Redmi 5,
+  replay at 1x circling: the glider on the ring, one zoom step twice
+  the size, one out half.
 
 - 2026-11-27 — The pilot: "commit, push, merge, and create a new
   release".  Upstream merged (41 commits; its team code now takes

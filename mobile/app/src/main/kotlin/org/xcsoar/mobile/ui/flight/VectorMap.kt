@@ -65,6 +65,7 @@ import org.xcsoar.mobile.core.MapItemInfo
 import org.xcsoar.mobile.core.MapOrientation
 import org.xcsoar.mobile.core.OfflineMap
 import org.xcsoar.mobile.core.TaskOutline
+import org.xcsoar.mobile.core.TileGraphic
 import org.xcsoar.mobile.core.WaypointInfo
 import org.xcsoar.mobile.ui.Format
 import java.io.File
@@ -89,8 +90,12 @@ private const val FOLLOW_MAX_FPS = 30
 /** Two pixels is a sixth of a millimetre on the Redmi 5: a step the eye does not see. */
 private const val PIXELS_PER_FRAME = 2
 
-/** The style's image of the thermal assistant. */
-private const val ASSISTANT_IMAGE = "thermal-assistant"
+/** The style's image of the thermal's core. */
+private const val CORE_IMAGE = "thermal-core"
+
+/** The style's source of the thermal assistant ([liftCircleJson]). */
+private const val LIFT_CIRCLE_SOURCE = "lift-circle"
+private const val NO_FEATURES = """{"type":"FeatureCollection","features":[]}"""
 
 /**
  * Circling, the camera looks at the thermal's core as long as the
@@ -166,10 +171,12 @@ class VectorMapState(
     internal var view: MapView? = null
     /** The style's glider layer (a location indicator). */
     internal var glider: Layer? = null
-    /** The thermal assistant's layer, on the glider (a location indicator too). */
-    internal var assistantLayer: Layer? = null
-    /** The assistant's image while circling, else null. */
-    private var assistant: Bitmap? = null
+    /** The layer of the thermal's core mark (a location indicator too). */
+    internal var coreLayer: Layer? = null
+    /** The core mark's image while circling, else null. */
+    private var coreImage: Bitmap? = null
+    /** The thermal assistant on the glider's circle ([liftCircleJson]); null: none. */
+    private var liftCircle: String? = null
     private var orientation: MapOrientation? = MapOrientation.NORTH_UP
     /** Around what the task modes frame: the sides and the map's buttons, pixels. */
     internal var frameMargin = 0
@@ -200,7 +207,7 @@ class VectorMapState(
     private var fixFrom: LatLng? = null
     /**
      * Where the lift is while circling (XCSoar's thermal locator), else
-     * null: the camera looks there, and the thermal assistant sits there.
+     * null: the camera looks there, and the core's mark sits there.
      */
     private var thermal: LatLng? = null
     /** Where the thermal's core was drawn when [fix] came. */
@@ -315,7 +322,7 @@ class VectorMapState(
         if (!following || gestures > 0) {
             // the map stays: the glider moves on it
             showGlider(at, bearingTo)
-            placeAssistant(core)
+            placeCore(core)
             return
         }
         if (previous == null || interval == 0L || previous.distanceTo(at) > JUMP_METRES) {
@@ -326,7 +333,7 @@ class VectorMapState(
             thermalFrom = null
             ownMove { map.moveCamera(CameraUpdateFactory.newCameraPosition(camera(map, at))) }
             showGlider(at, bearingTo)
-            placeAssistant(core)
+            placeCore(core)
             return
         }
         // the camera glides to the fix (circling, the thermal) until the
@@ -387,7 +394,7 @@ class VectorMapState(
         val now = SystemClock.uptimeMillis()
         if (following && gestures == 0) {
             showGlider(gliderAt(now), gliderBearing(now))
-            placeAssistant(thermalAt(now))
+            placeCore(thermalAt(now))
         }
     }
 
@@ -423,37 +430,49 @@ class VectorMapState(
     private fun location(at: LatLng) =
         PaintPropertyValue("location", arrayOf(at.latitude, at.longitude, 0.0))
 
-    /**
-     * The thermal assistant and the core's mark, drawn north up in
-     * [image], on the thermal's core while circling: the map turns it
-     * with its own frames; null hides it.
-     */
-    fun showThermalAssistant(image: Bitmap?) {
-        assistant = image
-        applyAssistant()
+    /** The core's mark in [image], on the thermal's core while circling; null hides it. */
+    fun showThermalCore(image: Bitmap?) {
+        coreImage = image
+        applyCore()
     }
 
-    private fun applyAssistant() {
+    private fun applyCore() {
         val style = map?.style ?: return
-        assistant?.let { style.addImage(ASSISTANT_IMAGE, it) }
-        placeAssistant(thermalAt(SystemClock.uptimeMillis()))
+        coreImage?.let { style.addImage(CORE_IMAGE, it) }
+        placeCore(thermalAt(SystemClock.uptimeMillis()))
     }
 
-    /** Where the assistant's layer is; null while hidden. */
-    private var assistantAt: LatLng? = null
+    /**
+     * The thermal assistant of [graphic] on the circle the glider flies,
+     * where the map scales it with its zoom ([liftCircleJson]); null, or
+     * no circle, hides it.
+     */
+    fun showLiftCircle(graphic: TileGraphic?) {
+        val json = graphic?.let(::liftCircleJson)
+        if (json == liftCircle) return
+        liftCircle = json
+        applyLiftCircle()
+    }
 
-    /** The assistant at [at] when there is one to show, else hidden. */
-    private fun placeAssistant(at: LatLng?) {
-        val layer = assistantLayer ?: return
-        val where = at?.takeIf { assistant != null }
-        if (where == assistantAt) return
+    private fun applyLiftCircle() {
+        map?.style?.source(LIFT_CIRCLE_SOURCE)?.setGeoJson(liftCircle ?: NO_FEATURES)
+    }
+
+    /** Where the core's layer is; null while hidden. */
+    private var coreAt: LatLng? = null
+
+    /** The core's mark at [at] when there is one to show, else hidden. */
+    private fun placeCore(at: LatLng?) {
+        val layer = coreLayer ?: return
+        val where = at?.takeIf { coreImage != null }
+        if (where == coreAt) return
         when {
             where == null -> layer.setProperties(PropertyFactory.visibility(Property.NONE))
-            assistantAt == null ->
+            coreAt == null ->
                 layer.setProperties(PropertyFactory.visibility(Property.VISIBLE), location(where))
             else -> layer.setProperties(location(where))
         }
-        assistantAt = where
+        coreAt = where
     }
 
     /** The glider's bearing at [now], turning evenly from one fix's track to the next. */
@@ -534,8 +553,8 @@ class VectorMapState(
         map = null
         view = null
         glider = null
-        assistantLayer = null
-        assistantAt = null
+        coreLayer = null
+        coreAt = null
         shownAt = null
     }
 
@@ -548,7 +567,8 @@ class VectorMapState(
      */
     internal fun attached(regions: LatLng?) {
         applyPadding()
-        applyAssistant()
+        applyCore()
+        applyLiftCircle()
         val map = map ?: return
         if (taskMode != null) return
         val at = fix
@@ -794,7 +814,7 @@ fun VectorMap(
                     loaded.addImage("glider", it.toBitmap())
                 }
                 state.glider = loaded.getLayer("glider")
-                state.assistantLayer = loaded.getLayer("thermal-assistant")
+                state.coreLayer = loaded.getLayer("thermal-core")
                 state.view = mapView
                 state.map = map
                 state.attached(offline?.bounds?.let { b ->

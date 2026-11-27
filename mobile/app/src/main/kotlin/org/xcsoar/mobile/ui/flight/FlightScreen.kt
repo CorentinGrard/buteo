@@ -254,7 +254,8 @@ fun FlightScreen(
             onCloseItems = viewModel::hideMapItems,
             onGoto = viewModel::gotoWaypoint,
             thermalAssistant = thermalAssistant,
-            onThermalAssistant = vectorState::showThermalAssistant,
+            onThermalCore = vectorState::showThermalCore,
+            onLiftCircle = vectorState::showLiftCircle,
         ),
         taskPanel = taskPanel,
     )
@@ -282,9 +283,10 @@ class ReplayControls(
  * @param items what is at the held point; null when not shown
  * @param onGoto fly directly to a waypoint of [items]
  * @param thermalAssistant drawn around the glider while circling
- * @param onThermalAssistant the map draws the thermal assistant itself,
- * from this image (null hides it); without it, Compose draws it over
- * the map
+ * @param onThermalCore the map draws the thermal's core itself, from
+ * this image (null hides it), and [onLiftCircle] the assistant on the
+ * glider's circle (null hides it); without them, Compose draws the
+ * assistant over the map
  */
 class MapSlot(
     val content: @Composable (Modifier) -> Unit,
@@ -297,7 +299,8 @@ class MapSlot(
     val onCloseItems: () -> Unit = {},
     val onGoto: (waypointId: Int) -> Unit = {},
     val thermalAssistant: TileGraphic? = null,
-    val onThermalAssistant: ((Bitmap?) -> Unit)? = null,
+    val onThermalCore: ((Bitmap?) -> Unit)? = null,
+    val onLiftCircle: (TileGraphic?) -> Unit = {},
 )
 
 /**
@@ -519,10 +522,11 @@ private fun MapArea(
         if (map != null) {
             map.content(Modifier.fillMaxSize())
             val assistant = map.thermalAssistant
-            val onImage = map.onThermalAssistant
+            val onImage = map.onThermalCore
             if (onImage != null) {
                 if (mapSize != IntSize.Zero)
-                    ThermalAssistantOnMap(assistant, circling, onImage, cardsBottom, mapSize)
+                    ThermalAssistantOnMap(assistant, circling, onImage, map.onLiftCircle,
+                                          cardsBottom, mapSize)
             } else if (assistant != null && circling && map.follows && mapSize != IntSize.Zero)
                 ThermalAssistantSlot(assistant, map, state, cardsBottom, mapSize)
         } else
@@ -690,28 +694,34 @@ private fun assistantPlace(cardsBottom: Int, mapSize: IntSize): AssistantPlace {
 }
 
 /**
- * The thermal's core and its assistant, drawn by the map where the
- * lift is while circling ([circling]; [graphic] when the assistant is
- * on): an image of them each time they change, which the map turns
- * with its own frames.  Only their words are Compose's.
+ * The thermal's core and its assistant, drawn by the map while
+ * circling ([circling]; [graphic] when the assistant is on): the core's
+ * mark as an image, which the map puts where the lift is, and the
+ * assistant on the circle the glider flies, which the map scales with
+ * its zoom (D35).  Only their words are Compose's.
  */
 @Composable
 private fun ThermalAssistantOnMap(graphic: TileGraphic?, circling: Boolean,
-                                  onImage: (Bitmap?) -> Unit, cardsBottom: Int,
+                                  onImage: (Bitmap?) -> Unit,
+                                  onLiftCircle: (TileGraphic?) -> Unit, cardsBottom: Int,
                                   mapSize: IntSize) {
     val colors = XcsTheme.colors
     val density = LocalDensity.current
-    val place = assistantPlace(cardsBottom, mapSize)
-    val image = remember { arrayOfNulls<Bitmap>(1) }
-    LaunchedEffect(graphic, circling, place.radius, colors) {
-        val drawn = if (circling)
-            thermalAssistantImage(graphic, place.radius, colors, density, image[0])
-        else null
-        if (drawn != null) image[0] = drawn
-        onImage(drawn)
+    LaunchedEffect(circling, colors) {
+        onImage(if (circling) thermalCoreImage(colors, density) else null)
     }
-    DisposableEffect(Unit) { onDispose { onImage(null) } }
+    LaunchedEffect(graphic, circling) {
+        onLiftCircle(graphic.takeIf { circling })
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            onImage(null)
+            onLiftCircle(null)
+        }
+    }
     if (graphic != null && circling) {
+        // TalkBack: the assistant is about the middle of the free map
+        val place = assistantPlace(cardsBottom, mapSize)
         val size = with(density) { (2 * place.radius).toDp() }
         Box(Modifier
                 .offset { IntOffset((place.centre.x - place.radius).roundToInt(),

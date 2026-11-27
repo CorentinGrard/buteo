@@ -22,7 +22,8 @@
     "task": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
     "trail": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
     "reach": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
-    "thermals": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}}
+    "thermals": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}},
+    "lift-circle": {"type": "geojson", "data": {"type": "FeatureCollection", "features": []}}
   },
   "layers": [
     {"id": "background", "type": "background", "paint": {"background-color": "#eef0ea"}},
@@ -246,8 +247,26 @@
      },
      "paint": {"text-color": "#1a6fa8", "text-halo-color": "#ffffff", "text-halo-width": 1.6}},
 
-    {"id": "thermal-assistant", "type": "location-indicator",
-     "layout": {"visibility": "none", "bearing-image": "thermal-assistant",
+    {"id": "lift-circle-ring-halo", "type": "line", "source": "lift-circle",
+     "filter": ["==", ["get", "kind"], "ring"],
+     "paint": {"line-color": "#ffffff", "line-opacity": 0.5, "line-width": 4.5}},
+    {"id": "lift-circle-ring", "type": "line", "source": "lift-circle",
+     "filter": ["==", ["get", "kind"], "ring"],
+     "paint": {"line-color": "#0e1210", "line-opacity": 0.5, "line-width": 1.5}},
+    {"id": "lift-circle-fill", "type": "fill", "source": "lift-circle",
+     "filter": ["==", ["get", "kind"], "lift"],
+     "paint": {"fill-color": "#1a6fa8", "fill-opacity": 0.3}},
+    {"id": "lift-circle-line", "type": "line", "source": "lift-circle",
+     "filter": ["==", ["get", "kind"], "lift"],
+     "layout": {"line-join": "round"},
+     "paint": {"line-color": "#1a6fa8", "line-width": 2.25}},
+    {"id": "lift-circle-advisor", "type": "line", "source": "lift-circle",
+     "filter": ["==", ["get", "kind"], "advisor"],
+     "layout": {"line-cap": "round"},
+     "paint": {"line-color": "#1a6fa8", "line-width": 3}},
+
+    {"id": "thermal-core", "type": "location-indicator",
+     "layout": {"visibility": "none", "bearing-image": "thermal-core",
                 "perspective-compensation": 0, "image-tilt-displacement": 0},
      "paint": {"location": [0, 0, 0], "bearing": 0, "bearing-image-size": 1,
                "accuracy-radius": 0}},

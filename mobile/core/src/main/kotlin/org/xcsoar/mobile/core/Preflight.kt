@@ -18,7 +18,7 @@ import kotlin.math.hypot
 import kotlin.math.max
 
 /** Metres a degree of latitude spans. */
-private const val METRES_PER_DEGREE = 111_195.0
+const val METRES_PER_DEGREE = 111_195.0
 
 /**
  * Metres to [other], on a plane around the two: close enough over the

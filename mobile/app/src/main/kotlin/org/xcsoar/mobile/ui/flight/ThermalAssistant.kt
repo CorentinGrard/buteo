@@ -26,10 +26,14 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.json.JSONArray
+import org.json.JSONObject
+import org.xcsoar.mobile.core.METRES_PER_DEGREE
 import org.xcsoar.mobile.core.TileGraphic
 import org.xcsoar.mobile.ui.Format
 import org.xcsoar.mobile.ui.theme.XcsColors
 import org.xcsoar.mobile.ui.theme.XcsTheme
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -41,7 +45,7 @@ import org.xcsoar.mobile.R
  * circle the climb was stronger, in the map's directions.  The map
  * turns with [upBearing] (the direction at the top of the screen).
  * Drawn by Compose only without the vector map (previews, tests): the
- * vector map draws [thermalAssistantImage] itself, in its own frames.
+ * vector map draws [liftCircleJson] itself, on the glider's circle.
  */
 @Composable
 fun ThermalAssistantOverlay(
@@ -67,31 +71,17 @@ fun Modifier.thermalAssistantSemantics(graphic: TileGraphic): Modifier {
 }
 
 /**
- * The thermal's core marked by a dot, and around it the assistant
- * ([graphic], when there is one) north up, [radius] pixels, in an image
- * for the vector map to draw where the lift is and turn with its frames
- * (a Compose overlay turning with the map redrew the whole screen in
- * every frame: half a core on the Redmi 5).  Drawn into [reuse] when it
- * has the size: the map copies the image, and a new one every second is
- * garbage.
+ * The thermal's core marked by a dot, in an image for the vector map to
+ * draw where the lift is (a Compose overlay moving with the map redrew
+ * the whole screen in every frame: half a core on the Redmi 5).
  */
-fun thermalAssistantImage(graphic: TileGraphic?, radius: Float, colors: XcsColors,
-                          density: Density, reuse: Bitmap? = null): Bitmap {
-    val assistant = graphic?.takeIf {
-        radius > 0f && liftPoints(it, Offset.Zero, radius, 0.0) != null
-    }
+fun thermalCoreImage(colors: XcsColors, density: Density): Bitmap {
     val core = with(density) { CORE_RADIUS.toPx() }
-    // the halo's stroke reaches past the outer ring
-    val margin = with(density) { 4.dp.toPx() }
-    val side = (2 * ((if (assistant != null) radius else core) + margin)).roundToInt()
-    val bitmap = reuse?.takeIf { it.width == side && it.height == side && it.isMutable }
-        ?.apply { eraseColor(android.graphics.Color.TRANSPARENT) }
-        ?: ImageBitmap(side, side).asAndroidBitmap()
+    val side = (2 * (core + with(density) { 3.dp.toPx() })).roundToInt()
+    val bitmap = ImageBitmap(side, side).asAndroidBitmap()
     CanvasDrawScope().draw(density, LayoutDirection.Ltr, Canvas(bitmap.asImageBitmap()),
                            Size(side.toFloat(), side.toFloat())) {
-        if (assistant != null)
-            thermalAssistant(assistant, center, radius, 0.0, colors, halo = true)
-        // the core: updraft data, sky blue, outlined for any ground
+        // updraft data, sky blue, outlined for any ground
         drawCircle(colors.sheet, core + 2.dp.toPx(), center)
         drawCircle(colors.updraft, core, center)
     }
@@ -100,6 +90,54 @@ fun thermalAssistantImage(graphic: TileGraphic?, radius: Float, colors: XcsColor
 
 /** The thermal's core mark. */
 private val CORE_RADIUS = 6.dp
+
+/** Segments of the assistant's rings on the map. */
+private const val RING_SEGMENTS = 72
+
+/**
+ * The thermal assistant on the vector map, on the circle the glider
+ * flies ([TileGraphic.circle]): its ring and the half ring, the climb of
+ * each heading where the glider flew it (as [thermalAssistant] draws
+ * it, in metres), and the advisor's line, as GeoJSON features of kind
+ * "ring", "lift" and "advisor".  The map scales them with its zoom and
+ * turns them with its frames.  Null without the circle or the lift.
+ */
+internal fun liftCircleJson(g: TileGraphic): String? {
+    val circle = g.circle ?: return null
+    // metres east (x) and south (y, as on a screen) of the centre
+    val points = liftPoints(g, Offset.Zero, circle.radius.toFloat(), 0.0) ?: return null
+    val metresPerLongitude = METRES_PER_DEGREE * cos(Math.toRadians(circle.latitude))
+    fun at(east: Double, south: Double): JSONArray = JSONArray()
+        .put(circle.longitude + east / metresPerLongitude)
+        .put(circle.latitude - south / METRES_PER_DEGREE)
+    fun at(p: Offset) = at(p.x.toDouble(), p.y.toDouble())
+    fun ring(radius: Double) = JSONArray().apply {
+        for (i in 0..RING_SEGMENTS) {
+            val a = 2 * PI * i / RING_SEGMENTS
+            put(at(radius * sin(a), -radius * cos(a)))
+        }
+    }
+    fun feature(kind: String, type: String, coordinates: JSONArray) = JSONObject()
+        .put("type", "Feature")
+        .put("geometry", JSONObject().put("type", type).put("coordinates", coordinates))
+        .put("properties", JSONObject().put("kind", kind))
+
+    val outline = JSONArray().apply {
+        points.forEach { put(at(it)) }
+        put(at(points.first()))
+    }
+    val features = JSONArray()
+        .put(feature("ring", "LineString", ring(circle.radius)))
+        .put(feature("ring", "LineString", ring(circle.radius / 2)))
+        .put(feature("lift", "Polygon", JSONArray().put(outline)))
+        .put(feature("advisor", "LineString",
+                     JSONArray().put(at(Offset.Zero)).put(at(advisorEnd(points)))))
+    return JSONObject().put("type", "FeatureCollection").put("features", features).toString()
+}
+
+/** Where the advisor's line points: the average of the lift polygon's corners. */
+private fun advisorEnd(points: List<Offset>) =
+    Offset(points.map { it.x }.average().toFloat(), points.map { it.y }.average().toFloat())
 
 /**
  * ThermalAssistantRenderer: the climb measured on each heading of the
@@ -133,9 +171,7 @@ internal fun DrawScope.thermalAssistant(g: TileGraphic, centre: Offset, radius: 
     drawPath(polygon, colors.updraft, style = Stroke(width * 1.5f, join = StrokeJoin.Round))
 
     // the advisor: towards the average of the points
-    val average = Offset(points.map { it.x }.average().toFloat(),
-                         points.map { it.y }.average().toFloat())
-    drawLine(colors.updraft, centre, average, width * 2, StrokeCap.Round)
+    drawLine(colors.updraft, centre, advisorEnd(points), width * 2, StrokeCap.Round)
 }
 
 /** The polygon's corners on screen; null without the core's 36 values. */

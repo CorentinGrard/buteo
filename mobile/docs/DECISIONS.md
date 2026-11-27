@@ -765,10 +765,20 @@ circle's centre in the middle and the glider on the ring.
   the core is so far that the glider would leave the free part of the
   map, the camera looks between them (30 % of that part at most).  The
   camera eases to each new estimate with the fix, as to the glider.
-- The thermal assistant sits on the core (north up, turned by the map),
-  with the core marked by a sky blue dot (updraft data); with the
-  assistant off (Map & units), the dot alone.  No core yet (the first
-  seconds of a climb): neither.
+- The core is marked by a sky blue dot (updraft data).  No core yet
+  (the first seconds of a climb): no dot.
+- The thermal assistant is drawn on the circle the glider flies, in
+  metres (amended 2026-11-27; it sat on the core at a fixed screen
+  size, and the pilot: "the zoom level have no impact on the drawn
+  circles nor the thermal shape").  The core sends that circle with
+  the assistant's lift (`xcs_thermal_assistant_get` "circle": the
+  true airspeed over the heading's turn rate, the centre beside the
+  glider): the outer ring is the glider's circle, the half ring no
+  climb, each heading's climb where the glider flew it, so the glider
+  rides the ring, the trail's circles fall on it, and the map's zoom
+  scales it.  At the default circling zoom a 100 m circle is about 20
+  dp across: zoom in to read the shape.  With the assistant off (Map &
+  units), the dot alone.
 - The earlier climbs: XCSoar's thermal sources (the last 20, kept only
   where the terrain gives their ground) carried downwind to the glider's
   altitude, as XCSoar's map shows them, a dark sky blue dot with the
