@@ -27,6 +27,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
@@ -735,7 +736,7 @@ fun VectorMap(
         }
     }
 
-    LaunchedEffect(mapView) {
+    MapEffect(mapView) {
         mapView.getMapAsync { map ->
             map.uiSettings.apply {
                 isCompassEnabled = false
@@ -804,11 +805,11 @@ fun VectorMap(
         }
     }
 
-    LaunchedEffect(orientation) {
+    MapEffect(orientation) {
         state.orient(orientation)
     }
 
-    LaunchedEffect(circling, circlingZoom) {
+    MapEffect(circling, circlingZoom) {
         state.circlingZoomEnabled = circlingZoom
         state.setCircling(circling)
     }
@@ -818,7 +819,7 @@ fun VectorMap(
         val airspace = remember(loaded) { AirspaceLook() }
         // the core's data: what changes with the data files, rarely
         var landablesAt by remember { mutableStateOf<Map<Int, Landable>>(emptyMap()) }
-        LaunchedEffect(loaded) {
+        MapEffect(loaded) {
             while (true) {
                 features(MapFeatures.AIRSPACE)?.let { loaded.source("airspace")?.setGeoJson(it) }
                 features(MapFeatures.WAYPOINTS)?.let {
@@ -828,12 +829,12 @@ fun VectorMap(
                 delay(5 * 60_000)
             }
         }
-        LaunchedEffect(loaded, relief) {
+        MapEffect(loaded, relief) {
             loaded.getLayer("hillshade")?.setProperties(
                 PropertyFactory.visibility(if (relief) Property.VISIBLE else Property.NONE))
         }
         // the task on the map: every waypoint while building it
-        LaunchedEffect(loaded, taskMode) {
+        MapEffect(loaded, taskMode) {
             state.setTaskMode(taskMode)
             val visibility = PropertyFactory.visibility(
                 if (taskMode == TaskMapMode.Edit) Property.VISIBLE else Property.NONE)
@@ -842,7 +843,7 @@ fun VectorMap(
         }
         // what changes in flight, each only when it changed: a new data
         // set or filter has MapLibre lay its layer out again
-        LaunchedEffect(loaded) {
+        MapEffect(loaded) {
             var tick = 0
             var task: TaskOutline? = null
             // the task mode framed last, framed once on entering it
@@ -916,7 +917,7 @@ fun VectorMap(
                 delay(1000)
             }
         }
-        LaunchedEffect(loaded) {
+        MapEffect(loaded) {
             var lastSequence = -1L
             var lastPosition: GeoPosition? = null
             var recentTrail: String? = null
@@ -981,6 +982,16 @@ private fun logFrameStats(mapView: MapView) {
             }
         })
 }
+
+/**
+ * A LaunchedEffect on the UI thread, where MapLibre takes its calls.
+ * The app's effects run there anyway; Compose's test rule runs them on
+ * a test dispatcher that goes on wherever a withContext() or the core
+ * resumed it (an IO thread), and MapLibre threw in the end-to-end tests.
+ */
+@Composable
+private fun MapEffect(vararg keys: Any?, block: suspend CoroutineScope.() -> Unit) =
+    LaunchedEffect(*keys) { withContext(Dispatchers.Main.immediate, block) }
 
 private fun Style.source(id: String) = getSourceAs<GeoJsonSource>(id)
 
