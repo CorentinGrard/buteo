@@ -767,18 +767,22 @@ circle's centre in the middle and the glider on the ring.
   camera eases to each new estimate with the fix, as to the glider.
 - The core is marked by a sky blue dot (updraft data).  No core yet
   (the first seconds of a climb): no dot.
-- The thermal assistant is drawn on the circle the glider flies, in
-  metres (amended 2026-11-27; it sat on the core at a fixed screen
-  size, and the pilot: "the zoom level have no impact on the drawn
-  circles nor the thermal shape").  The core sends that circle with
-  the assistant's lift (`xcs_thermal_assistant_get` "circle": the
-  true airspeed over the heading's turn rate, the centre beside the
-  glider): the outer ring is the glider's circle, the half ring no
-  climb, each heading's climb where the glider flew it, so the glider
-  rides the ring, the trail's circles fall on it, and the map's zoom
-  scales it.  At the default circling zoom a 100 m circle is about 20
-  dp across: zoom in to read the shape.  With the assistant off (Map &
-  units), the dot alone.
+- On the map the thermal assistant is the climb around the thermal
+  (amended 2026-11-27).  Its gauge on the core, a fixed screen size,
+  ignored the zoom; drawn in metres on the glider's circle it moved
+  with that circle; the pilot: "I need the blue part to be static on
+  the background", then "draw on top of the map some kind of color
+  scale with the past lift and extrapolate for the rest of the map, the
+  idea would be to help find the center of the thermal".  The core
+  gives the climb's samples (`xcs_map_features` LIFT: the trace since
+  the climb began, ten minutes at most, netto, where the trail draws
+  them); the app fits a plane to the samples near each cell of a grid
+  round them (local linear regression, 60 m), so a climb growing
+  across the circle goes on growing past it, fading out 250 m from the
+  samples, and the map draws it under the trail, the updraft's blues
+  from none to the best climb.  No rings, no advisor's line: the
+  gauge stays in its tile.  With the assistant off (Map & units), the
+  dot alone.
 - The earlier climbs: XCSoar's thermal sources (the last 20, kept only
   where the terrain gives their ground) carried downwind to the glider's
   altitude, as XCSoar's map shows them, a dark sky blue dot with the

@@ -255,7 +255,7 @@ fun FlightScreen(
             onGoto = viewModel::gotoWaypoint,
             thermalAssistant = thermalAssistant,
             onThermalCore = vectorState::showThermalCore,
-            onLiftCircle = vectorState::showLiftCircle,
+            onLift = vectorState::showLift,
         ),
         taskPanel = taskPanel,
     )
@@ -284,9 +284,9 @@ class ReplayControls(
  * @param onGoto fly directly to a waypoint of [items]
  * @param thermalAssistant drawn around the glider while circling
  * @param onThermalCore the map draws the thermal's core itself, from
- * this image (null hides it), and [onLiftCircle] the assistant on the
- * glider's circle (null hides it); without them, Compose draws the
- * assistant over the map
+ * this image (null hides it), and [onLift] the climb around the
+ * thermal while the assistant is there (null hides it); without them,
+ * Compose draws the assistant over the map
  */
 class MapSlot(
     val content: @Composable (Modifier) -> Unit,
@@ -300,7 +300,7 @@ class MapSlot(
     val onGoto: (waypointId: Int) -> Unit = {},
     val thermalAssistant: TileGraphic? = null,
     val onThermalCore: ((Bitmap?) -> Unit)? = null,
-    val onLiftCircle: (TileGraphic?) -> Unit = {},
+    val onLift: (TileGraphic?) -> Unit = {},
 )
 
 /**
@@ -525,7 +525,7 @@ private fun MapArea(
             val onImage = map.onThermalCore
             if (onImage != null) {
                 if (mapSize != IntSize.Zero)
-                    ThermalAssistantOnMap(assistant, circling, onImage, map.onLiftCircle,
+                    ThermalAssistantOnMap(assistant, circling, onImage, map.onLift,
                                           cardsBottom, mapSize)
             } else if (assistant != null && circling && map.follows && mapSize != IntSize.Zero)
                 ThermalAssistantSlot(assistant, map, state, cardsBottom, mapSize)
@@ -697,13 +697,13 @@ private fun assistantPlace(cardsBottom: Int, mapSize: IntSize): AssistantPlace {
  * The thermal's core and its assistant, drawn by the map while
  * circling ([circling]; [graphic] when the assistant is on): the core's
  * mark as an image, which the map puts where the lift is, and the
- * assistant on the circle the glider flies, which the map scales with
- * its zoom (D35).  Only their words are Compose's.
+ * climb around the thermal from its samples ([LiftField], D35).  Only
+ * their words are Compose's.
  */
 @Composable
 private fun ThermalAssistantOnMap(graphic: TileGraphic?, circling: Boolean,
                                   onImage: (Bitmap?) -> Unit,
-                                  onLiftCircle: (TileGraphic?) -> Unit, cardsBottom: Int,
+                                  onLift: (TileGraphic?) -> Unit, cardsBottom: Int,
                                   mapSize: IntSize) {
     val colors = XcsTheme.colors
     val density = LocalDensity.current
@@ -711,12 +711,12 @@ private fun ThermalAssistantOnMap(graphic: TileGraphic?, circling: Boolean,
         onImage(if (circling) thermalCoreImage(colors, density) else null)
     }
     LaunchedEffect(graphic, circling) {
-        onLiftCircle(graphic.takeIf { circling })
+        onLift(graphic.takeIf { circling })
     }
     DisposableEffect(Unit) {
         onDispose {
             onImage(null)
-            onLiftCircle(null)
+            onLift(null)
         }
     }
     if (graphic != null && circling) {

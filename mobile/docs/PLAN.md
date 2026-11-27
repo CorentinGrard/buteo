@@ -1031,12 +1031,13 @@ page, checklists, a widget, a message after landing away).
   minutes of the test flight at 50x: nothing said; the sample callout
   speaks).  Then: "there is still a bug with the thermal assistant, the
   zoom level have no impact on the drawn circles nor the thermal
-  shape"; asked what its ring should measure, the pilot chose the
-  glider's own circle (D35 amended): the core sends the circle (radius
-  from airspeed and turn rate, 251 m in the core test's climb), the
-  map draws the rings, the lift and the advisor in metres.  Redmi 5,
-  replay at 1x circling: the glider on the ring, one zoom step twice
-  the size, one out half.
+  shape"; drawn in metres on the glider's circle, the pilot: "nonono,
+  still bad ... I need to blue part to be static on the background",
+  then a colour scale of the past lift, extrapolated, to find the
+  centre (D35 amended): the core gives the climb's samples, the app
+  fits the field (local linear regression) and draws it under the
+  trail.  Redmi 5, replay at 1x: a blue cloud where the climb was,
+  still on the map; 38-39 % of a core, as before the climb.
 
 - 2026-11-27 — The pilot: "commit, push, merge, and create a new
   release".  Upstream merged (41 commits; its team code now takes

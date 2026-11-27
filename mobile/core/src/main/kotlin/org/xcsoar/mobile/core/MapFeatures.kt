@@ -36,6 +36,11 @@ enum class MapFeatures(val code: Int) {
     TRAIL_RECENT(6),
     /** The flight's earlier thermals at the glider's altitude: points, "lift" (m/s). */
     THERMALS(7),
+    /**
+     * The current climb's samples while circling: points, "climb" (the
+     * netto vario, m/s), where the trail draws them.
+     */
+    LIFT(8),
 }
 
 /** An airspace with a warning (`XCS_FEATURES_AIRSPACE_STATE`). */

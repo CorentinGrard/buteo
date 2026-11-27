@@ -117,8 +117,6 @@ data class TileGraphic(
     val heading: Double = 0.0,
     /** Thermal assistant: the 30 s average climb (m/s). */
     val average: Double = 0.0,
-    /** Thermal assistant: the circle the glider flies now; null without one. */
-    val circle: LiftCircle? = null,
 ) {
     val points get() = pointsRaw.map { ChartPoint(it[0], it[1]) }
     val terrain get() = terrainRaw.map { ChartPoint(it[0], it[1]) }
@@ -137,14 +135,6 @@ data class TileGraphic(
         const val THERMAL_ASSISTANT = "thermal_assistant"
     }
 }
-
-/**
- * The circle the glider flies in the air, where the thermal assistant's
- * headings were flown: its centre (WGS84) and [radius] (m), from the
- * true airspeed and the heading's turn rate (`xcs_thermal_assistant_get`).
- */
-@Serializable
-data class LiftCircle(val latitude: Double, val longitude: Double, val radius: Double)
 
 /**
  * What a tapped tile opens, as XCSoar's InfoBox decides

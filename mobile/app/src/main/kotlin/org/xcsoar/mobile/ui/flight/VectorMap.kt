@@ -43,6 +43,7 @@ import org.maplibre.android.gestures.MoveGestureDetector
 import org.maplibre.android.gestures.StandardScaleGestureDetector
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
+import org.maplibre.android.geometry.LatLngQuad
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
@@ -52,9 +53,11 @@ import org.maplibre.android.style.layers.Layer
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.PaintPropertyValue
 import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.layers.RasterLayer
 import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.android.style.sources.ImageSource
 import org.xcsoar.mobile.R
 import org.xcsoar.mobile.core.AirspaceState
 import org.xcsoar.mobile.core.FlightState
@@ -93,9 +96,11 @@ private const val PIXELS_PER_FRAME = 2
 /** The style's image of the thermal's core. */
 private const val CORE_IMAGE = "thermal-core"
 
-/** The style's source of the thermal assistant ([liftCircleJson]). */
-private const val LIFT_CIRCLE_SOURCE = "lift-circle"
-private const val NO_FEATURES = """{"type":"FeatureCollection","features":[]}"""
+/** The climb around the thermal ([LiftField]): its image and layer, under the trail. */
+private const val LIFT_SOURCE = "thermal-lift"
+private const val LIFT_LAYER = "thermal-lift"
+/** The lift's samples are fetched again this often while circling, ms. */
+private const val LIFT_MILLIS = 1000L
 
 /**
  * Circling, the camera looks at the thermal's core as long as the
@@ -175,8 +180,9 @@ class VectorMapState(
     internal var coreLayer: Layer? = null
     /** The core mark's image while circling, else null. */
     private var coreImage: Bitmap? = null
-    /** The thermal assistant on the glider's circle ([liftCircleJson]); null: none. */
-    private var liftCircle: String? = null
+    /** The climb around the thermal is drawn ([showLift]). */
+    internal var liftShown by mutableStateOf(false)
+        private set
     private var orientation: MapOrientation? = MapOrientation.NORTH_UP
     /** Around what the task modes frame: the sides and the map's buttons, pixels. */
     internal var frameMargin = 0
@@ -443,19 +449,11 @@ class VectorMapState(
     }
 
     /**
-     * The thermal assistant of [graphic] on the circle the glider flies,
-     * where the map scales it with its zoom ([liftCircleJson]); null, or
-     * no circle, hides it.
+     * The climb around the thermal on the map while [graphic] (the
+     * thermal assistant, while circling) is there; null hides it.
      */
-    fun showLiftCircle(graphic: TileGraphic?) {
-        val json = graphic?.let(::liftCircleJson)
-        if (json == liftCircle) return
-        liftCircle = json
-        applyLiftCircle()
-    }
-
-    private fun applyLiftCircle() {
-        map?.style?.source(LIFT_CIRCLE_SOURCE)?.setGeoJson(liftCircle ?: NO_FEATURES)
+    fun showLift(graphic: TileGraphic?) {
+        liftShown = graphic != null
     }
 
     /** Where the core's layer is; null while hidden. */
@@ -568,7 +566,6 @@ class VectorMapState(
     internal fun attached(regions: LatLng?) {
         applyPadding()
         applyCore()
-        applyLiftCircle()
         val map = map ?: return
         if (taskMode != null) return
         val at = fix
@@ -853,6 +850,27 @@ fun VectorMap(
             loaded.getLayer("hillshade")?.setProperties(
                 PropertyFactory.visibility(if (relief) Property.VISIBLE else Property.NONE))
         }
+        // circling with the thermal assistant on: the climb around the
+        // thermal, from its samples, as they change
+        val liftShown = state.liftShown
+        MapEffect(loaded, liftShown) {
+            if (!liftShown) {
+                showLiftField(loaded, null)
+                return@MapEffect
+            }
+            var last: String? = null
+            while (true) {
+                val json = features(MapFeatures.LIFT)
+                if (json != null && json != last) {
+                    last = json
+                    val field = withContext(Dispatchers.Default) {
+                        liftField(parseLiftSamples(json))?.let { it to it.toBitmap() }
+                    }
+                    showLiftField(loaded, field)
+                }
+                delay(LIFT_MILLIS)
+            }
+        }
         // the task on the map: every waypoint while building it
         MapEffect(loaded, taskMode) {
             state.setTaskMode(taskMode)
@@ -1014,6 +1032,34 @@ private fun MapEffect(vararg keys: Any?, block: suspend CoroutineScope.() -> Uni
     LaunchedEffect(*keys) { withContext(Dispatchers.Main.immediate, block) }
 
 private fun Style.source(id: String) = getSourceAs<GeoJsonSource>(id)
+
+/**
+ * The climb around the thermal ([LiftField]) as an image over its
+ * place, under the trail; null hides it.  Made the first time.
+ */
+private fun showLiftField(style: Style, field: Pair<LiftField, Bitmap>?) {
+    val layer = style.getLayer(LIFT_LAYER)
+    if (field == null) {
+        layer?.setProperties(PropertyFactory.visibility(Property.NONE))
+        return
+    }
+    val (f, image) = field
+    val quad = LatLngQuad(LatLng(f.north, f.west), LatLng(f.north, f.east),
+                          LatLng(f.south, f.east), LatLng(f.south, f.west))
+    val source = style.getSourceAs<ImageSource>(LIFT_SOURCE)
+    if (source == null) {
+        style.addSource(ImageSource(LIFT_SOURCE, quad, image))
+        // no fade: a new image every second would draw for 300 ms
+        style.addLayerBelow(RasterLayer(LIFT_LAYER, LIFT_SOURCE).withProperties(
+            PropertyFactory.rasterFadeDuration(0f),
+            PropertyFactory.rasterResampling(Property.RASTER_RESAMPLING_LINEAR)), "trail")
+        return
+    }
+    source.setCoordinates(quad)
+    source.setImage(image)
+    if (layer?.visibility?.value != Property.VISIBLE)
+        layer?.setProperties(PropertyFactory.visibility(Property.VISIBLE))
+}
 
 /**
  * A change of the style made only when it differs from the last one:
