@@ -41,6 +41,11 @@ Deinitialise() noexcept;
 std::string
 Describe() noexcept;
 
+/** One station as an entry of Describe(), e.g. one Download() gave
+    without adding it. */
+std::string
+DescribeStation(const NOAAStore::Item &item) noexcept;
+
 /**
  * Add a station by its four letter ICAO code (any case).
  *

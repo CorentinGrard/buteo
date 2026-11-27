@@ -98,6 +98,14 @@ Describe(const NOAAStore::Item &item) noexcept
 }
 
 std::string
+CoreWeather::DescribeStation(const NOAAStore::Item &item) noexcept
+{
+  StringOutputStream os;
+  Json::Serialize(os, ::Describe(item));
+  return std::move(os).GetValue();
+}
+
+std::string
 CoreWeather::Describe() noexcept
 {
   boost::json::array a;

@@ -89,6 +89,7 @@
 #include "Terrain/RasterTerrain.hpp"
 #include "Engine/Airspace/Airspaces.hpp"
 #include "Engine/Waypoint/Waypoints.hpp"
+#include "Geo/GeoVector.hpp"
 #include "LocalPath.hpp"
 #include "LogFile.hpp"
 #include "Language/Language.hpp"
@@ -1933,6 +1934,34 @@ xcs_weather_update(xcs_core *core)
 }
 
 xcs_status
+xcs_weather_station(xcs_core *core, const char *code, char *buffer,
+                    size_t size, size_t *length_r)
+{
+  if (core == nullptr || code == nullptr || buffer == nullptr ||
+      length_r == nullptr || !NOAAStore::IsValidCode(code))
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+  if (!core->started || core->IsMainThread())
+    return XCS_ERROR_STATE;
+
+  NOAAStore::Item item;
+  try {
+    item = CoreWeather::Download(code);
+  } catch (...) {
+    LogError(std::current_exception(), "Weather download failed");
+    return XCS_ERROR_FAILED;
+  }
+
+  if (!item.metar_available && !item.taf_available)
+    return XCS_ERROR_FAILED;
+
+  /* formatted in the user's units, on the main thread */
+  return RunOnMain(*core, [&]{
+    return CopyJson(CoreWeather::DescribeStation(item), buffer, size, length_r);
+  });
+}
+
+xcs_status
 xcs_weglide_get(xcs_core *core, char *buffer, size_t size, size_t *length_r)
 {
   return GetJsonOnMain(core, buffer, size, length_r,
@@ -3285,6 +3314,76 @@ xcs_waypoints_search(xcs_core *core, const char *name, uint32_t filter,
 
     std::memcpy(buffer, json.c_str(), json.size() + 1);
     return XCS_OK;
+  });
+}
+
+xcs_status
+xcs_waypoint_get(xcs_core *core, uint32_t waypoint_id, char *buffer,
+                 size_t size, size_t *length_r)
+{
+  if (core == nullptr || buffer == nullptr || length_r == nullptr)
+    return XCS_ERROR_INVALID_ARGUMENT;
+
+  return RunOnMain(*core, [=]{
+    const auto waypoint_ptr =
+      data_components->waypoints->LookupId(waypoint_id);
+    if (waypoint_ptr == nullptr)
+      return XCS_ERROR_INVALID_ARGUMENT;
+
+    const auto &waypoint = *waypoint_ptr;
+    const auto &basic = CommonInterface::Basic();
+    const auto &calculated = CommonInterface::Calculated();
+    const auto &settings = CommonInterface::GetComputerSettings();
+
+    boost::json::object o{
+      {"id", waypoint.id},
+      {"name", waypoint.name.c_str()},
+      {"code", waypoint.shortname.c_str()},
+      {"landable", waypoint.IsLandable()},
+      {"airport", waypoint.IsAirport()},
+      {"latitude", waypoint.location.latitude.Degrees()},
+      {"longitude", waypoint.location.longitude.Degrees()},
+    };
+    if (waypoint.HasElevation())
+      o["elevation"] = waypoint.elevation;
+    if (waypoint.runway.IsDirectionDefined())
+      o["runway"] = waypoint.runway.GetDirectionDegrees();
+    if (waypoint.runway.IsLengthDefined())
+      o["runway_length"] = waypoint.runway.GetLength();
+    char frequency[32];
+    if (waypoint.radio_frequency.Format(frequency,
+                                        sizeof(frequency)) != nullptr)
+      o["frequency"] = frequency;
+    if (!waypoint.comment.empty())
+      o["comment"] = waypoint.comment.c_str();
+    if (!waypoint.details.empty())
+      o["details"] = waypoint.details.c_str();
+
+    if (basic.location_available) {
+      const GeoVector vector(basic.location, waypoint.location);
+      o["distance"] = vector.distance;
+      o["bearing"] = vector.bearing.Degrees();
+
+      /* as the waypoint list: on the safety polar (the glide cone) */
+      if (waypoint.IsLandable()) {
+        const auto reach =
+          CalculateWaypointReach(waypoint,
+                                 &backend_components->glide_computer->GetProtectedRoutePlanner(),
+                                 basic, calculated,
+                                 settings.polar, settings.task);
+        if (reach.reachability != WaypointReachability::INVALID) {
+          o["reachable"] = reach.IsReachable();
+          o["arrival"] = reach.result.terrain_valid ==
+            ReachResult::Validity::VALID
+            ? reach.result.terrain
+            : reach.result.direct;
+        }
+      }
+    }
+
+    StringOutputStream os;
+    Json::Serialize(os, o);
+    return CopyJson(std::move(os).GetValue(), buffer, size, length_r);
   });
 }
 

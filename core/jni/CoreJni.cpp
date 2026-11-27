@@ -1198,6 +1198,26 @@ Java_org_xcsoar_mobile_NativeCore_nativeWeatherUpdate(JNIEnv *, jclass,
 }
 
 JNIEXPORT jstring JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeWeatherStation(JNIEnv *env, jclass,
+                                                       jlong core,
+                                                       jstring code)
+{
+  const auto c = Java::String::GetUTFChars(env, code);
+  return GetJson(env, [core, &c](char *buffer, size_t size, size_t *length){
+    return xcs_weather_station(ToCore(core), c.c_str(), buffer, size, length);
+  });
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_xcsoar_mobile_NativeCore_nativeWaypointGet(JNIEnv *env, jclass,
+                                                    jlong core, jint id)
+{
+  return GetJson(env, [core, id](char *buffer, size_t size, size_t *length){
+    return xcs_waypoint_get(ToCore(core), id, buffer, size, length);
+  });
+}
+
+JNIEXPORT jstring JNICALL
 Java_org_xcsoar_mobile_NativeCore_nativeTrackingGet(JNIEnv *env, jclass,
                                                     jlong core)
 {

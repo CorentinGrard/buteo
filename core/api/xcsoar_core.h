@@ -493,6 +493,28 @@ xcs_waypoints_search(xcs_core *core, const char *name, uint32_t filter,
                      size_t *length_r);
 
 /**
+ * One waypoint (an id from xcs_waypoints_search() or the map), as XCSoar's
+ * waypoint details show it, as JSON:
+ *
+ *   {"id": 42, "name": "LFLQ Montelimar Ancone", "code": "LFLQ",
+ *    "landable": true, "airport": true, "latitude": 44.58,
+ *    "longitude": 4.74, "elevation": 73.0, "runway": 20,
+ *    "runway_length": 1200, "frequency": "123.500",
+ *    "comment": "...", "details": "...", "distance": 23400.0,
+ *    "bearing": 41.0, "reachable": true, "arrival": 340}
+ *
+ * "code" is the file's short name (may be ""); "runway" its direction
+ * in degrees, "runway_length" metres; "details" the waypoint details
+ * file's text.  Values the file does not give are left out; distance
+ * and bearing need a GPS fix, "reachable" and "arrival" (as
+ * xcs_waypoints_search()) a landable too.  XCS_ERROR_INVALID_ARGUMENT
+ * for an unknown id.  Buffer rules as for xcs_get_data_status().
+ */
+XCS_EXPORT xcs_status
+xcs_waypoint_get(xcs_core *core, uint32_t waypoint_id, char *buffer,
+                 size_t size, size_t *length_r);
+
+/**
  * Fly directly to a waypoint (XCSoar's "Go to"): the next point of the
  * snapshot becomes that waypoint.  waypoint_id comes from
  * xcs_map_items_at().  XCS_ERROR_FAILED when the profile only allows
@@ -1320,6 +1342,17 @@ xcs_weather_remove(xcs_core *core, const char *code);
  */
 XCS_EXPORT xcs_status
 xcs_weather_update(xcs_core *core);
+
+/**
+ * METAR and TAF of one station (four letter ICAO code) without adding
+ * it to the list: an object as in xcs_weather_list().  Blocks: call it
+ * from a worker thread (XCS_ERROR_STATE on the core main thread).
+ * XCS_ERROR_INVALID_ARGUMENT for an invalid code, XCS_ERROR_FAILED
+ * when NOAA has nothing for it or cannot be reached.
+ */
+XCS_EXPORT xcs_status
+xcs_weather_station(xcs_core *core, const char *code, char *buffer,
+                    size_t size, size_t *length_r);
 
 /*
  * WeGlide (core/host/CoreWeGlide.hpp has the JSON formats).

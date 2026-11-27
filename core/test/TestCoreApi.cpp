@@ -418,8 +418,19 @@ TestTask(xcs_core *core)
   const auto ids = WaypointIds(core, 3);
   ok1(ids.size() == 3);
   if (ids.size() != 3) {
-    skip(36 + 24 + 5, 0, "no waypoints");
+    skip(36 + 24 + 5 + 3, 0, "no waypoints");
     return;
+  }
+
+  /* one waypoint's details; an unknown id is refused */
+  {
+    char buffer[8192];
+    size_t length;
+    ok1(xcs_waypoint_get(core, ids[0], buffer, sizeof(buffer), &length) ==
+        XCS_OK && Has(buffer, "\"name\":") && Has(buffer, "\"latitude\":"));
+    ok1(Has(buffer, fmt::format("\"id\":{}", ids[0]).c_str()));
+    ok1(xcs_waypoint_get(core, 9999999, buffer, sizeof(buffer), &length) ==
+        XCS_ERROR_INVALID_ARGUMENT);
   }
 
   /* Go to: the target is there at once, by name, also without a GPS
@@ -981,6 +992,13 @@ TestWeather(xcs_core *core)
   ok1(xcs_weather_add(core, "LFMT") == XCS_ERROR_INVALID_ARGUMENT);
   ok1(xcs_weather_add(core, "LFM") == XCS_ERROR_INVALID_ARGUMENT);
   ok1(xcs_weather_add(core, "LF-T") == XCS_ERROR_INVALID_ARGUMENT);
+  /* one station without adding it: an invalid code needs no network */
+  {
+    char buffer[64];
+    size_t length;
+    ok1(xcs_weather_station(core, "LF-T", buffer, sizeof(buffer), &length) ==
+        XCS_ERROR_INVALID_ARGUMENT);
+  }
   /* nothing downloaded yet: the code alone */
   ok1(Contains(stations(), "{\"code\":\"LFMT\"}"));
   ok1(xcs_weather_remove(core, "lfmt") == XCS_OK);
@@ -2016,7 +2034,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1 + 1 + 3 + 2 + 2 + 2 + 13 + 6 + 1);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1 + 1 + 3 + 2 + 2 + 2 + 13 + 6 + 1 + 4);
 
   Recorder recorder;
   TestCreateArguments(recorder);
