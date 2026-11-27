@@ -393,9 +393,37 @@ TrailDrifts() noexcept
 }
 
 /**
+ * Where a trace point is drawn: moved downwind by the wind times its
+ * age when @p drift (TrailRenderer's TrailGeoPoint()), else where it
+ * was flown.
+ */
+class TrailLocation {
+  GeoPoint drift_per_second = GeoPoint::Zero();
+  TimeStamp now;
+  bool drift;
+
+public:
+  explicit TrailLocation(bool _drift) noexcept
+    :now(CommonInterface::Basic().time), drift(_drift) {
+    if (drift) {
+      const auto &basic = CommonInterface::Basic();
+      const auto &wind = CommonInterface::Calculated().wind;
+      drift_per_second = basic.location -
+        FindLatitudeLongitude(basic.location, wind.bearing, wind.norm);
+    }
+  }
+
+  GeoPoint operator()(const TracePoint &p) const noexcept {
+    return drift
+      ? p.GetLocation().Parametric(drift_per_second, p.CalculateDrift(now))
+      : p.GetLocation();
+  }
+};
+
+/**
  * The trail's lines by climb class, at most @p max_age long (zero: as
  * long as the pilot's trail setting); each point moved downwind by the
- * wind times its age when @p drift (TrailRenderer's TrailGeoPoint()).
+ * wind times its age when @p drift (TrailLocation).
  */
 static std::string
 TrailSince(TracePoint::Time max_age, bool drift) noexcept
@@ -404,18 +432,7 @@ TrailSince(TracePoint::Time max_age, bool drift) noexcept
   if (!backend_components->glide_computer)
     return std::move(w).Finish();
 
-  const auto &basic = CommonInterface::Basic();
-  GeoPoint traildrift = GeoPoint::Zero();
-  if (drift) {
-    const auto &wind = CommonInterface::Calculated().wind;
-    traildrift = basic.location -
-      FindLatitudeLongitude(basic.location, wind.bearing, wind.norm);
-  }
-  const auto location = [&](const TracePoint &p){
-    return drift
-      ? p.GetLocation().Parametric(traildrift, p.CalculateDrift(basic.time))
-      : p.GetLocation();
-  };
+  const TrailLocation location{drift};
 
   TracePointVector trace;
   backend_components->glide_computer->GetTraceComputer().LockedCopyTo(trace);
@@ -491,6 +508,43 @@ RecentTrail() noexcept
   /* the part of the trace XCSoar does not thin
      (TraceComputer's full_trace_no_thin_time) */
   return TrailSince(TracePoint::Time{2 * 60}, false);
+}
+
+/** The lift's samples reach back this far in a long climb. */
+static constexpr TracePoint::Time LIFT_SPAN{10 * 60};
+
+std::string
+Lift() noexcept
+{
+  FeatureWriter w;
+  const auto &basic = CommonInterface::Basic();
+  const auto &calculated = CommonInterface::Calculated();
+  if (!backend_components->glide_computer || !calculated.circling ||
+      !basic.time_available || !calculated.climb_start_time.IsDefined())
+    return std::move(w).Finish();
+
+  TracePointVector trace;
+  backend_components->glide_computer->GetTraceComputer().LockedCopyTo(trace);
+  if (trace.empty())
+    return std::move(w).Finish();
+
+  /* this climb, its last ten minutes at most */
+  auto since = std::chrono::duration_cast<TracePoint::Time>(
+    calculated.climb_start_time.ToDuration());
+  const auto last = trace.back().GetTime();
+  if (last > LIFT_SPAN && last - LIFT_SPAN > since)
+    since = last - LIFT_SPAN;
+
+  /* where the trail draws them, so that they stay on it */
+  const TrailLocation location{TrailDrifts()};
+  for (const auto &p : trace) {
+    if (p.GetTime() < since)
+      continue;
+    w.Begin("Point");
+    w.Position(location(p));
+    w.Properties({{"climb", p.GetVario()}});
+  }
+  return std::move(w).Finish();
 }
 
 std::string

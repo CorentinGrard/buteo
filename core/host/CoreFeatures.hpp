@@ -52,6 +52,14 @@ std::string
 Thermals() noexcept;
 
 /**
+ * The climb's samples while circling: the trace's points since it
+ * began (ten minutes at most), each with its netto climb, where the
+ * trail draws them.  None while not circling.
+ */
+std::string
+Lift() noexcept;
+
+/**
  * The terrain's heights (metres) over tile (zoom, x, y) of the Web
  * Mercator grid, @p size by @p size from the north-west, for the map's
  * relief (xcs_terrain_tile()).

@@ -1609,38 +1609,12 @@ TestReplayControls(xcs_core *core)
     ok1(lift != std::string::npos && end != std::string::npos &&
         std::count(json.begin() + lift, json.begin() + end, ',') == 35);
   }
+  /* the climb's samples, for the map's lift */
+  ok1(Contains(Features(core, XCS_FEATURES_LIFT),
+               "\"type\":\"Point\""));
+  ok1(Contains(Features(core, XCS_FEATURES_LIFT), "\"climb\":"));
   ok1(Contains(graphic(InfoBoxFactory::THERMAL_ASSISTANT),
                "\"graphic\":{\"kind\":\"thermal_assistant\",\"circling\":true,"));
-  {
-    /* the circle the glider flies, for the map: a thermal's size, its
-       centre a radius from the glider */
-    double radius = 0, distance = 0;
-    for (unsigned i = 0; i < 50 && radius == 0; ++i) {
-      const auto json = assistant();
-      const auto at = json.find("\"radius\":");
-      const auto centre = json.find("\"circle\":{\"latitude\":");
-      xcs_flight_snapshot s{};
-      s.struct_size = sizeof(s);
-      if (at != std::string::npos && centre != std::string::npos &&
-          xcs_get_snapshot(core, &s) == XCS_OK &&
-          (s.valid & XCS_VALID_LOCATION) != 0) {
-        radius = std::strtod(json.c_str() + at + 9, nullptr);
-        char *end;
-        const double latitude = std::strtod(json.c_str() + centre + 21, &end);
-        /* ,"longitude": */
-        const double longitude = std::strtod(end + 13, nullptr);
-        /* metres, on a sphere: close enough over a few hundred */
-        const double dy = (latitude - s.latitude) * 111195;
-        const double dx = (longitude - s.longitude) * 111195 *
-          std::cos(s.latitude * M_PI / 180);
-        distance = std::hypot(dx, dy);
-      } else
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-    ok1(radius >= 15 && radius <= 500);
-    /* the snapshot may be a fix newer than the circle */
-    ok1(std::fabs(distance - radius) < radius / 2 + 60);
-  }
   xcs_tiles_set(core, XCS_TILES_CIRCLING, 5, InfoBoxFactory::e_WindSpeed_Est);
 
   /* circling: where the thermal locator puts the lift; with the trail

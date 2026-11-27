@@ -1479,6 +1479,9 @@ xcs_map_features(xcs_core *core, uint32_t which, char *buffer, size_t size,
   case XCS_FEATURES_THERMALS:
     describe = CoreFeatures::Thermals;
     break;
+  case XCS_FEATURES_LIFT:
+    describe = CoreFeatures::Lift;
+    break;
   default:
     return XCS_ERROR_INVALID_ARGUMENT;
   }

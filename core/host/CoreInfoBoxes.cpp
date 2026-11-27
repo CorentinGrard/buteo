@@ -8,7 +8,6 @@
 #include "InfoBoxes/Content/Group.hpp"
 #include "InfoBoxes/Data.hpp"
 #include "Math/Angle.hpp"
-#include "Geo/Math.hpp"
 #include "Engine/Navigation/TraceHistory.hpp"
 #include "FlightStatistics.hpp"
 #include "Computer/GlideComputer.hpp"
@@ -280,54 +279,10 @@ Points(const LeastSquares &store) noexcept
   return points;
 }
 
-/* the circle's radius, m, when the turn gives one: slower turns are no
-   thermal circle (XCSoar's circling detection starts at 4°/s) */
-static constexpr double MIN_CIRCLE_RADIUS = 15;
-static constexpr double MAX_CIRCLE_RADIUS = 500;
-static constexpr Angle MIN_CIRCLE_TURN_RATE = Angle::Degrees(4);
-
-/**
- * The circle the glider flies in the air, where the lift's headings
- * were flown: its radius (the true airspeed over the heading's turn
- * rate) and its centre, beside the glider on the side it turns to.
- * Nothing while not circling or turning too slowly.
- */
-static void
-AddCircle(boost::json::object &json, const MoreData &basic,
-          const DerivedInfo &calculated) noexcept
-{
-  if (!calculated.circling || !basic.location_available)
-    return;
-
-  const Angle rate = calculated.turn_rate_heading_smoothed.Absolute();
-  if (rate < MIN_CIRCLE_TURN_RATE)
-    return;
-
-  const double speed = basic.airspeed_available
-    ? basic.true_airspeed
-    : (basic.ground_speed_available ? basic.ground_speed : 0.);
-  const double radius = speed / rate.Radians();
-  if (radius < MIN_CIRCLE_RADIUS || radius > MAX_CIRCLE_RADIUS)
-    return;
-
-  const Angle side = calculated.TurningLeft()
-    ? -Angle::QuarterCircle()
-    : Angle::QuarterCircle();
-  const GeoPoint centre =
-    FindLatitudeLongitude(basic.location, basic.attitude.heading + side,
-                          radius);
-  json["circle"] = boost::json::object{
-    {"latitude", centre.latitude.Degrees()},
-    {"longitude", centre.longitude.Degrees()},
-    {"radius", radius},
-  };
-}
-
 /**
  * What ThermalAssistantRenderer draws: the climb XCSoar measured on each
  * heading of the circle (LiftDatabase, from north in 10° steps), the
- * turn's direction, the heading and the average climb; and where that
- * circle is (AddCircle()), for the map.
+ * turn's direction, the heading and the average climb.
  */
 static boost::json::object
 ThermalAssistantJson(const MoreData &basic, const DerivedInfo &calculated) noexcept
@@ -335,7 +290,7 @@ ThermalAssistantJson(const MoreData &basic, const DerivedInfo &calculated) noexc
   boost::json::array lift;
   for (const double v : calculated.lift_database)
     lift.emplace_back(v);
-  boost::json::object json{
+  return {
     {"kind", "thermal_assistant"},
     {"circling", calculated.circling},
     {"left", calculated.TurningLeft()},
@@ -343,8 +298,6 @@ ThermalAssistantJson(const MoreData &basic, const DerivedInfo &calculated) noexc
     {"average", calculated.average},
     {"lift", std::move(lift)},
   };
-  AddCircle(json, basic, calculated);
-  return json;
 }
 
 std::string
