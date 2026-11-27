@@ -3281,9 +3281,8 @@ xcs_core::EndReplay() noexcept
   bc.merge_thread->Suspend();
   bc.calculation_thread->Suspend();
   bc.glide_computer->ResetFlight(true);
-  /* the replay's warnings and acknowledgements go with it: the warning
-     computer replaces them only at the next fix (none indoors), and an
-     airspace acknowledged "for the day" in a replay stayed silent in
+  /* the replay's acknowledgements go with it: an airspace acknowledged
+     "for the day" on its details page in a replay stayed silent in
      that day's flight */
   if (auto *warnings = bc.GetAirspaceWarnings())
     warnings->Clear();
@@ -3302,8 +3301,19 @@ xcs_core::EndReplay() noexcept
 static xcs_status
 StartReplay(const char *path) noexcept
 try {
-  backend_components->replay->Start(Path{path},
-                                    CommonInterface::GetSystemSettings().devices[0]);
+  auto &bc = *backend_components;
+  bc.replay->Start(Path{path},
+                   CommonInterface::GetSystemSettings().devices[0]);
+
+  /* a replay warns of no airspace: the warnings off from its first
+     fix, not from the next timer tick, and those of the real position
+     gone (the replay's time jump resets the warning computer, which
+     then keeps them on the screen) */
+  bc.calculation_thread->Suspend();
+  CoreSendComputerSettings();
+  if (auto *warnings = bc.GetAirspaceWarnings())
+    warnings->Clear();
+  bc.calculation_thread->Resume();
   return XCS_OK;
 } catch (...) {
   LogError(std::current_exception(), "Replay failed");

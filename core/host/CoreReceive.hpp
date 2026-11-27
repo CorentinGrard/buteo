@@ -44,6 +44,15 @@ void
 CoreSendCalculatedNotify() noexcept;
 
 /**
+ * Hand the settings to the calculation thread, as the timer below
+ * does twice per second.  While a replay runs, with the airspace
+ * warnings off: a replay warns of no airspace (no banner, sound or
+ * colour on the map).  Call on the core main thread.
+ */
+void
+CoreSendComputerSettings() noexcept;
+
+/**
  * Start/stop the housekeeping timer of the core main thread: twice per
  * second, like ProcessTimer() in the normal program, minus the UI
  * (device reopen and tick, settings to the calculation thread, ballast

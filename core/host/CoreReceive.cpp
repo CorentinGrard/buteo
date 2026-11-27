@@ -29,6 +29,7 @@
 #include "BatteryTimer.hpp"
 #include "Blackboard/DeviceBlackboard.hpp"
 #include "CalculationThread.hpp"
+#include "Replay/Replay.hpp"
 
 #include <memory>
 
@@ -110,6 +111,19 @@ CoreSendCalculatedNotify() noexcept
     calculated_notify->SendNotification();
 }
 
+void
+CoreSendComputerSettings() noexcept
+{
+  if (!backend_components->calculation_thread)
+    return;
+
+  ComputerSettings settings = CommonInterface::GetComputerSettings();
+  /* a replay is not the pilot's flight: no airspace warning */
+  if (backend_components->replay && backend_components->replay->IsActive())
+    settings.airspace.enable_warnings = false;
+  backend_components->calculation_thread->SetComputerSettings(settings);
+}
+
 /* the backend half of BlackboardProcessTimer() in src/ProcessTimer.cpp
    (XCSoarInterface::ExchangeBlackboard() also pushes settings to the
    MainWindow) */
@@ -119,9 +133,7 @@ ExchangeBlackboard() noexcept
   backend_components->device_blackboard->ExpireWallClock();
 
   XCSoarInterface::ExchangeDeviceBlackboard();
-  if (backend_components->calculation_thread)
-    backend_components->calculation_thread->SetComputerSettings(
-      CommonInterface::GetComputerSettings());
+  CoreSendComputerSettings();
 }
 
 /* MainWindow::LateInitialise(): open the devices once the event loop

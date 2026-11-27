@@ -1638,6 +1638,28 @@ TestReplayControls(xcs_core *core)
   ok1(Features(core, XCS_FEATURES_THERMALS).starts_with(
         "{\"type\":\"FeatureCollection\""));
 
+  /* a replay warns of no airspace, not even inside a restricted area
+     all around the flight: no banner, sound or colour on the map */
+  {
+    const auto path = std::filesystem::absolute(
+      std::filesystem::path{DATA_PATH} / "around-the-replay.txt").string();
+    std::ofstream{path} << "AC R\nAN Around the replay\nAL SFC\nAH FL200\n"
+      "DP 30:00:00 S 143:00:00 E\nDP 30:00:00 S 150:00:00 E\n"
+      "DP 38:00:00 S 150:00:00 E\nDP 38:00:00 S 143:00:00 E\n";
+    ok1(xcs_set_data_file(core, XCS_DATA_AIRSPACE, path.c_str()) == XCS_OK);
+    xcs_replay_fast_forward(core, 120);
+    bool quiet = true;
+    for (unsigned i = 0; i < 20; ++i) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      quiet = quiet && Features(core, XCS_FEATURES_AIRSPACE_STATE) == "[]" &&
+        GetJson([core](char *b, size_t s, size_t *l){
+          return xcs_get_airspace_warnings(core, b, s, l);
+        }) == "[]";
+    }
+    ok1(quiet);
+    xcs_set_data_file(core, XCS_DATA_AIRSPACE, nullptr);
+  }
+
   /* 0 pauses */
   ok1(xcs_replay_set_time_scale(core, 0) == XCS_OK);
   ok1(xcs_replay_set_time_scale(core, 20) == XCS_OK);
@@ -1918,7 +1940,7 @@ TestRepositoryList()
 int
 main()
 {
-  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1 + 1 + 3);
+  plan_tests(9 + 17 + 6 + 55 + 15 + 35 + 11 + 23 + 11 + 7 + 23 + 17 + 8 + 9 + 14 + 10 + 7 + 1 + 10 + 2 + 11 + 16 + 9 + 6 + 28 + 5 + 15 + 7 + 38 + 7 + 2 + 1 + 8 + 2 + 9 + 2 + 2 + 8 + 1 + 1 + 3 + 1 + 1 + 3 + 3 + 3 + 1 + 1 + 1 + 2 + 1 + 5 + 24 + 2 + 2 + 1 + 7 + 8 + 5 + 5 + 1 + 1 + 3 + 2);
 
   Recorder recorder;
   TestCreateArguments(recorder);
