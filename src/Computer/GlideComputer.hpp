@@ -92,8 +92,10 @@ public:
 
   /**
    * Process slow calculations. Called by the CalculationThread.
+   *
+   * @param contest false skips the contest's solver
    */
-  void ProcessIdle(bool exhaustive=false);
+  void ProcessIdle(bool exhaustive=false, bool contest=true);
 
   void ProcessExhaustive() {
     ProcessIdle(true);

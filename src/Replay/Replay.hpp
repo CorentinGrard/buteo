@@ -135,6 +135,19 @@ public:
                            CalculationThread &calc_thread,
                            const std::function<void()> &after_fix = {});
 
+  /**
+   * Like ProcessAllFixes(), but only up to the first fix at or after
+   * \a until; then the replay goes on in (scaled) real time from
+   * there, as after Start().  Fixes read ahead for the timed replay
+   * are skipped; the contest is solved at the last fix only (a first
+   * pass of its solver).  Stops the replay at the end of the file.
+   * Returns the number of fixes processed.  \a merge_thread and \a
+   * calc_thread must be suspended.
+   */
+  unsigned ProcessFixesUntil(TimeStamp until, MergeThread &merge_thread,
+                             CalculationThread &calc_thread,
+                             const std::function<void()> &after_fix = {});
+
 private:
   void OnTimer();
 };

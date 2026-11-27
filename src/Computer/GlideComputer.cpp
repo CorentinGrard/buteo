@@ -151,7 +151,7 @@ GlideComputer::ProcessGPS(bool force)
 }
 
 void
-GlideComputer::ProcessIdle(bool exhaustive)
+GlideComputer::ProcessIdle(bool exhaustive, bool contest)
 {
   const MoreData &basic = Basic();
   DerivedInfo &calculated = SetCalculated();
@@ -162,7 +162,7 @@ GlideComputer::ProcessIdle(bool exhaustive)
   log_computer.Run(basic, calculated, GetComputerSettings().logger);
 
   task_computer.ProcessIdle(basic, calculated, GetComputerSettings(),
-                            exhaustive);
+                            exhaustive, contest);
 
   warning_computer.Update(GetComputerSettings(), basic,
                           calculated, calculated.airspace_warnings);

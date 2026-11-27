@@ -109,7 +109,7 @@ CalculationThread::Tick() noexcept
 }
 
 void
-CalculationThread::ProcessReplayFix() noexcept
+CalculationThread::ProcessReplayFix(bool contest) noexcept
 {
 #ifdef HAVE_CPU_FREQUENCY
   const ScopeLockCPU cpu;
@@ -133,7 +133,7 @@ CalculationThread::ProcessReplayFix() noexcept
      ProcessIdle is needed to fill the snail trail, the flight statistics
      and the contest etc. */
   try {
-    glide_computer.ProcessIdle();
+    glide_computer.ProcessIdle(false, contest);
   } catch (...) {
     LogError(std::current_exception(), "ProcessIdle");
   }

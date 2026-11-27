@@ -87,7 +87,11 @@ public:
   void ProcessAutoTask(const NMEAInfo &basic, const DerivedInfo &calculated,
                        Waypoints &waypoints);
 
+  /**
+   * @param contest false skips the contest's solver (a replay seeking
+   * through many fixes solves it at the last one)
+   */
   void ProcessIdle(const MoreData &basic, DerivedInfo &calculated,
                    const ComputerSettings &settings_computer,
-                   bool exhaustive=false);
+                   bool exhaustive=false, bool contest=true);
 };

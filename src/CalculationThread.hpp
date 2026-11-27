@@ -66,8 +66,11 @@ public:
   /**
    * Run one calculation cycle for bulk replay (no UI triggers).
    * Call only while the worker thread is suspended.
+   *
+   * @param contest false skips the contest's solver: two thirds of a
+   * fix's time, needed only at the last one of many
    */
-  void ProcessReplayFix() noexcept;
+  void ProcessReplayFix(bool contest=true) noexcept;
 
 protected:
   void Tick() noexcept override;

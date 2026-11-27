@@ -142,7 +142,7 @@ Predicted(const ContestSettings &settings,
 void
 TaskComputer::ProcessIdle(const MoreData &basic, DerivedInfo &calculated,
                           const ComputerSettings &settings_computer,
-                          bool exhaustive)
+                          bool exhaustive, bool solve_contest)
 {
   contest.SetPredicted(Predicted(settings_computer.contest, basic,
                                  calculated.task_stats.current_leg));
@@ -150,7 +150,7 @@ TaskComputer::ProcessIdle(const MoreData &basic, DerivedInfo &calculated,
   if (exhaustive)
     contest.SolveExhaustive(settings_computer.contest,
                             calculated.contest_stats);
-  else
+  else if (solve_contest)
     contest.Solve(settings_computer.contest, calculated.contest_stats);
 
   const AircraftState as = ToAircraftState(basic, calculated);

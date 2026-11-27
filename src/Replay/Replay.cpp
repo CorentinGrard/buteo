@@ -249,6 +249,66 @@ Replay::ProcessAllFixes(MergeThread &merge_thread,
   return count;
 }
 
+unsigned
+Replay::ProcessFixesUntil(TimeStamp until, MergeThread &merge_thread,
+                          CalculationThread &calc_thread,
+                          const std::function<void()> &after_fix)
+{
+  if (replay == nullptr || path == nullptr || path.empty())
+    return 0;
+
+  timer.Cancel();
+  fast_forward = TimeStamp::Undefined();
+
+  /* from the replay's latest data: what the file's header gave (an
+     IGC file's date) stays */
+  NMEAInfo data = next_data;
+  unsigned count = 0;
+  bool more;
+
+  while ((more = replay->Update(data))) {
+    assert(!data.gps.real);
+
+    {
+      const std::lock_guard lock{device_blackboard.mutex};
+      device_blackboard.SetReplayState() = data;
+    }
+
+    /* the contest only once, at the last fix: solving it at each one
+       took two thirds of the time (its solver goes on improving the
+       result from there) */
+    const bool last = data.time_available && data.time >= until;
+    merge_thread.ProcessReplayFix();
+    calc_thread.ProcessReplayFix(last);
+    ++count;
+
+    if (after_fix)
+      after_fix();
+
+    if (last)
+      break;
+    if (data.time_available)
+      data.Expire();
+  }
+
+  if (!more) {
+    Stop();
+    return count;
+  }
+
+  /* go on in real time from the next fix, as after Start(), with the
+     day the file's header gave (an IGC file's date record) */
+  const BrokenDate date = data.date_time_utc;
+  next_data.Reset();
+  if (date.IsPlausible())
+    next_data.ProvideDate(date);
+  if (cli != nullptr)
+    cli->Reset();
+  virtual_time = TimeStamp::Undefined();
+  timer.Schedule(std::chrono::milliseconds(100));
+  return count;
+}
+
 void
 Replay::OnTimer()
 {
