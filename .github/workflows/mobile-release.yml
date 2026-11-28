@@ -136,10 +136,15 @@ jobs:
           ORG_GRADLE_PROJECT_buteoKeyPassword: ${{ secrets.BUTEO_KEY_PASSWORD }}
         run: |
           set -o pipefail
-          ./gradlew --no-daemon --console=plain -Pxcsoar.abis=arm64-v8a :app:assembleRelease :app:bundleRelease 2>&1 | tee build.log || {
-            grep -E "^e: | error:|error:|FAILED|What went wrong" -A3 build.log | head -30 | sed 's/^/::error::/'
-            exit 1
-          }
+          for attempt in 1 2; do
+            ./gradlew --no-daemon --console=plain -Pxcsoar.abis=arm64-v8a :app:assembleRelease :app:bundleRelease 2>&1 | tee build.log && exit 0
+            # On a cold Gradle cache, a plugin download sometimes fails
+            # ("was not found"): one more try.
+            grep -q "was not found in any of the following sources" build.log || break
+            sleep 30
+          done
+          grep -E "^e: | error:|error:|FAILED|What went wrong" -A3 build.log | head -30 | sed 's/^/::error::/'
+          exit 1
 
       # Never publish a build signed with the debug key: its updates
       # could not follow.
