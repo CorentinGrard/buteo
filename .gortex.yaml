@@ -1,0 +1,98 @@
+# Gortex (https://github.com/zzet/gortex) settings for this repository.
+#
+# Applying changes (tested with v0.64.11):
+# - exclude: `gortex daemon reload`, then reindex.
+# - artifacts, architecture, guards: read only when the daemon starts, from
+#   ./.gortex.yaml in the directory it starts in. Run
+#   `gortex daemon restart` from the repository root.
+
+# Gitignore syntax, on top of .gitignore and the built-in list
+# (`gortex config exclude list` shows the effective result).
+exclude:
+  # Vendored git submodules: not our code, and they drown search results.
+  - lib/glm/
+  - android/ioio/
+  - android/UsbSerial/
+  # Gortex skips every build/ by default. Here /build/ is the Makefile
+  # build system, and build/python/build/ its Python helpers. Other
+  # build/ directories (Gradle output) stay excluded.
+  - "!/build/"
+  - "!/build/python/build/"
+
+# Documents to search with search(operation:"artifacts"). Gortex has no
+# reStructuredText parser, so doc/*.rst is declared here.
+artifacts:
+  - path: doc/architecture.rst
+    kind: doc
+  - path: doc/policy.rst
+    kind: doc
+  - path: doc/i18n.rst
+    kind: doc
+  - path: doc/release.rst
+    kind: doc
+  - path: .cursor/rules/*.mdc
+    kind: doc
+  - path: mobile/docs/*.md
+    kind: doc
+
+# Layer rules from doc/architecture.rst ("Layer dependencies") and
+# mobile/docs/ARCHITECTURE.md, checked by change(operation:"guards").
+# Warnings only. Without clangd, C++ resolution is incomplete (some
+# namespace-qualified calls such as CommonInterface::Basic() have no edge),
+# so "no violations" does not prove a change respects the layers.
+architecture:
+  severity: warn
+  layers:
+    foundation:
+      paths:
+        - src/util/**
+        - src/Math/**
+        - src/Geo/**
+        - src/io/**
+        - src/system/**
+        - src/time/**
+        - src/Atmosphere/**
+        - src/Radio/**
+        - src/Units/**
+        - src/Operation/**
+      deny: [engine, backend, interface, widgets]
+    engine:
+      paths:
+        - src/Engine/**
+      deny: [backend, interface, widgets]
+    backend:
+      paths:
+        - src/Device/**
+        - src/Computer/**
+        - src/Blackboard/**
+        - src/Storage/**
+        - src/NOTAM/**
+      deny: [interface, widgets]
+    # Buteo's headless core replaces the CommonInterface seams, so it may
+    # use "interface", but it does not link the old widget UI.
+    core:
+      paths:
+        - core/**
+      deny: [widgets]
+    interface:
+      paths:
+        - src/Interface.hpp
+        - src/Interface.cpp
+    widgets:
+      paths:
+        - src/Dialogs/**
+        - src/Form/**
+        - src/Widget/**
+        - src/Menu/**
+
+# `source` and `target` are path prefixes, not globs, and must start with the
+# repository name Gortex uses (XCSoar/), or the rule never fires.
+guards:
+  rules:
+    - name: c-api-and-jni
+      kind: co-change
+      source: XCSoar/core/api/xcsoar_core.h
+      target: XCSoar/core/jni/
+      message: >-
+        The C API changed without core/jni/. Check whether the JNI binding
+        and the Kotlin interface in mobile/core/ need the same change.
