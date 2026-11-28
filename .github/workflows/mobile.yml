@@ -228,16 +228,18 @@ jobs:
       # saving every cache.  Hash once, before the build.
       - name: Gradle cache key
         id: gradle-key
-        run: echo "key=mobile-gradle-${{ hashFiles('mobile/gradle/libs.versions.toml', 'mobile/gradle/wrapper/gradle-wrapper.properties', 'mobile/*.gradle.kts', 'mobile/*/build.gradle.kts') }}" >> "$GITHUB_OUTPUT"
+        run: echo "key=mobile-gradle-app-${{ hashFiles('mobile/gradle/libs.versions.toml', 'mobile/gradle/wrapper/gradle-wrapper.properties', 'mobile/*.gradle.kts', 'mobile/*/build.gradle.kts') }}" >> "$GITHUB_OUTPUT"
 
       - name: Cache Gradle
         uses: actions/cache@v6
         with:
           key: ${{ steps.gradle-key.outputs.key }}
-          restore-keys: mobile-gradle-
+          restore-keys: mobile-gradle-app-
+          # Java's user.home: root's, not the container's $HOME
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
+            /root/.gradle/caches
+            /root/.gradle/wrapper
+            /root/.m2/repository
 
       - name: Install build dependencies
         run: |
@@ -265,9 +267,9 @@ jobs:
           set -o pipefail
           for attempt in 1 2; do
             ./gradlew --no-daemon --console=plain :core:test :app:verifyRoborazziDebug :app:assembleDebug 2>&1 | tee build.log && exit 0
-            # On a cold Gradle cache, a plugin download sometimes fails
-            # ("was not found"): one more try.
-            grep -q "was not found in any of the following sources" build.log || break
+            # On a cold Gradle cache, a download from Maven Central
+            # sometimes fails: one more try.
+            grep -qE "was not found in any of the following sources|MavenArtifactFetcher" build.log || break
             sleep 30
           done
           grep -E "^e: | error:|error:|FAILED|What went wrong" -A3 build.log | head -30 | sed 's/^/::error::/'
@@ -325,16 +327,17 @@ jobs:
 
       - name: Gradle cache key
         id: gradle-key
-        run: echo "key=mobile-gradle-${{ hashFiles('mobile/gradle/libs.versions.toml', 'mobile/gradle/wrapper/gradle-wrapper.properties', 'mobile/*.gradle.kts', 'mobile/*/build.gradle.kts') }}" >> "$GITHUB_OUTPUT"
+        run: echo "key=mobile-gradle-l5-${{ hashFiles('mobile/gradle/libs.versions.toml', 'mobile/gradle/wrapper/gradle-wrapper.properties', 'mobile/*.gradle.kts', 'mobile/*/build.gradle.kts') }}" >> "$GITHUB_OUTPUT"
 
       - name: Cache Gradle
         uses: actions/cache@v6
         with:
           key: ${{ steps.gradle-key.outputs.key }}
-          restore-keys: mobile-gradle-
+          restore-keys: mobile-gradle-l5-
+          # Java's user.home: root's, not the container's $HOME
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
+            /root/.gradle/caches
+            /root/.gradle/wrapper
 
       - name: Install build dependencies
         run: |
@@ -361,9 +364,9 @@ jobs:
           set -o pipefail
           for attempt in 1 2; do
             ./gradlew --no-daemon --console=plain -Pxcsoar.abis=x86_64 :app:assembleL5 :app:assembleL5AndroidTest 2>&1 | tee build.log && exit 0
-            # On a cold Gradle cache, a plugin download sometimes fails
-            # ("was not found"): one more try.
-            grep -q "was not found in any of the following sources" build.log || break
+            # On a cold Gradle cache, a download from Maven Central
+            # sometimes fails: one more try.
+            grep -qE "was not found in any of the following sources|MavenArtifactFetcher" build.log || break
             sleep 30
           done
           grep -E "^e: | error:|error:|FAILED|What went wrong" -A3 build.log | head -30 | sed 's/^/::error::/'
